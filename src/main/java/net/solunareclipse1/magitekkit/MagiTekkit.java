@@ -1,4 +1,4 @@
-package net.solunareclipse1.mgtkmod;
+package net.solunareclipse1.magitekkit;
 
 import java.util.stream.Collectors;
 
@@ -20,11 +20,11 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-@Mod("mgtkmod")
-public class MgtkMod {
+@Mod("magitekkit")
+public class MagiTekkit {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public MgtkMod() {
+    public MagiTekkit() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
@@ -38,7 +38,7 @@ public class MgtkMod {
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {
-        InterModComms.sendTo("mgtkmod", "helloworld", () -> { LOGGER.info("Hello world from the MDK"); return "Hello world";});
+        InterModComms.sendTo("magitekkit", "helloworld", () -> { LOGGER.info("Hello world from the MDK"); return "Hello world";});
     }
 
     private void processIMC(final InterModProcessEvent event) {

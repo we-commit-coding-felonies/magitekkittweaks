@@ -18,8 +18,8 @@ apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
 
 version = '0.0.0.1'
-group = 'net.solunareclipse1.mgtkmod'
-archivesBaseName = 'MagiTekkit-Mod'
+group = 'net.solunareclipse1.magitekkit'
+archivesBaseName = 'MagiTekkit'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -32,10 +32,10 @@ minecraft {
 
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'mgtkmod'
+            property 'forge.enabledGameTestNamespaces', 'magitekkit'
 
             mods {
-                mgtkmod {
+                magitekkit {
                     source sourceSets.main
                 }
             }
@@ -46,10 +46,10 @@ minecraft {
 
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'mgtkmod'
+            property 'forge.enabledGameTestNamespaces', 'magitekkit'
 
             mods {
-                mgtkmod {
+                magitekkit {
                     source sourceSets.main
                 }
             }
@@ -60,10 +60,10 @@ minecraft {
 
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'mgtkmod'
+            property 'forge.enabledGameTestNamespaces', 'magitekkit'
 
             mods {
-                mgtkmod {
+                magitekkit {
                     source sourceSets.main
                 }
             }
@@ -75,10 +75,10 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
 
-            args '--mod', 'mgtkmod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', 'magitekkit', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
 
             mods {
-                mgtkmod {
+                magitekkit {
                     source sourceSets.main
                 }
             }
@@ -105,7 +105,7 @@ dependencies {
 jar {
     manifest {
         attributes([
-                "Specification-Title"     : "mgtkmod",
+                "Specification-Title"     : "magitekkit",
                 "Specification-Vendor"    : "solunareclipse1",
                 "Specification-Version"   : "0.0.0.1",
                 "Implementation-Title"    : project.name,
