@@ -1,0 +1,16 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+.idea
+
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run
