@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="GNU GPLv3"
+#issueTrackerURL="https://github.com/solunareclipse1/newmod"
+
+[[mods]]
+modId="mgtkmod"
+version="${file.jarVersion}"
+displayName="MagiTekkit"
+displayURL="https://solunareclipse1.net"
+# https://mcforge.readthedocs.io/en/latest/gettingstarted/autoupdate/
+#updateJSONURL="https://solunareclipse1.net"
+logoFile="logo.png"
+authors="solunareclipse1"
+#credits="None"
+description='''
+Contains custom code for the MagiTekkit modpack.
+'''
+
+[[dependencies.mgtkmod]]
+    modId="forge"
+    mandatory=true
+    versionRange="[40,41)"
+    ordering="NONE"
+    side="BOTH"
+# Here's another dependency
+[[dependencies.mgtkmod]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.18.2,1.19)"
+    ordering="NONE"
+    side="BOTH"
