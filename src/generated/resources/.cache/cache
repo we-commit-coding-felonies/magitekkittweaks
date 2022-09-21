@@ -1,0 +1,8 @@
+7cc197927f14c5d08fdf88006e87b7db7c3dbc00 assets/magitekkit/blockstates/gantium_block.json
+2ff1a85f6cd4bce5bb83f0cb078f00a064cb3757 assets/magitekkit/lang/en_us.json
+dd8bb2be07f4a82d2040da7ef8ee8ba6370068fd assets/magitekkit/models/block/gantium_block.json
+cfe87fa3f55cecbb4cfa2aee4946803939672813 assets/magitekkit/models/item/gantium_block.json
+3c9203c3ec8cea078de6fe2e2215545b2cc6394c data/forge/tags/blocks/storage_blocks.json
+3c9203c3ec8cea078de6fe2e2215545b2cc6394c data/forge/tags/items/storage_blocks.json
+3c9203c3ec8cea078de6fe2e2215545b2cc6394c data/minecraft/tags/blocks/beacon_base_blocks.json
+3c9203c3ec8cea078de6fe2e2215545b2cc6394c data/minecraft/tags/blocks/needs_diamond_tool.json
