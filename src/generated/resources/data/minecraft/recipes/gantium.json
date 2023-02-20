@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "tag": "magitekkit:void_armor"
+  },
+  "result": "magitekkit:gantium_block",
+  "experience": 9001.0,
+  "cookingtime": 1337
+}

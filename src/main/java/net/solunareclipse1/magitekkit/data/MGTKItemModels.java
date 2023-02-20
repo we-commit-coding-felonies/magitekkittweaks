@@ -14,5 +14,15 @@ public class MGTKItemModels extends ItemModelProvider {
     @Override
     protected void registerModels() {
         withExistingParent(ObjectInit.GANTIUM_BLOCK_ITEM.getId().getPath(), modLoc("block/gantium_block"));
+        
+        singleTexture(ObjectInit.VOID_HELM.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/void/helm"));
+        singleTexture(ObjectInit.VOID_CHEST.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/void/chest"));
+        singleTexture(ObjectInit.VOID_LEGS.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/void/legs"));
+        singleTexture(ObjectInit.VOID_BOOTS.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/void/boots"));
+        
+        singleTexture(ObjectInit.PHIL_HELM.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/phil/helm"));
+        singleTexture(ObjectInit.PHIL_CHEST.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/phil/chest"));
+        singleTexture(ObjectInit.PHIL_LEGS.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/phil/legs"));
+        singleTexture(ObjectInit.PHIL_BOOTS.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/phil/boots"));
     }
 }

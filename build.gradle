@@ -17,9 +17,9 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
 
-version = '0.0.0.1'
+version = '0.1'
 group = 'net.solunareclipse1.magitekkit'
-archivesBaseName = 'MagiTekkit'
+archivesBaseName = 'magitekkit'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -33,6 +33,9 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             property 'forge.enabledGameTestNamespaces', 'magitekkit'
+            
+            property 'mixin.env.remapRefMap', 'true'
+			property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
             mods {
                 magitekkit {
@@ -47,6 +50,9 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             property 'forge.enabledGameTestNamespaces', 'magitekkit'
+            
+            property 'mixin.env.remapRefMap', 'true'
+			property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
             mods {
                 magitekkit {
@@ -89,16 +95,32 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-    maven { // JEI
+    maven {
+    	name "JEI Maven"
         url "https://dvs1.progwml6.com/files/maven"
+    }
+    maven {
+    	name "CurseForge"
+        url "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+    maven {
+        name "Curios Maven"
+        url "https://maven.theillusivec4.top/"
     }
 }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.1.80'
 
-    compileOnly fg.deobf("mezz.jei:jei-${jei_version}:api")
-    implementation fg.deobf("mezz.jei:jei-${jei_version}")
+    implementation fg.deobf("curse.maven:projecte-226410:${projecte_version}")
+
+    compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api")
+    implementation fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}")
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${mc_version}-${curios_version}:api")
 }
 
 
@@ -107,7 +129,7 @@ jar {
         attributes([
                 "Specification-Title"     : "magitekkit",
                 "Specification-Vendor"    : "solunareclipse1",
-                "Specification-Version"   : "0.0.0.1",
+                "Specification-Version"   : "0.1",
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
                 "Implementation-Vendor"   : "solunareclipse1",

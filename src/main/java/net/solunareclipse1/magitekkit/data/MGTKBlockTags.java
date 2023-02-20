@@ -21,10 +21,12 @@ public class MGTKBlockTags extends BlockTagsProvider {
         	.add(ObjectInit.GANTIUM_BLOCK.get());
         tag(Tags.Blocks.STORAGE_BLOCKS)
         	.add(ObjectInit.GANTIUM_BLOCK.get());
+        tag(BlockTags.MINEABLE_WITH_PICKAXE)
+        	.add(ObjectInit.GANTIUM_BLOCK.get());
     }
 
     @Override
     public String getName() {
-        return "MagiTekkit Block Tags";
+        return "ProjectTweaks Block Tags";
     }
 }

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "magitekkit:void_helm",
+    "magitekkit:void_chest",
+    "magitekkit:void_legs",
+    "magitekkit:void_boots"
+  ]
+}

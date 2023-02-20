@@ -1,20 +1,20 @@
 modLoader="javafml"
 loaderVersion="[40,)"
 license="GNU GPLv3"
-#issueTrackerURL="https://github.com/solunareclipse1/newmod"
+#issueTrackerURL="https://github.com/we-commit-coding-felonies/magitekkittweaks/issues"
 
 [[mods]]
 modId="magitekkit"
 version="${file.jarVersion}"
-displayName="MagiTekkit"
-displayURL="https://solunareclipse1.net"
+displayName="MagiTekkit Tweaks"
+displayURL="https://github.com/we-commit-coding-felonies/magitekkittweaks"
 # https://mcforge.readthedocs.io/en/latest/gettingstarted/autoupdate/
-#updateJSONURL="https://solunareclipse1.net"
+#updateJSONURL="https://github.com/we-commit-coding-felonies/magitekkittweaks"
 logoFile="logo.png"
 authors="solunareclipse1"
 #credits="None"
 description='''
-Contains custom code for the MagiTekkit modpack.
+Custom code mod for the MagiTekkit modpack
 '''
 
 [[dependencies.magitekkit]]
@@ -23,7 +23,6 @@ Contains custom code for the MagiTekkit modpack.
     versionRange="[40,41)"
     ordering="NONE"
     side="BOTH"
-# Here's another dependency
 [[dependencies.magitekkit]]
     modId="minecraft"
     mandatory=true

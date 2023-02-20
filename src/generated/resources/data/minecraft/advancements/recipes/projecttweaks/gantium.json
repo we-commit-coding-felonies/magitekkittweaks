@@ -1,0 +1,34 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "minecraft:gantium"
+    ]
+  },
+  "criteria": {
+    "has_gantium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "magitekkit:gantium_block"
+            ]
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "minecraft:gantium"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_gantium",
+      "has_the_recipe"
+    ]
+  ]
+}
