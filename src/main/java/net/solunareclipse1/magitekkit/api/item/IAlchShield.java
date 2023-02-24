@@ -2,6 +2,7 @@ package net.solunareclipse1.magitekkit.api.item;
 
 import java.util.HashMap;
 
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -9,9 +10,16 @@ import net.minecraft.world.item.ItemStack;
 
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 
+import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
 
+/**
+ * Block damage with EMC
+ * 
+ * @author solunareclipse1
+ *
+ */
 public interface IAlchShield {
 
 
@@ -74,7 +82,7 @@ public interface IAlchShield {
         	if (source.getEntity() != null) {
         		info.put("Source Entity", source.getEntity().getEncodeId());
             	info.put("Entity UUID", source.getEntity().getStringUUID());
-            	info.put("Entity Position ", source.getEntity().position().toString());
+            	info.put("Entity Position", source.getEntity().position().toString());
         	}
         	info.put("Will try shield", shieldCondition(player, damage, source, stack)+"");
         	info.put("EMC Cost", Math.pow(Math.max(8, damage), 2)+"");
@@ -89,12 +97,13 @@ public interface IAlchShield {
 			if (emcCost <= emcHeld && emcHeld > 0) {
 				long emcConsumed = EmcHelper.consumeAvaliableEmc(player, emcCost);
 				if (emcConsumed > emcCost) {
-					//player.world.playSound(null, player.posX, player.posY, player.posZ, PESounds.WASTE, SoundCategory.PLAYERS, 0.45F, 1.0F);
+					player.level.playSound(null, player, EffectInit.EMC_WASTE.get(), SoundSource.PLAYERS, 0.45F, 1.0F);
 				}
+				
 				if (EmcHelper.getAvaliableEmc(player) > 0) {
-					//player.world.playSound(null, player.posX, player.posY, player.posZ, PESounds.PROTECT, SoundCategory.PLAYERS, 0.45F, 1.0F);
+					player.level.playSound(null, player, EffectInit.SHIELD_PROTECT.get(), SoundSource.PLAYERS, 0.45F, 1.0F);
 				} else {
-					//player.world.playSound(null, player.posX, player.posY, player.posZ, PESounds.PROTECTFAIL, SoundCategory.PLAYERS, 1.5F, 1.0F);
+					player.level.playSound(null, player, EffectInit.SHIELD_FAIL.get(), SoundSource.PLAYERS, 1.5F, 1.0F);
 				}
 				return true;
 			} else {
@@ -102,7 +111,7 @@ public interface IAlchShield {
 				float affordableDamage = emcHeld / 8;
 				EmcHelper.consumeAvaliableEmc(player, emcHeld);
 				player.hurt(source, damage - affordableDamage);
-				//player.world.playSound(null, player.posX, player.posY, player.posZ, PESounds.PROTECTFAIL, SoundCategory.PLAYERS, 1.5F, 1.0F);
+				player.level.playSound(null, player, EffectInit.SHIELD_FAIL.get(), SoundSource.PLAYERS, 1.5F, 1.0F);
 				return true;
 			}
 		}

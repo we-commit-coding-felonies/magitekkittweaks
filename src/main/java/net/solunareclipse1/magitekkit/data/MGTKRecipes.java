@@ -16,9 +16,9 @@ public class MGTKRecipes extends RecipeProvider {
 
     @Override
     protected void buildCraftingRecipes(Consumer<FinishedRecipe> consumer) {
-    	SimpleCookingRecipeBuilder.smelting(Ingredient.of(ObjectInit.VOID_ARMOR), ObjectInit.GANTIUM_BLOCK_ITEM.get(), 9001.0f, 1337)
-        	.unlockedBy("has_gantium", has(ObjectInit.GANTIUM_BLOCK_ITEM.get()))
-        	.save(consumer, "gantium")
-        ;
+    	//SimpleCookingRecipeBuilder.smelting(Ingredient.of(ObjectInit.VOID_ARMOR), ObjectInit.GANTIUM_BLOCK_ITEM.get(), 9001.0f, 1337)
+        //	.unlockedBy("has_gantium", has(ObjectInit.GANTIUM_BLOCK_ITEM.get()))
+        //	.save(consumer, "gantium")
+        //;
     }
 }

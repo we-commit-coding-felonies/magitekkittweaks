@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import net.solunareclipse1.magitekkit.init.ClientInit;
+import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.ModInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
@@ -19,6 +20,7 @@ public class MagiTekkit {
     public MagiTekkit() {
     	LoggerHelper.printInfo("Main", "IsLoading", "Hello from MagiTekkit Tweaks!");
         ObjectInit.init();
+        EffectInit.init();
         IEventBus modbus = FMLJavaModLoadingContext.get().getModEventBus();
         modbus.addListener(ModInit::init);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> modbus.addListener(ClientInit::init));

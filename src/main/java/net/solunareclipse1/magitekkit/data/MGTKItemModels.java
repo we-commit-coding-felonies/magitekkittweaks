@@ -20,9 +20,9 @@ public class MGTKItemModels extends ItemModelProvider {
         singleTexture(ObjectInit.VOID_LEGS.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/void/legs"));
         singleTexture(ObjectInit.VOID_BOOTS.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/void/boots"));
         
-        singleTexture(ObjectInit.PHIL_HELM.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/phil/helm"));
-        singleTexture(ObjectInit.PHIL_CHEST.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/phil/chest"));
-        singleTexture(ObjectInit.PHIL_LEGS.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/phil/legs"));
-        singleTexture(ObjectInit.PHIL_BOOTS.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/phil/boots"));
+        singleTexture(ObjectInit.GEM_CIRCLET.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/gem_jewelry/helm"));
+        singleTexture(ObjectInit.GEM_AMULET.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/gem_jewelry/chest"));
+        singleTexture(ObjectInit.GEM_TIMEPIECE.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/gem_jewelry/legs"));
+        singleTexture(ObjectInit.GEM_ANKLET.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/gem_jewelry/boots"));
     }
 }

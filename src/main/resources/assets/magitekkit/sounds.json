@@ -1,0 +1,43 @@
+{
+  "item.alchshield.ambient": {
+    "subtitle": "subtitles.mgtk.alchshield.ambient",
+    "sounds": [{
+        "name": "minecraft:block/beacon/ambient",
+        "pitch": 0.5
+    }]
+  },
+
+  "item.alchshield.protect": {
+    "subtitle": "subtitles.mgtk.alchshield.protect",
+    "sounds": [ "magitekkit:item/alchshield/protect" ]
+  },
+
+  "item.alchshield.fail": {
+    "subtitle": "subtitles.mgtk.alchshield.fail",
+    "sounds": [ "magitekkit:item/alchshield/fail" ]
+  },
+
+  "item.emc.waste": {
+    "subtitle": "subtitles.mgtk.emc.waste",
+    "sounds": [ "magitekkit:item/emc/waste" ]
+  },
+
+  "item.matterarmor.absorb": {
+    "subtitle": "subtitles.mgtk.matterarmor.absorb",
+    "sounds": [{
+        "name": "projecte:item/pepower",
+        "pitch": 2.0
+    }]
+  },
+
+  "item.matterarmor.break": {
+    "subtitle": "subtitles.mgtk.matterarmor.break",
+    "sounds": [ "projecte:item/nova" ]
+  },
+
+  "item.jewelry.break": {
+    "subtitle": "subtitles.mgtk.jewelry.break",
+    "sounds": [ "minecraft:block/glass/break" ]
+  }
+
+}

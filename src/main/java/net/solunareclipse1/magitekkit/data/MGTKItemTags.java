@@ -18,24 +18,10 @@ public class MGTKItemTags extends ItemTagsProvider {
         tag(Tags.Items.STORAGE_BLOCKS)
         	.add(ObjectInit.GANTIUM_BLOCK_ITEM.get())
         ;
-        
-        tag(ObjectInit.VOID_ARMOR)
-    		.add(ObjectInit.VOID_HELM.get())
-    		.add(ObjectInit.VOID_CHEST.get())
-    		.add(ObjectInit.VOID_LEGS.get())
-    		.add(ObjectInit.VOID_BOOTS.get())
-    	;
-        
-        tag(ObjectInit.PHIL_ARMOR)
-			.add(ObjectInit.PHIL_HELM.get())
-			.add(ObjectInit.PHIL_CHEST.get())
-			.add(ObjectInit.PHIL_LEGS.get())
-			.add(ObjectInit.PHIL_BOOTS.get())
-		;
     }
 
     @Override
     public String getName() {
-        return "ProjectTweaks Item Tags";
+        return "MagiTekkit Item Tags";
     }
 }

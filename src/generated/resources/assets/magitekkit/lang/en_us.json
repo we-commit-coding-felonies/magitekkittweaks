@@ -1,0 +1,23 @@
+{
+  "block.magitekkit.gantium_block": "Block of Gantium",
+  "item.magitekkit.gem_amulet": "Infernal Amulet",
+  "item.magitekkit.gem_anklet": "Hurricane Anklet",
+  "item.magitekkit.gem_circlet": "Abyssal Circlet",
+  "item.magitekkit.gem_timepiece": "Gravity's Timepiece",
+  "item.magitekkit.void_boots": "Boots of the Void",
+  "item.magitekkit.void_chest": "Chestplate of the Void",
+  "item.magitekkit.void_helm": "Helmet of the Void",
+  "item.magitekkit.void_legs": "Leggings of the Void",
+  "itemGroup.magitekkit": "MagiTekkit",
+  "subtitles.mgtk.alchshield.ambient": "Alchemical barrier hums",
+  "subtitles.mgtk.alchshield.fail": "Alchemical barrier shatters",
+  "subtitles.mgtk.alchshield.protect": "Alchemical barrier activates",
+  "subtitles.mgtk.emc.waste": "EMC disperses",
+  "subtitles.mgtk.matterarmor.absorb": "Damage absorbed",
+  "subtitles.mgtk.matterarmor.break": "Armor degrades",
+  "tip.mgtk.burnout": "Burnout: %1$s / %2$s",
+  "tip.mgtk.gem_amulet": "Perhaps wearing this around your neck isn't the best idea...",
+  "tip.mgtk.gem_anklet": "Not to be confused with Anklet of the Wind",
+  "tip.mgtk.gem_circlet": "PLACEHOLDER",
+  "tip.mgtk.gem_timepiece": "2... 3... 5... 7... 11... 13..."
+}

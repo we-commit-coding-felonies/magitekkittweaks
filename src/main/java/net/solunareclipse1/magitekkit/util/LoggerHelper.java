@@ -11,6 +11,7 @@ import com.mojang.logging.LogUtils;
  * Has some nice functions to make outputting stuff to log a tad easier.
  * Meant to be used to help standardize the format of logs
  * Some examples can be found at the bottom of the file
+ * TODO: actually put examples
  * 
  * @author solunareclipse1
  */
