@@ -49,14 +49,29 @@ public class GemJewelryItemBase extends VoidArmorItem implements IAlchShield, IF
 		return amount;
 	}
 	
-	// common for all pieces
-	public void onArmorTick(ItemStack stack, Level level, Player player) {
+	/**
+	 * Common tick function for all 4 pieces
+	 * called in onArmorTick
+	 * <p>
+	 * returns players avaliable emc so we dont have to call getAvaliableEmc() multiple times per tick
+	 * 
+	 * @param stack The armor piece ItemStack
+	 * @param level The level
+	 * @param player The player with the armor
+	 * @return The avaliable EMC in the player's inventory
+	 */
+	protected long jewelryTick(ItemStack stack, Level level, Player player) {
+		long plrEmc = EmcHelper.getAvaliableEmc(player);
+		
+		// slow, expensive auto-repair
 		if (stack.isDamaged() && level.getGameTime() % 200 == 0 && player instanceof ServerPlayer) {
-			if (EmcHelper.getAvaliableEmc(player) >= 65536) {
-				EmcHelper.consumeAvaliableEmc(player, 65536);
+			if (plrEmc >= 65536) {
+				plrEmc -= EmcHelper.consumeAvaliableEmc(player, 65536);
 				stack.hurt(-1, player.getRandom(), (ServerPlayer) player);
 			}
 		}
+		
+		return plrEmc;
 	}
 
 
