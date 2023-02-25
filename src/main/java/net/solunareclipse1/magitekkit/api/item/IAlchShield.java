@@ -52,7 +52,12 @@ public interface IAlchShield {
 	default void tryShield(LivingAttackEvent event, ItemStack stack) {	
         Entity hurt = event.getEntity();
 		if (hurt.level.isClientSide || event.isCanceled()) return;
-		event.setCanceled(shieldWithEmc((Player)hurt, event.getAmount(), event.getSource(), stack));
+		if (shieldWithEmc((Player)hurt, event.getAmount(), event.getSource(), stack)) {
+			event.setCanceled(true);
+			//System.out.println(hurt.invulnerableTime);
+			hurt.invulnerableTime = 2;
+			//System.out.println(hurt.invulnerableTime);
+		}
 	}
 
     /**
@@ -85,7 +90,8 @@ public interface IAlchShield {
             	info.put("Entity Position", source.getEntity().position().toString());
         	}
         	info.put("Will try shield", shieldCondition(player, damage, source, stack)+"");
-        	info.put("EMC Cost", Math.pow(Math.max(8, damage), 2)+"");
+        	info.put("EMC Cost", calcShieldingCost(player, damage, source, stack)+"");
+        	info.put("Affordable damage", calcAffordableDamage(player, damage, source, stack, EmcHelper.getAvaliableEmc(player))+"");
         	
         	LoggerHelper.printDebug("IAlchShield", "ShieldingDebug", "Attempting to shieldWithEmc", info);
         }
@@ -100,7 +106,8 @@ public interface IAlchShield {
 					player.level.playSound(null, player, EffectInit.EMC_WASTE.get(), SoundSource.PLAYERS, 0.45F, 1.0F);
 				}
 				
-				if (EmcHelper.getAvaliableEmc(player) > 0) {
+				emcHeld -= emcConsumed;
+				if (emcHeld > 0) {
 					player.level.playSound(null, player, EffectInit.SHIELD_PROTECT.get(), SoundSource.PLAYERS, 0.45F, 1.0F);
 				} else {
 					player.level.playSound(null, player, EffectInit.SHIELD_FAIL.get(), SoundSource.PLAYERS, 1.5F, 1.0F);
@@ -108,9 +115,9 @@ public interface IAlchShield {
 				return true;
 			} else {
 				if (emcHeld <= 0) return false;
-				float affordableDamage = emcHeld / 8;
+				float canAfford = calcAffordableDamage(player, damage, source, stack, emcHeld);
 				EmcHelper.consumeAvaliableEmc(player, emcHeld);
-				player.hurt(source, damage - affordableDamage);
+				player.hurt(source, damage - canAfford);
 				player.level.playSound(null, player, EffectInit.SHIELD_FAIL.get(), SoundSource.PLAYERS, 1.5F, 1.0F);
 				return true;
 			}
@@ -121,16 +128,36 @@ public interface IAlchShield {
 	/**
 	 * Calculates the EMC cost to shield
 	 * Override this to change the cost calculation
-	 * Default is Math.max(8, damage) squared, or Long.MAX_VALUE if it overflows
+	 * Default is Math.max(64, damage^2)
 	 * 
-	 * @param player The player being shielded
-     * @param damage The amount of damage to shield
-     * @param source The DamageSource we are shielding
-     * @param stack The ItemStack doing the shielding
-	 * @return The cost in EMC
+	 * @param player Player being shielded
+	 * @param damage Amount of incoming damage
+	 * @param source DamageSource we are shielding
+	 * @param stack ItemStack doing the shielding
+     * 
+	 * @return EMC cost to shield
 	 */
 	default long calcShieldingCost(Player player, float damage, DamageSource source, ItemStack stack) {
-		long calcCost = (long) Math.pow(Math.max(8, damage), 2);
-		return calcCost < 8 ? Long.MAX_VALUE : calcCost;
+		return (long) Math.max(64, Math.pow(damage, 2));
+		//long calcCost = (long) Math.pow(Math.max(8, damage), 2);
+		//return calcCost < 64 ? Long.MAX_VALUE : calcCost;
+	}
+	
+	/**
+	 * Calculates how much damage we can afford to shield. <br>
+	 * Normally, this is only called if (emcHeld < emcCost) <br>
+	 * <br>
+	 * Defaults to sqrt(emcHeld)
+	 * 
+	 * @param player Player being shielded
+	 * @param damage Amount of incoming damage
+	 * @param source DamageSource we are shielding
+	 * @param stack ItemStack doing the shielding
+	 * @param emcHeld Total EMC avaliable
+	 * 
+	 * @return Amount of damage we can afford
+	 */
+	default float calcAffordableDamage(Player player, float damage, DamageSource source, ItemStack stack, long emcHeld) {
+		return (float)Math.sqrt(emcHeld);
 	}
 }

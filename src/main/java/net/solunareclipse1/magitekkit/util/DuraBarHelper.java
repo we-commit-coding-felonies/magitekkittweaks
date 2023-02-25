@@ -10,7 +10,7 @@ import net.minecraft.util.Mth;
  *
  */
 public class DuraBarHelper {
-	public int covBarColor(float fillPercent) {
+	public static int covBarColor(float fillPercent) {
 		float f = Math.max(0.3911f, fillPercent / 1.65125495376f);
 		return Mth.hsvToRgb(f, 1.0f, 0.824f);
 	}
@@ -31,7 +31,7 @@ public class DuraBarHelper {
 	 * @param v2 Value for Color 2
 	 * @return RGB value as an integer
 	 */
-	public int gradientBarColor(float percent, float h1, float s1, float v1, float h2, float s2, float v2) {
+	public static int gradientBarColor(float percent, float h1, float s1, float v1, float h2, float s2, float v2) {
 		boolean hInv, sInv, vInv;
 		if (Math.max(h1, h2) == h1) hInv = true; else hInv = false;
 		if (Math.max(s1, s2) == s1) sInv = true; else sInv = false;
@@ -55,7 +55,7 @@ public class DuraBarHelper {
 	 * @param v2 Value for Color 2
 	 * @return RGB value as an integer
 	 */
-	public int fadingBarColor(long timer, int cycle, int offset, float h1, float s1, float v1, float h2, float s2, float v2) {
+	public static int fadingBarColor(long timer, int cycle, int offset, float h1, float s1, float v1, float h2, float s2, float v2) {
 		boolean hInv, sInv, vInv;
 		if (Math.max(h1, h2) == h1) hInv = true; else hInv = false;
 		if (Math.max(s1, s2) == s1) sInv = true; else sInv = false;
@@ -89,7 +89,7 @@ public class DuraBarHelper {
 	 * @param max Maximum value
 	 * @return Value for use in getBarWidth
 	 */
-	public int barLevelFromCurMax(float cur, float max) {
+	public static int barLevelFromCurMax(float cur, float max) {
 		return (int) Math.round(13 - 13 * cur / max);
 	}
 	/**
@@ -101,7 +101,7 @@ public class DuraBarHelper {
 	 * @param max Maximum value
 	 * @return Value for use in getBarWidth
 	 */
-	public int barLevelFromCurMax(double cur, double max) {
+	public static int barLevelFromCurMax(double cur, double max) {
 		return (int) Math.round(13 - 13 * cur / max);
 	}
 	/**
@@ -113,7 +113,7 @@ public class DuraBarHelper {
 	 * @param max Maximum value
 	 * @return Value for use in getBarWidth
 	 */
-	public int barLevelFromCurMax(int cur, int max) {
+	public static int barLevelFromCurMax(int cur, int max) {
 		return (int) Math.round(13 - 13 * cur / max);
 	}
 	/**
@@ -125,7 +125,7 @@ public class DuraBarHelper {
 	 * @param max Denominator
 	 * @return Value for use in getBarWidth
 	 */
-	public int barLevelFromCurMax(long cur, long max) {
+	public static int barLevelFromCurMax(long cur, long max) {
 		return (int) Math.round(13 - 13 * cur / max);
 	}
 	
@@ -135,7 +135,7 @@ public class DuraBarHelper {
 	 * @param fill Percentage that the bar is filled (0.5 is 50%)
 	 * @return
 	 */
-	public int barLevelFromPercent(float fill) {
+	public static int barLevelFromPercent(float fill) {
 		return (int) Math.round(13 - 13 * fill);
 	}
 	/**
@@ -144,7 +144,7 @@ public class DuraBarHelper {
 	 * @param fill Percentage that the bar is filled (0.5 is 50%)
 	 * @return
 	 */
-	public int barLevelFromPercent(double fill) {
+	public static int barLevelFromPercent(double fill) {
 		return (int) Math.round(13 - 13 * fill);
 	}
 }

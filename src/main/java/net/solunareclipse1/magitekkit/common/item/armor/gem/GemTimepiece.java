@@ -108,5 +108,6 @@ public class GemTimepiece extends GemJewelryItemBase {
 	}
 	
 	// TODO: gem of eternal density, watch of flowing time, shrinker
+	// density gem maybe put emc into klein stars?
 	// need to figure out how to handle keypresses and stuff
 }

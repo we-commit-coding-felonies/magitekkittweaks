@@ -1,10 +1,6 @@
 package net.solunareclipse1.magitekkit.init;
 
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -51,10 +47,10 @@ public class ObjectInit {
     public static final RegistryObject<VoidArmorItem> VOID_LEGS = ITEMS.register("void_legs", () -> new VoidArmorItem(VoidArmorMaterial.MAT, EquipmentSlot.LEGS, ITEM_PROPERTIES_UNBREAKABLE, 0.27f));
     public static final RegistryObject<VoidArmorItem> VOID_BOOTS = ITEMS.register("void_boots", () -> new VoidArmorItem(VoidArmorMaterial.MAT, EquipmentSlot.FEET, ITEM_PROPERTIES_UNBREAKABLE, 0.12f));
     
-    public static final RegistryObject<GemCirclet> GEM_CIRCLET = ITEMS.register("gem_circlet", () -> new GemCirclet(ITEM_PROPERTIES_JEWELRY, 0.24f));
-    public static final RegistryObject<GemAmulet> GEM_AMULET = ITEMS.register("gem_amulet", () -> new GemAmulet(ITEM_PROPERTIES_JEWELRY, 0.24f));
-    public static final RegistryObject<GemTimepiece> GEM_TIMEPIECE = ITEMS.register("gem_timepiece", () -> new GemTimepiece(ITEM_PROPERTIES_JEWELRY, 0.24f));
-    public static final RegistryObject<GemAnklet> GEM_ANKLET = ITEMS.register("gem_anklet", () -> new GemAnklet(ITEM_PROPERTIES_JEWELRY, 0.24f));
+    public static final RegistryObject<GemCirclet> GEM_CIRCLET = ITEMS.register("gem_circlet", () -> new GemCirclet(ITEM_PROPERTIES_JEWELRY, 0.25f));
+    public static final RegistryObject<GemAmulet> GEM_AMULET = ITEMS.register("gem_amulet", () -> new GemAmulet(ITEM_PROPERTIES_JEWELRY, 0.25f));
+    public static final RegistryObject<GemTimepiece> GEM_TIMEPIECE = ITEMS.register("gem_timepiece", () -> new GemTimepiece(ITEM_PROPERTIES_JEWELRY, 0.25f));
+    public static final RegistryObject<GemAnklet> GEM_ANKLET = ITEMS.register("gem_anklet", () -> new GemAnklet(ITEM_PROPERTIES_JEWELRY, 0.25f));
 
     // Conveniance function: Take a RegistryObject<Block> and make a corresponding RegistryObject<Item> from it
     public static <B extends Block> RegistryObject<Item> fromBlock(RegistryObject<B> block) {

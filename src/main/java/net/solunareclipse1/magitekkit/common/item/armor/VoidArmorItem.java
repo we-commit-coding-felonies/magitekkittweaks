@@ -1,7 +1,6 @@
 package net.solunareclipse1.magitekkit.common.item.armor;
 
 import java.util.function.Consumer;
-
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.resources.ResourceLocation;
@@ -13,18 +12,16 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
-import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ProtectionEnchantment;
 import net.minecraft.world.level.Level;
 
+import moze_intel.projecte.api.capabilities.PECapabilities;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
-import net.solunareclipse1.magitekkit.init.EffectInit;
-import net.solunareclipse1.magitekkit.util.DuraBarHelper;
 
 public class VoidArmorItem extends ArmorItem {
 	private float baseDr;
@@ -77,6 +74,7 @@ public class VoidArmorItem extends ArmorItem {
 	@Override
 	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {
 		if (ench instanceof ProtectionEnchantment) return false;
+		System.out.println(PECapabilities.EMC_STORAGE_CAPABILITY);
 		return true;
 	}
 	
