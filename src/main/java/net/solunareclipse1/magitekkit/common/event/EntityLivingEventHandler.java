@@ -2,6 +2,7 @@ package net.solunareclipse1.magitekkit.common.event;
 
 import java.util.Optional;
 
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -18,6 +19,7 @@ import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryItemBase;
+import net.solunareclipse1.magitekkit.init.EffectInit;
 
 @Mod.EventBusSubscriber(modid = MagiTekkit.MODID)
 public class EntityLivingEventHandler {
@@ -119,11 +121,13 @@ public class EntityLivingEventHandler {
 		float drMod = 1; // 100% of the dr
 		if (source.isBypassMagic()) drMod = 0.5f;
 		else if (source.isBypassArmor()) drMod = 0.9f;
+		entity.level.playSound(null, entity.blockPosition(), EffectInit.ARMOR_ABSORB.get(), SoundSource.PLAYERS, 0.1f, 1);
 		if (item instanceof GemJewelryItemBase) {
 			// gem jewelry always 100% dr, instead takes more dura damage
 			int dmg = 1; // 1, 2 if bypass armor, 3 if bypass magic
 			if (drMod < 1) dmg = drMod == 0.5 ? 3 : 2;
-			item.damageItem(stack, dmg, entity, ent -> {});
+			stack.hurtAndBreak(dmg, entity, ent -> {});
+			//item.damageItem(stack, dmg, entity, ent -> {});
 			return item.getDr(stack);
 		}
 		return item.getDr(stack) * drMod;

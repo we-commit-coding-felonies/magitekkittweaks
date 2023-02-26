@@ -20,12 +20,14 @@ import moze_intel.projecte.utils.WorldHelper;
 
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
+import vazkii.botania.api.item.IManaProficiencyArmor;
+
 /**
  * Leggings
  * 
  * @author solunareclipse1
  */
-public class GemTimepiece extends GemJewelryItemBase {
+public class GemTimepiece extends GemJewelryItemBase implements IManaProficiencyArmor {
 	public GemTimepiece(Properties props, float baseDr) {
 		super(EquipmentSlot.LEGS, props, baseDr);
 	}
@@ -44,14 +46,16 @@ public class GemTimepiece extends GemJewelryItemBase {
 		long plrEmc = jewelryTick(stack, level, player);
 		if (!stack.isDamaged()) {
 			
-			// default gem legs behavior
 			if (player.isShiftKeyDown()) {
 				fastDescend(player, level);
-				plrEmc = repelEntities(player, level, plrEmc);
+			} else {
+				plrEmc = vacuumItems(player, level, plrEmc);
 			}
 			
-			// black hole band / item magnet
-			plrEmc = vacuumItems(player, level, plrEmc);
+			
+			if (fullPristineSet(player) && player.isShiftKeyDown()) {
+				plrEmc = repelEntities(player, level, plrEmc);
+			}
 		}
 	}
 	
@@ -105,6 +109,10 @@ public class GemTimepiece extends GemJewelryItemBase {
 		}
 		
 		return plrEmc;
+	}
+	
+	public boolean shouldGiveProficiency(ItemStack stack, EquipmentSlot slot, Player player, ItemStack rod) {
+		return !stack.isDamaged();
 	}
 	
 	// TODO: gem of eternal density, watch of flowing time, shrinker

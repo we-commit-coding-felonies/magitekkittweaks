@@ -121,9 +121,11 @@ public class EmcHelper {
 				if (stack.isEmpty()) continue;
 				
 				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
+				
+				
 				if (consumed != 0) {
 					didConsume = true;
-					totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
+					totalConsumed = addEmcToTotal(totalConsumed, consumed, player);
 					consumed = 0;
 				}
 				if (totalConsumed == Long.MAX_VALUE || totalConsumed >= toConsume) {

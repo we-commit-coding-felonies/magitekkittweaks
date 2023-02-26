@@ -96,7 +96,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     maven {
-    	name "JEI Maven"
+    	name "JEI maven"
         url "https://dvs1.progwml6.com/files/maven"
     }
     maven {
@@ -107,8 +107,12 @@ repositories {
         }
     }
     maven {
-        name "Curios Maven"
+        name "Curios maven"
         url "https://maven.theillusivec4.top/"
+    }
+    maven {
+    	name "BlameJared maven"
+    	url 'https://maven.blamejared.com'
     }
 }
 
@@ -116,11 +120,15 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.2.0'
 
     implementation fg.deobf("curse.maven:projecte-226410:${projecte_version}-api")
+    
+    implementation fg.deobf("vazkii.botania:Botania:1.18.2-435")
+    runtimeOnly fg.deobf("vazkii.patchouli:Patchouli:1.18.2-71.1")
 
     compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api")
     implementation fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}")
-    //runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${mc_version}-${curios_version}")
-    //compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${mc_version}-${curios_version}:api")
+    
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${mc_version}-${curios_version}")
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${mc_version}-${curios_version}:api")
 }
 
 

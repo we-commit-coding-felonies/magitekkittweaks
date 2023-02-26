@@ -38,6 +38,5 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.emc.waste", "EMC disperses");
         add("subtitles.mgtk.matterarmor.absorb", "Damage absorbed");
         add("subtitles.mgtk.matterarmor.break", "Armor degrades");
-        //add("subtitles.mgtk.emc.waste", "EMC disperses");
     }
 }

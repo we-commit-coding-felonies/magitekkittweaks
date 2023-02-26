@@ -27,6 +27,6 @@ public class MGTKBlockTags extends BlockTagsProvider {
 
     @Override
     public String getName() {
-        return "ProjectTweaks Block Tags";
+        return "MagiTekkit Block Tags";
     }
 }

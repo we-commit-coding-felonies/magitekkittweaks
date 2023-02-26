@@ -54,9 +54,6 @@ public interface IAlchShield {
 		if (hurt.level.isClientSide || event.isCanceled()) return;
 		if (shieldWithEmc((Player)hurt, event.getAmount(), event.getSource(), stack)) {
 			event.setCanceled(true);
-			//System.out.println(hurt.invulnerableTime);
-			hurt.invulnerableTime = 2;
-			//System.out.println(hurt.invulnerableTime);
 		}
 	}
 
