@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import javax.annotation.Nullable;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.nbt.CompoundTag;
@@ -13,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -31,19 +34,32 @@ import moze_intel.projecte.capability.ItemCapabilityWrapper;
 import moze_intel.projecte.gameObjs.items.IFireProtector;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
+import net.solunareclipse1.magitekkit.capability.MGTKCapabilityProvider;
 import net.solunareclipse1.magitekkit.common.event.EntityLivingEventHandler;
-import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorItem;
+import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.util.DuraBarHelper;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
+
+import vazkii.botania.api.mana.IManaDiscountArmor;
 
 /**
  * Helmet
  * 
  * @author solunareclipse1
  */
-public class GemJewelryItemBase extends VoidArmorItem implements IAlchShield, IFireProtector {
-	public GemJewelryItemBase(EquipmentSlot slot, Properties props, float baseDr) {
+public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireProtector, IManaDiscountArmor {
+	public GemJewelryBase(EquipmentSlot slot, Properties props, float baseDr) {
 		super(GemJewelryMaterial.MAT, slot, props, baseDr);
+	}
+
+	@Override
+	public int getBarColor(ItemStack stack) {
+		return Mth.hsvToRgb(0, 1, 1);
+	}
+	
+	public float getDiscount(ItemStack stack, int slot, Player player, @Nullable ItemStack tool) {
+		return stack.isDamaged() ? 0 : 0.16f;
 	}
 	
 	@Override
@@ -110,7 +126,7 @@ public class GemJewelryItemBase extends VoidArmorItem implements IAlchShield, IF
 
 	public boolean fullPristineSet(Player player) {
 		for (ItemStack stack : player.getArmorSlots()) {
-			if (stack.getItem() instanceof GemJewelryItemBase && !stack.isDamaged()) continue;
+			if (stack.getItem() instanceof GemJewelryBase && !stack.isDamaged()) continue;
 			else return false;
 		}
 		return true;
@@ -131,34 +147,6 @@ public class GemJewelryItemBase extends VoidArmorItem implements IAlchShield, IF
 		else if (source.isBypassArmor()) mod = 10/11;
 		return (float) (mod*Math.sqrt(emcHeld));
 	}
-	
-	
-	
-
-	
-
-	// capability stuff
-	// TODO: understand
-	private final List<Supplier<ItemCapability<?>>> supportedCapabilities = new ArrayList<>();
-	
-	protected void addItemCapability(Supplier<ItemCapability<?>> capabilitySupplier) {
-		supportedCapabilities.add(capabilitySupplier);
-	}
-
-	protected void addItemCapability(String modid, Supplier<Supplier<ItemCapability<?>>> capabilitySupplier) {
-		if (ModList.get().isLoaded(modid)) {
-			supportedCapabilities.add(capabilitySupplier.get());
-		}
-	}
-	
-	@Override
-	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag nbt) {
-		if (supportedCapabilities.isEmpty()) {
-			return super.initCapabilities(stack, nbt);
-		}
-		return new ItemCapabilityWrapper(stack, supportedCapabilities);
-	}
-	
 	
 	
 	// Material

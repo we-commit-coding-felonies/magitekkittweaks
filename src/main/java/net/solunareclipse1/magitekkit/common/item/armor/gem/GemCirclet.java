@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -18,12 +19,15 @@ import moze_intel.projecte.handlers.InternalTimers;
 
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 
+import vazkii.botania.common.item.ModItems;
+import vazkii.botania.common.item.equipment.bauble.ItemThirdEye;
+
 /**
  * Helmet
  * 
  * @author solunareclipse1
  */
-public class GemCirclet extends GemJewelryItemBase implements IAlchShield {
+public class GemCirclet extends GemJewelryBase {
 	public GemCirclet(Properties props, float baseDr) {
 		super(EquipmentSlot.HEAD, props, baseDr);
 	}
@@ -31,7 +35,7 @@ public class GemCirclet extends GemJewelryItemBase implements IAlchShield {
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
-		tips.add(new TranslatableComponent("tip.mgtk.gem_circlet"));
+		tips.add(new TranslatableComponent("tip.mgtk.gem_circlet").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 
 	@Override
@@ -41,6 +45,7 @@ public class GemCirclet extends GemJewelryItemBase implements IAlchShield {
 				// set bonus stuff
 			}
 			player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, true, false));
+			((ItemThirdEye) ModItems.thirdEye).onWornTick(stack, player);
 			player.setAirSupply(player.getMaxAirSupply());
 		}
 	}

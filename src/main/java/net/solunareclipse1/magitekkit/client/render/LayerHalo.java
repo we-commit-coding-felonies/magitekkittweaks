@@ -16,7 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryItemBase;
+import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 
 public class LayerHalo extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
@@ -37,13 +37,13 @@ public class LayerHalo extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
 			float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		for (ItemStack stack : player.getArmorSlots()) {
-			if (!(stack.getItem() instanceof GemJewelryItemBase) || stack.isDamaged()) return;
+			if (!(stack.getItem() instanceof GemJewelryBase) || stack.isDamaged()) return;
 		}
 		poseStack.pushPose();
-		renderer.getModel().head.translateAndRotate(poseStack);
+		renderer.getModel().jacket.translateAndRotate(poseStack);
 		poseStack.mulPose(Vector3f.XP.rotationDegrees(270)); // rotate upright
 		poseStack.scale(1.5f, 1.5f, 1.5f);
-		poseStack.mulPose(Vector3f.YP.rotationDegrees(ageInTicks % 360)); // spinny
+		poseStack.mulPose(Vector3f.YP.rotationDegrees(ageInTicks*0.6f % 360)); // spinny
 		poseStack.translate(-0.5, -0.25, -0.5); // positioning behind the head
 		ResourceLocation texture = HALO_TEXTURE;
 		if (NERD_UUID.equals(player.getUUID())) texture = NERD_TEXTURE;

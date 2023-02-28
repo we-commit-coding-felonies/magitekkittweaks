@@ -19,6 +19,11 @@ import moze_intel.projecte.emc.FuelMapper;
 import moze_intel.projecte.utils.EMCHelper;
 import moze_intel.projecte.utils.PlayerHelper;
 
+/**
+ * Contains functions useful for working with EMC
+ * 
+ * @author solunareclipse1
+ */
 public class EmcHelper {
 	
 	/**

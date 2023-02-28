@@ -5,6 +5,8 @@ import javax.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -20,14 +22,18 @@ import moze_intel.projecte.utils.WorldHelper;
 
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
+import vazkii.botania.api.BotaniaAPI;
 import vazkii.botania.api.item.IManaProficiencyArmor;
+import vazkii.botania.common.lib.ModTags;
+import vazkii.botania.mixin.AccessorItemEntity;
+import vazkii.botania.xplat.IXplatAbstractions;
 
 /**
  * Leggings
  * 
  * @author solunareclipse1
  */
-public class GemTimepiece extends GemJewelryItemBase implements IManaProficiencyArmor {
+public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmor {
 	public GemTimepiece(Properties props, float baseDr) {
 		super(EquipmentSlot.LEGS, props, baseDr);
 	}
@@ -35,7 +41,7 @@ public class GemTimepiece extends GemJewelryItemBase implements IManaProficiency
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
-		tips.add(new TranslatableComponent("tip.mgtk.gem_timepiece"));
+		tips.add(new TranslatableComponent("tip.mgtk.gem_timepiece").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	
 	
@@ -98,17 +104,45 @@ public class GemTimepiece extends GemJewelryItemBase implements IManaProficiency
 	 * @return modified plrEmc total
 	 */
 	public long vacuumItems(@NotNull Player player, @NotNull Level level, long plrEmc) {
-		for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(7))) {
-			if (plrEmc >= 1) {
-				if (ItemHelper.simulateFit(player.getInventory().items, item.getItem()) < item.getItem().getCount()) {
-					plrEmc -= EmcHelper.consumeAvaliableEmc(player, 1);
-					WorldHelper.gravitateEntityTowards(item, player.getX(), player.getY(), player.getZ());
+		if (!BotaniaAPI.instance().hasSolegnoliaAround(player)) {
+			for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(7))) {
+				if (plrEmc >= 1 && isMagnetable(item)) {
+					if (ItemHelper.simulateFit(player.getInventory().items, item.getItem()) < item.getItem().getCount()) {
+						plrEmc -= EmcHelper.consumeAvaliableEmc(player, 1);
+						WorldHelper.gravitateEntityTowards(item, player.getX(), player.getY(), player.getZ());
+					}
 				}
+				
 			}
-			
 		}
-		
 		return plrEmc;
+	}
+	
+	// Slightly modified from Botanias ItemMagnetRing.canPullItem()
+	private boolean isMagnetable(ItemEntity item) {
+		int pickupDelay = ((AccessorItemEntity) item).getPickupDelay();
+		if (!item.isAlive() || pickupDelay >= 40
+				|| BotaniaAPI.instance().hasSolegnoliaAround(item)
+				|| IXplatAbstractions.INSTANCE.preventsRemoteMovement(item)) {
+			return false;
+		}
+
+		ItemStack stack = item.getItem();
+		if (stack.isEmpty()
+				|| IXplatAbstractions.INSTANCE.findManaItem(stack) != null
+				|| IXplatAbstractions.INSTANCE.findRelic(stack) != null
+				|| stack.is(ModTags.Items.MAGNET_RING_BLACKLIST)) {
+			return false;
+		}
+
+		BlockPos pos = item.blockPosition();
+
+		if (item.level.getBlockState(pos).is(ModTags.Blocks.MAGNET_RING_BLACKLIST)
+				|| item.level.getBlockState(pos.below()).is(ModTags.Blocks.MAGNET_RING_BLACKLIST)) {
+			return false;
+		}
+
+		return true;
 	}
 	
 	public boolean shouldGiveProficiency(ItemStack stack, EquipmentSlot slot, Player player, ItemStack rod) {

@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -26,7 +27,7 @@ import net.solunareclipse1.magitekkit.api.item.IAlchShield;
  * 
  * @author solunareclipse1
  */
-public class GemAnklet extends GemJewelryItemBase implements IFlightProvider, IStepAssister {
+public class GemAnklet extends GemJewelryBase implements IFlightProvider, IStepAssister {
 	public GemAnklet(Properties props, float baseDr) {
 		super(EquipmentSlot.FEET, props, baseDr);
 	}
@@ -34,7 +35,7 @@ public class GemAnklet extends GemJewelryItemBase implements IFlightProvider, IS
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
-		tips.add(new TranslatableComponent("tip.mgtk.gem_anklet"));
+		tips.add(new TranslatableComponent("tip.mgtk.gem_anklet").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 
 	private static boolean isJumpPressed() {

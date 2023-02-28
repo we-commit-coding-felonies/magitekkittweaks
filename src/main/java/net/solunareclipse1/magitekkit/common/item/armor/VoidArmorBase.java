@@ -23,7 +23,7 @@ import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
 
-public class VoidArmorItem extends ArmorItem {
+public class VoidArmorBase extends MGTKArmorItem {
 	private float baseDr;
 	/**
 	 * Semiclone of Dark Matter armor. <br>
@@ -34,7 +34,7 @@ public class VoidArmorItem extends ArmorItem {
 	 * @param baseDR The base amount of Damage Reduction this item provides
 	 * @param props The properties of the item
 	 */
-	public VoidArmorItem(ArmorMaterial mat, EquipmentSlot slot, Properties props, float baseDr) {
+	public VoidArmorBase(ArmorMaterial mat, EquipmentSlot slot, Properties props, float baseDr) {
 		super(mat, slot, props);
 		this.baseDr = baseDr;
 	}

@@ -17,8 +17,8 @@ import net.minecraftforge.items.IItemHandler;
 import moze_intel.projecte.utils.PlayerHelper;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
-import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorItem;
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryItemBase;
+import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
+import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 @Mod.EventBusSubscriber(modid = MagiTekkit.MODID)
@@ -76,7 +76,7 @@ public class EntityLivingEventHandler {
 			float drVal = 0, newDmg = dmg;
 			for (ItemStack stack : entity.getArmorSlots()) {
 				if (stack.isEmpty()) continue;
-				if (stack.getItem() instanceof VoidArmorItem) {
+				if (stack.getItem() instanceof VoidArmorBase) {
 					drVal += calcDr(stack, source, entity);
 				}
 			}
@@ -117,12 +117,12 @@ public class EntityLivingEventHandler {
 	 */
 	private static float calcDr(ItemStack stack, DamageSource source, LivingEntity entity) {
 		if (isUnblockableSource(source)) return 0;
-		VoidArmorItem item = (VoidArmorItem) stack.getItem();
+		VoidArmorBase item = (VoidArmorBase) stack.getItem();
 		float drMod = 1; // 100% of the dr
 		if (source.isBypassMagic()) drMod = 0.5f;
 		else if (source.isBypassArmor()) drMod = 0.9f;
 		entity.level.playSound(null, entity.blockPosition(), EffectInit.ARMOR_ABSORB.get(), SoundSource.PLAYERS, 0.1f, 1);
-		if (item instanceof GemJewelryItemBase) {
+		if (item instanceof GemJewelryBase) {
 			// gem jewelry always 100% dr, instead takes more dura damage
 			int dmg = 1; // 1, 2 if bypass armor, 3 if bypass magic
 			if (drMod < 1) dmg = drMod == 0.5 ? 3 : 2;

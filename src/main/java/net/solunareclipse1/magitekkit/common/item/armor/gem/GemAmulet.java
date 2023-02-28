@@ -7,16 +7,22 @@ import javax.annotation.Nullable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+
 import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.api.capabilities.item.IItemEmcHolder;
 import moze_intel.projecte.capability.EmcHolderItemCapabilityWrapper;
@@ -24,26 +30,57 @@ import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.WorldHelper;
 
+import net.solunareclipse1.magitekkit.capability.ManaItemCapabilityWrapper;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.util.ColorsHelper;
+import net.solunareclipse1.magitekkit.util.DuraBarHelper;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
-import net.solunareclipse1.magitekkit.util.ShenanigansHelper;
+import net.solunareclipse1.magitekkit.util.MiscHelper;
+
+import vazkii.botania.api.mana.IManaItem;
 
 /**
  * Chestplate
  * 
  * @author solunareclipse1
  */
-public class GemAmulet extends GemJewelryItemBase implements IItemEmcHolder {
+public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
+	
+	public static final long CAPACITY = 384000;
 	
 	public GemAmulet(Properties props, float baseDr) {
 		super(EquipmentSlot.CHEST, props, baseDr);
 		addItemCapability(EmcHolderItemCapabilityWrapper::new);
+		//addItemCapability(ManaItemCapabilityWrapper::new);
 	}
+
+	// durability bar stuff
+	@Override
+	public boolean isBarVisible(ItemStack stack) {
+		return stack.isDamaged() || getStoredEmc(stack) > 0;
+	}
+
+	@Override
+	public int getBarWidth(ItemStack stack) {
+		if (stack.isDamaged()) return super.getBarWidth(stack);
+		return Math.round(13 * ((float)getStoredEmc(stack) / (float)CAPACITY));
+	}
+
+	@Override
+	public int getBarColor(ItemStack stack) {
+		if (stack.isDamaged()) return super.getBarColor(stack);
+		// is this bad?
+		Minecraft mc = Minecraft.getInstance();
+		long worldTime = mc.level.getGameTime();
+		return ColorsHelper.fadingColorInt(worldTime, 200, 0, 0.3911f, 1.0f, 0.824f, 0.6056f, 1.0f, 0.824f);
+	}
+	
+	
 	
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
-		tips.add(new TranslatableComponent("tip.mgtk.gem_amulet"));
+		tips.add(new TranslatableComponent("tip.mgtk.gem_amulet").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	
 	//@Override
@@ -57,7 +94,7 @@ public class GemAmulet extends GemJewelryItemBase implements IItemEmcHolder {
 		long plrEmc = jewelryTick(stack, level, player);
 		
 		// leaks emc when below half durability
-		plrEmc = leakEmc(stack, level, player, plrEmc);
+		plrEmc = tryLeakEmc(stack, level, player, plrEmc);
 		
 		
 		// TODO: self-refill
@@ -100,7 +137,7 @@ public class GemAmulet extends GemJewelryItemBase implements IItemEmcHolder {
 	}
 	
 	
-	public long leakEmc(ItemStack stack, Level level, Player player, long plrEmc) {
+	public long tryLeakEmc(ItemStack stack, Level level, Player player, long plrEmc) {
 		if (getDamage(stack) >= getMaxDamage(stack)/2) {
 			int remaining = getMaxDamage(stack)-getDamage(stack);
 			if (Math.round(level.getGameTime() % remaining) == 0) {
@@ -126,7 +163,7 @@ public class GemAmulet extends GemJewelryItemBase implements IItemEmcHolder {
 		case 0:
 			break;
 		case 1:
-			ShenanigansHelper.funnySound(rand, level, player.blockPosition());
+			MiscHelper.funnySound(rand, level, player.blockPosition());
 			consumed++;
 			break;
 		case 2:
@@ -156,14 +193,14 @@ public class GemAmulet extends GemJewelryItemBase implements IItemEmcHolder {
 			consumed += Math.max(diff, 1);
 			break;
 		case 8:
-			consumed += 32*ShenanigansHelper.fiftyTwoCardPickup(rand, level, player);
+			consumed += 32*MiscHelper.fiftyTwoCardPickup(rand, level, player);
 			break;
 		case 9:
-			ShenanigansHelper.pokeNearby(level, player, stack);
+			MiscHelper.pokeNearby(level, player, stack);
 			break;
 		case 10:
 			if (player instanceof ServerPlayer) { // TODO: this check might be unneccessary
-				ShenanigansHelper.smitePlayer(level, (ServerPlayer) player);
+				MiscHelper.smitePlayer(level, (ServerPlayer) player);
 				consumed += 1024;
 			} break;
 		case 11:
@@ -205,7 +242,7 @@ public class GemAmulet extends GemJewelryItemBase implements IItemEmcHolder {
 	}
 
 	@Override
-	public @Range(from = 1, to = Long.MAX_VALUE) long getMaximumEmc(@NotNull ItemStack stack) {return 384000;}
+	public @Range(from = 1, to = Long.MAX_VALUE) long getMaximumEmc(@NotNull ItemStack stack) {return CAPACITY;}
 
 	@Override
 	public @Range(from = 0, to = Long.MAX_VALUE) long getStoredEmc(@NotNull ItemStack stack) {
@@ -214,7 +251,6 @@ public class GemAmulet extends GemJewelryItemBase implements IItemEmcHolder {
 	
 	
 	
-	
-	// TODO: botania mana / hex casting media compat
+	// hex casting media compat
 	// emc should be converted as necessary
 }

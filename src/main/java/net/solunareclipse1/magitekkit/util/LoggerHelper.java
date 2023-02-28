@@ -8,10 +8,11 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 /**
- * Has some nice functions to make outputting stuff to log a tad easier.
- * Meant to be used to help standardize the format of logs
+ * Has some nice functions to make outputting stuff to log a tad easier. <br>
+ * Meant to be used to help standardize the format of logs <br>
  * Some examples can be found at the bottom of the file
- * TODO: actually put examples
+ * <p>
+ * TODO: output things in proper order, and actually put examples
  * 
  * @author solunareclipse1
  */

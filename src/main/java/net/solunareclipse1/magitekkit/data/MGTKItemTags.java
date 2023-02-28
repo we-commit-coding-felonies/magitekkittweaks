@@ -7,6 +7,9 @@ import net.minecraft.tags.ItemTags;
 
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
+
+import moze_intel.projecte.gameObjs.PETags;
+
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 
@@ -29,6 +32,10 @@ public class MGTKItemTags extends ItemTagsProvider {
         
         tag(ModTags.Items.BURST_VIEWERS)
         	.add(ObjectInit.GEM_CIRCLET.get())
+        ;
+        
+        tag(PETags.Items.CURIOS_RING)
+        	.add(ObjectInit.GEM_BRACELET.get())
         ;
     }
 
