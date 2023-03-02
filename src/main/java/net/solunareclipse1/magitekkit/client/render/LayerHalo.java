@@ -50,7 +50,7 @@ public class LayerHalo extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
 		}
 		if (emcLevel <= 0) return;
 		int timer = Math.round(ageInTicks);
-		if (timer % 20 == 0) System.out.println("EMC Percentage: "+emcLevel);
+		//if (timer % 20 == 0) System.out.println("EMC Percentage: "+emcLevel);
 		poseStack.pushPose();
 		renderer.getModel().jacket.translateAndRotate(poseStack);
 		poseStack.mulPose(Vector3f.XP.rotationDegrees(270)); // rotate upright

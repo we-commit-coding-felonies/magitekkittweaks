@@ -4,7 +4,7 @@ import net.minecraft.world.entity.player.Player;
 import top.theillusivec4.curios.api.SlotContext;
 import moze_intel.projecte.integration.curios.CurioItemCapability;
 
-import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet.KleinBridgeManaItem;
+import net.solunareclipse1.magitekkit.common.item.curio.GemBracelet.KleinBridgeManaItem;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
 import vazkii.botania.common.helper.ItemNBTHelper;

@@ -16,10 +16,17 @@ public class MGTKLanguageProvider extends LanguageProvider {
         
         add(ObjectInit.GANTIUM_BLOCK.get(), "Block of Gantium");
         
+        add(ObjectInit.COVALENCE_BRACELET.get(), "Covalence Bracelet");
+        
         add(ObjectInit.VOID_HELM.get(), "Helmet of the Void");
         add(ObjectInit.VOID_CHEST.get(), "Chestplate of the Void");
         add(ObjectInit.VOID_LEGS.get(), "Leggings of the Void");
         add(ObjectInit.VOID_BOOTS.get(), "Boots of the Void");
+        
+        add(ObjectInit.CRIMSON_HELM.get(), "Crimson Helmet");
+        add(ObjectInit.CRIMSON_CHEST.get(), "Crimson Chestplate");
+        add(ObjectInit.CRIMSON_LEGS.get(), "Crimson Leggings");
+        add(ObjectInit.CRIMSON_BOOTS.get(), "Crimson Boots");
         
         add(ObjectInit.GEM_CIRCLET.get(), "Abyssal Circlet");
         add(ObjectInit.GEM_AMULET.get(), "Infernal Amulet");

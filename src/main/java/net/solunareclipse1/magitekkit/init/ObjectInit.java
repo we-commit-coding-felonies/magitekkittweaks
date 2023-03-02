@@ -20,8 +20,8 @@ import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAnklet;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemCirclet;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemTimepiece;
-import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet;
 import net.solunareclipse1.magitekkit.common.item.curio.GemBracelet;
+import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet;
 
 public class ObjectInit {
 	private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MagiTekkit.MODID);
@@ -46,7 +46,7 @@ public class ObjectInit {
     public static final RegistryObject<Item> GANTIUM_BLOCK_ITEM = fromBlock(GANTIUM_BLOCK);
     
     // Items
-    public static final RegistryObject<CovalenceBracelet> COVALENCE_BRACELET = ITEMS.register("covalence_bracelet", () -> new CovalenceBracelet(ITEM_PROPERTIES_GENERIC.stacksTo(1)));
+    public static final RegistryObject<GemBracelet> COVALENCE_BRACELET = ITEMS.register("covalence_bracelet", () -> new GemBracelet(ITEM_PROPERTIES_GENERIC.stacksTo(1)));
     
     public static final RegistryObject<VoidArmorBase> VOID_HELM = ITEMS.register("void_helm", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.HEAD, ITEM_PROPERTIES_UNBREAKABLE, 0.15f));
     public static final RegistryObject<VoidArmorBase> VOID_CHEST = ITEMS.register("void_chest", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.CHEST, ITEM_PROPERTIES_UNBREAKABLE, 0.36f));
@@ -62,7 +62,7 @@ public class ObjectInit {
     public static final RegistryObject<GemAmulet> GEM_AMULET = ITEMS.register("gem_amulet", () -> new GemAmulet(ITEM_PROPERTIES_JEWELRY, 0.25f));
     public static final RegistryObject<GemTimepiece> GEM_TIMEPIECE = ITEMS.register("gem_timepiece", () -> new GemTimepiece(ITEM_PROPERTIES_JEWELRY, 0.25f));
     public static final RegistryObject<GemAnklet> GEM_ANKLET = ITEMS.register("gem_anklet", () -> new GemAnklet(ITEM_PROPERTIES_JEWELRY, 0.25f));
-    public static final RegistryObject<GemBracelet> GEM_BRACELET = ITEMS.register("gem_bracelet", () -> new GemBracelet(ITEM_PROPERTIES_GENERIC.stacksTo(1)));
+    public static final RegistryObject<CovalenceBracelet> GEM_BRACELET = ITEMS.register("gem_bracelet", () -> new CovalenceBracelet(ITEM_PROPERTIES_GENERIC.stacksTo(1)));
 
     // Conveniance function: Take a RegistryObject<Block> and make a corresponding RegistryObject<Item> from it
     public static <B extends Block> RegistryObject<Item> fromBlock(RegistryObject<B> block) {

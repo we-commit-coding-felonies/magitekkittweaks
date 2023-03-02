@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -20,6 +21,7 @@ import moze_intel.projecte.utils.EMCHelper;
 import moze_intel.projecte.utils.PlayerHelper;
 
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
+import net.solunareclipse1.magitekkit.init.EffectInit;
 
 /**
  * Contains functions useful for working with EMC
@@ -91,7 +93,7 @@ public class EmcHelper {
 		boolean didConsume = false;
 		long consumed = 0, totalConsumed = 0;
 
-		consumed = consumeAvaliableEmcOfStack(player.getOffhandItem(), toConsume - totalConsumed);
+		consumed = consumeAvaliableEmcOfStack(player.getOffhandItem(), toConsume - totalConsumed, player);
 		if (consumed != 0) {
 			didConsume = true;
 			totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
@@ -106,7 +108,7 @@ public class EmcHelper {
 		if (curios != null) {
 			for (int i = 0; i < curios.getSlots(); i++) {
 				ItemStack stack = curios.getStackInSlot(i);
-				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
 				if (consumed != 0) {
 					didConsume = true;
 					totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
@@ -130,7 +132,7 @@ public class EmcHelper {
 					System.out.println(i);
 				}
 				
-				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
 				
 				
 				if (consumed != 0) {
@@ -150,34 +152,39 @@ public class EmcHelper {
 	}
 	
 	/**
-	 * Same as consumeAvaliableEmc() but will ignore anything that can be equipped as armor
+	 * Same as consumeAvaliableEmc() but will ignore a specific itemstack
+	 * 
 	 * @param player
 	 * @param toConsume
 	 * @return
 	 */
-	public static long consumeAvaliableEmcNoArmor(Player player, @Range(from = 0, to = Long.MAX_VALUE) long toConsume) {
+	public static long consumeAvaliableEmcExcludeSelf(Player player, @Range(from = 0, to = Long.MAX_VALUE) long toConsume, ItemStack excluded) {
 		if (player.isCreative() || toConsume == 0) {
 			return toConsume;
 		}
 		boolean didConsume = false;
 		long consumed = 0, totalConsumed = 0;
 
-		consumed = consumeAvaliableEmcOfStack(player.getOffhandItem(), toConsume - totalConsumed);
-		if (consumed != 0) {
-			didConsume = true;
-			totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
-			consumed = 0;
-		}
-		if (totalConsumed == Long.MAX_VALUE || totalConsumed >= toConsume) {
-			if (didConsume) player.containerMenu.broadcastChanges();
-			return totalConsumed;
+		ItemStack offhand = player.getOffhandItem();
+		if (!offhand.isEmpty() && offhand != excluded) {
+			consumed = consumeAvaliableEmcOfStack(offhand, toConsume - totalConsumed, player);
+			if (consumed != 0) {
+				didConsume = true;
+				totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
+				consumed = 0;
+			}
+			if (totalConsumed == Long.MAX_VALUE || totalConsumed >= toConsume) {
+				if (didConsume) player.containerMenu.broadcastChanges();
+				return totalConsumed;
+			}
 		}
 		
 		IItemHandler curios = PlayerHelper.getCurios(player);
 		if (curios != null) {
 			for (int i = 0; i < curios.getSlots(); i++) {
 				ItemStack stack = curios.getStackInSlot(i);
-				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
+				if (stack.isEmpty() || stack == excluded) continue;
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
 				if (consumed != 0) {
 					didConsume = true;
 					totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
@@ -196,12 +203,9 @@ public class EmcHelper {
 			IItemHandler inv = itemHandlerCap.get();
 			for (int i = 0; i < inv.getSlots(); i++) {
 				ItemStack stack = inv.getStackInSlot(i);
-				if (stack.isEmpty()) continue;
-				if ( stack.getItem() instanceof GemAmulet ) {
-					System.out.println(i);
-				}
+				if (stack.isEmpty() || stack == excluded) continue;
 				
-				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
 				
 				
 				if (consumed != 0) {
@@ -261,6 +265,38 @@ public class EmcHelper {
 				stack.shrink(itemsToConsume);
 			}
 		}
+		if (consumed > toConsume) System.out.println(consumed +" and "+ toConsume);
+		if (consumed < 0) return Long.MAX_VALUE;
+		return consumed;
+	}
+	
+	/**
+	 * Tries to consume EMC from a fuel item or IItemEmcHolder <br>
+	 * If the ItemStack doesnt have enough EMC, it will consume all of it
+	 * <p>
+	 * This version will play a sound when EMC is wasted (which is what the player argument is used for)
+	 * 
+	 * @param stack The ItemStack to consume from
+	 * @param toConsume The amount of EMC to consume
+	 * @return The amount of EMC that was consumed
+	 */
+	public static long consumeAvaliableEmcOfStack(@NotNull ItemStack stack, @Range(from = 0, to = Long.MAX_VALUE) long toConsume, Player player) {
+		if (stack.isEmpty()) return 0;
+		long consumed = 0;
+		
+		Optional<IItemEmcHolder> kleinStarCapability = stack.getCapability(PECapabilities.EMC_HOLDER_ITEM_CAPABILITY).resolve();
+		if (kleinStarCapability.isPresent()) consumed = kleinStarCapability.get().extractEmc(stack, toConsume, EmcAction.EXECUTE);
+		else if (FuelMapper.isStackFuel(stack)) {
+			int itemsToConsume = (int) Math.ceil((double) toConsume / EMCHelper.getEmcValue(stack));
+			if (itemsToConsume > stack.getCount()) {
+				consumed = stack.getCount() * EMCHelper.getEmcValue(stack);
+				stack.setCount(0);
+			} else {
+				consumed = EMCHelper.getEmcValue(stack) * itemsToConsume;
+				stack.shrink(itemsToConsume);
+			}
+		}
+		if (consumed > toConsume) player.getLevel().playSound(null, player, EffectInit.EMC_WASTE.get(), SoundSource.PLAYERS, 1, 1);
 		if (consumed < 0) return Long.MAX_VALUE;
 		return consumed;
 	}

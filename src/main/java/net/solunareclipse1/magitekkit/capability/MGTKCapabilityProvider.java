@@ -18,7 +18,8 @@ import moze_intel.projecte.capability.ItemCapability;
 import moze_intel.projecte.capability.ItemCapabilityWrapper;
 
 import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet;
-import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet.KleinBridgeManaItem;
+import net.solunareclipse1.magitekkit.common.item.curio.GemBracelet;
+import net.solunareclipse1.magitekkit.common.item.curio.GemBracelet.KleinBridgeManaItem;
 
 /**
  * this is here because botania doesnt like passing
@@ -46,7 +47,7 @@ public class MGTKCapabilityProvider extends ItemCapabilityWrapper {
 			this.capabilities[i] = cap;
 			cap.setWrapper(this);
 			if (isBracelet) {
-				KleinBridgeManaItem braceletManaItem = new CovalenceBracelet.KleinBridgeManaItem(stack);
+				KleinBridgeManaItem braceletManaItem = new GemBracelet.KleinBridgeManaItem(stack);
 				if (cap instanceof ManaItemCapabilityWrapper) {
 					ManaItemCapabilityWrapper wrapper = (ManaItemCapabilityWrapper) cap;
 					wrapper.manaItem = braceletManaItem;
@@ -68,7 +69,7 @@ public class MGTKCapabilityProvider extends ItemCapabilityWrapper {
 			cap.setWrapper(this);
 			if (cap instanceof ManaItemCapabilityWrapper) {
 				ManaItemCapabilityWrapper manaWrapper = (ManaItemCapabilityWrapper) cap;
-				manaWrapper.manaItem = new CovalenceBracelet.KleinBridgeManaItem(stack);
+				manaWrapper.manaItem = new GemBracelet.KleinBridgeManaItem(stack);
 			}
 		}
 	}

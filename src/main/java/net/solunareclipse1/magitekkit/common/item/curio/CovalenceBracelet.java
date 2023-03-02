@@ -9,7 +9,7 @@ import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import vazkii.botania.api.mana.IManaItem;
 import vazkii.botania.common.helper.ItemNBTHelper;
 
-public class GemBracelet extends MGTKItem {
+public class CovalenceBracelet extends MGTKItem {
 	
 	/**
 	 * This number was chosen because it is just enough to cover the most single-tick mana usage item when wearing full gem<br>
@@ -19,7 +19,7 @@ public class GemBracelet extends MGTKItem {
 	 */
 	public static final long CAPACITY = 40000;
 	
-	public GemBracelet(Properties props) {
+	public CovalenceBracelet(Properties props) {
 		super(props);
 		addItemCapability(ManaItemCapabilityWrapper::new);
 		addItemCapability(CurioEmcBridgeCapabilityWrapper::new);

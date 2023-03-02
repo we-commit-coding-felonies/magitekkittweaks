@@ -73,7 +73,7 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 		public Ingredient getRepairIngredient() {return Ingredient.EMPTY;}
 		@NotNull
 		@Override
-		public String getName() {return new ResourceLocation(MagiTekkit.MODID, "void_armor").toString();}
+		public String getName() {return new ResourceLocation(MagiTekkit.MODID, "crimson/").toString();}
 		@Override
 		public float getToughness() {return 5;}
 		@Override

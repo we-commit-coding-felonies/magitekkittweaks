@@ -95,8 +95,8 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 			plrEmc = leakEmc(stack, level, player, plrEmc);
 		}
 		
-		
-		// TODO: self-refill
+		// self-refilling
+		autoRefill(stack, player);
 		
 		// life stone
 		plrEmc = rejuvenatePlayer(level, player, plrEmc);
@@ -117,7 +117,10 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	 * @param player
 	 */
 	public void autoRefill(ItemStack stack, Player player) {
-		//EmcHelper.consumeAvaliableEmc(player, CAPACITY - getStoredEmc(stack));
+		long needed = CAPACITY - getStoredEmc(stack);
+		long consumed = EmcHelper.consumeAvaliableEmcExcludeSelf(player, CAPACITY - getStoredEmc(stack), stack);
+		if (consumed > needed) System.out.println("CRINGE DETECTED!");
+		insertEmc(stack, consumed, EmcAction.EXECUTE); 
 	}
 	
 	// body / soul / life stone

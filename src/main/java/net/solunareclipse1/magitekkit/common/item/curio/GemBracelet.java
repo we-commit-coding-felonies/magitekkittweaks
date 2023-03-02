@@ -9,17 +9,9 @@ import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import vazkii.botania.api.mana.IManaItem;
 import vazkii.botania.common.helper.ItemNBTHelper;
 
-public class CovalenceBracelet extends MGTKItem {
+public class GemBracelet extends CovalenceBracelet {
 	
-	/**
-	 * This number was chosen because it is just enough to cover the most single-tick mana usage item when wearing full gem<br>
-	 * Rod of the Terra Firma can, even with gem's 64% mana usage reduction, consume upwards of 38312 mana per operation
-	 * <p>
-	 * 40k is enough to handle that, with a bit of room for error.
-	 */
-	public static final long CAPACITY = 40000;
-	
-	public CovalenceBracelet(Properties props) {
+	public GemBracelet(Properties props) {
 		super(props);
 		addItemCapability(ManaItemCapabilityWrapper::new);
 		addItemCapability(CurioEmcBridgeCapabilityWrapper::new);
