@@ -22,6 +22,7 @@ public class EffectInit {
     public static final RegistryObject<SoundEvent> SHIELD_PROTECT = registerSound("item.alchshield.protect");
     public static final RegistryObject<SoundEvent> SHIELD_FAIL = registerSound("item.alchshield.fail");
     public static final RegistryObject<SoundEvent> EMC_WASTE = registerSound("item.emc.waste");
+    public static final RegistryObject<SoundEvent> EMC_LEAK = registerSound("item.emc.leak");
     public static final RegistryObject<SoundEvent> ARMOR_ABSORB = registerSound("item.matterarmor.absorb");
     public static final RegistryObject<SoundEvent> ARMOR_BREAK = registerSound("item.matterarmor.break");
     public static final RegistryObject<SoundEvent> JEWELRY_BREAK = registerSound("item.jewelry.break");

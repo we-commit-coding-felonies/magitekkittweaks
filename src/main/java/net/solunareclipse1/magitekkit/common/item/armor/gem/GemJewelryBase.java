@@ -1,15 +1,10 @@
 package net.solunareclipse1.magitekkit.common.item.armor.gem;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import javax.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -23,22 +18,16 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Explosion.BlockInteraction;
 
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.fml.ModList;
-
-import moze_intel.projecte.capability.ItemCapability;
-import moze_intel.projecte.capability.ItemCapabilityWrapper;
 import moze_intel.projecte.gameObjs.items.IFireProtector;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
-import net.solunareclipse1.magitekkit.capability.MGTKCapabilityProvider;
 import net.solunareclipse1.magitekkit.common.event.EntityLivingEventHandler;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
 import net.solunareclipse1.magitekkit.init.EffectInit;
-import net.solunareclipse1.magitekkit.util.DuraBarHelper;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
 import vazkii.botania.api.mana.IManaDiscountArmor;
@@ -65,17 +54,15 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	@Override
 	public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
 		if ((stack.getMaxDamage() - stack.getDamageValue()) - 1 < amount) {
-			entity.level.playSound(null, entity, SoundEvents.ENDER_EYE_DEATH, SoundSource.PLAYERS, 2.0F, 1.0F);
+			entity.level.playSound(null, entity, EffectInit.JEWELRY_BREAK.get(), SoundSource.PLAYERS, 2.0F, 1.0F);
 			if (stack.getItem() instanceof GemAmulet && LivingEntity.getEquipmentSlotForItem(stack) == EquipmentSlot.CHEST) {
-				entity.level.playSound(null, entity.blockPosition(), EffectInit.ARMOR_BREAK.get(), SoundSource.PLAYERS, 1, 1);
 				GemAmulet amulet = (GemAmulet) stack.getItem();
 				float multiplier = (float)amulet.getStoredEmc(stack) / (float)amulet.getMaximumEmc(stack);
 				stack.shrink(1);
+				entity.level.playSound(null, entity.blockPosition(), EffectInit.ARMOR_BREAK.get(), SoundSource.PLAYERS, 1*(2*multiplier), 1);
 				entity.level.explode(null, entity.getX(), entity.getY(), entity.getZ(), 64*multiplier, BlockInteraction.BREAK);
-				//if (multiplier > 0.075) {
-					//entity.setHealth(0);
-				//}
-				//WorldHelper.createNovaExplosion(ent.level, ent, ent.position().x, ent.position().y, ent.position().z, 128*multiplier);
+			} else {
+				stack.shrink(1);
 			}
 		}
 		return amount;
@@ -96,12 +83,12 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		long plrEmc = EmcHelper.getAvaliableEmc(player);
 		
 		// slow, expensive auto-repair
-		if (stack.isDamaged() && level.getGameTime() % 200 == 0 && player instanceof ServerPlayer) {
-			if (plrEmc >= 65536) {
-				//plrEmc -= EmcHelper.consumeAvaliableEmc(player, 65536);
-				//stack.hurt(-1, player.getRandom(), (ServerPlayer) player);
-			}
-		}
+		//if (stack.isDamaged() && level.getGameTime() % 200 == 0 && player instanceof ServerPlayer) {
+		//	if (plrEmc >= 65536) {
+		//		plrEmc -= EmcHelper.consumeAvaliableEmc(player, 65536);
+		//		stack.hurt(-1, player.getRandom(), (ServerPlayer) player);
+		//	}
+		//}
 		
 		return plrEmc;
 	}
@@ -147,6 +134,13 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		else if (source.isBypassArmor()) mod = 10/11;
 		return (float) (mod*Math.sqrt(emcHeld));
 	}
+	
+	@Override
+	public boolean isEnchantable(@NotNull ItemStack stack) {return false;}
+	@Override
+	public boolean isBookEnchantable(ItemStack stack, ItemStack book) {return false;}
+	@Override
+	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {return false;}
 	
 	
 	// Material

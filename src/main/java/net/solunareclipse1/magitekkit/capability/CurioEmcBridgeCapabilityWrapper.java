@@ -1,32 +1,12 @@
 package net.solunareclipse1.magitekkit.capability;
 
-import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.google.common.collect.Multimap;
-
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.loot.LootContext;
-
 import top.theillusivec4.curios.api.SlotContext;
 import moze_intel.projecte.integration.curios.CurioItemCapability;
 
-import net.solunareclipse1.magitekkit.common.item.curio.ConverterBracelet.KleinBridgeManaItem;
+import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet.KleinBridgeManaItem;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
-import vazkii.botania.api.mana.IManaItem;
 import vazkii.botania.common.helper.ItemNBTHelper;
 
 /**
@@ -36,7 +16,7 @@ import vazkii.botania.common.helper.ItemNBTHelper;
  * 
  * @author solunareclipse1
  */
-public class CurioItemCapabilityButBetter extends CurioItemCapability {
+public class CurioEmcBridgeCapabilityWrapper extends CurioItemCapability {
 	
 	// bruh
 	protected KleinBridgeManaItem kleinManaItem = null;

@@ -19,6 +19,8 @@ import moze_intel.projecte.emc.FuelMapper;
 import moze_intel.projecte.utils.EMCHelper;
 import moze_intel.projecte.utils.PlayerHelper;
 
+import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
+
 /**
  * Contains functions useful for working with EMC
  * 
@@ -124,6 +126,80 @@ public class EmcHelper {
 			for (int i = 0; i < inv.getSlots(); i++) {
 				ItemStack stack = inv.getStackInSlot(i);
 				if (stack.isEmpty()) continue;
+				if ( stack.getItem() instanceof GemAmulet ) {
+					System.out.println(i);
+				}
+				
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
+				
+				
+				if (consumed != 0) {
+					didConsume = true;
+					totalConsumed = addEmcToTotal(totalConsumed, consumed, player);
+					consumed = 0;
+				}
+				if (totalConsumed == Long.MAX_VALUE || totalConsumed >= toConsume) {
+					if (didConsume) player.containerMenu.broadcastChanges();
+					return totalConsumed;
+				}
+			}
+		}
+		
+		if (didConsume) player.containerMenu.broadcastChanges();
+		return totalConsumed;
+	}
+	
+	/**
+	 * Same as consumeAvaliableEmc() but will ignore anything that can be equipped as armor
+	 * @param player
+	 * @param toConsume
+	 * @return
+	 */
+	public static long consumeAvaliableEmcNoArmor(Player player, @Range(from = 0, to = Long.MAX_VALUE) long toConsume) {
+		if (player.isCreative() || toConsume == 0) {
+			return toConsume;
+		}
+		boolean didConsume = false;
+		long consumed = 0, totalConsumed = 0;
+
+		consumed = consumeAvaliableEmcOfStack(player.getOffhandItem(), toConsume - totalConsumed);
+		if (consumed != 0) {
+			didConsume = true;
+			totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
+			consumed = 0;
+		}
+		if (totalConsumed == Long.MAX_VALUE || totalConsumed >= toConsume) {
+			if (didConsume) player.containerMenu.broadcastChanges();
+			return totalConsumed;
+		}
+		
+		IItemHandler curios = PlayerHelper.getCurios(player);
+		if (curios != null) {
+			for (int i = 0; i < curios.getSlots(); i++) {
+				ItemStack stack = curios.getStackInSlot(i);
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
+				if (consumed != 0) {
+					didConsume = true;
+					totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
+					consumed = 0;
+				}
+				if (totalConsumed == Long.MAX_VALUE || totalConsumed >= toConsume) {
+					if (didConsume) player.containerMenu.broadcastChanges();
+					return totalConsumed;
+				}
+			}
+		}
+
+
+		Optional<IItemHandler> itemHandlerCap = player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).resolve();
+		if (itemHandlerCap.isPresent()) {
+			IItemHandler inv = itemHandlerCap.get();
+			for (int i = 0; i < inv.getSlots(); i++) {
+				ItemStack stack = inv.getStackInSlot(i);
+				if (stack.isEmpty()) continue;
+				if ( stack.getItem() instanceof GemAmulet ) {
+					System.out.println(i);
+				}
 				
 				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
 				

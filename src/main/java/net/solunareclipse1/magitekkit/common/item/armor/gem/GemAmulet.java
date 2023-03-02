@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Range;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,8 +20,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-
 import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.api.capabilities.item.IItemEmcHolder;
 import moze_intel.projecte.capability.EmcHolderItemCapabilityWrapper;
@@ -30,14 +27,10 @@ import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.WorldHelper;
 
-import net.solunareclipse1.magitekkit.capability.ManaItemCapabilityWrapper;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.util.ColorsHelper;
-import net.solunareclipse1.magitekkit.util.DuraBarHelper;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
-
-import vazkii.botania.api.mana.IManaItem;
 
 /**
  * Chestplate
@@ -69,10 +62,14 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	@Override
 	public int getBarColor(ItemStack stack) {
 		if (stack.isDamaged()) return super.getBarColor(stack);
-		// is this bad?
+		
+		// i hope this isnt bad?
 		Minecraft mc = Minecraft.getInstance();
 		long worldTime = mc.level.getGameTime();
-		return ColorsHelper.fadingColorInt(worldTime, 200, 0, 0.3911f, 1.0f, 0.824f, 0.6056f, 1.0f, 0.824f);
+		//high 0.605555555555
+		//low 0.303055555556, changed to 0.3911 cuz otherwise too much green
+		return Mth.hsvToRgb(ColorsHelper.fadingValue(worldTime, 200, 0, 0.3911f, 0.6056f), 1.0f, 0.824f);
+		//return ColorsHelper.fadingColorInt(worldTime, 200, 0, 0.3911f, 1.0f, 0.824f, 0.6056f, 1.0f, 0.824f);
 	}
 	
 	
@@ -94,7 +91,9 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 		long plrEmc = jewelryTick(stack, level, player);
 		
 		// leaks emc when below half durability
-		plrEmc = tryLeakEmc(stack, level, player, plrEmc);
+		if (getDamage(stack) >= getMaxDamage(stack)/2) {
+			plrEmc = leakEmc(stack, level, player, plrEmc);
+		}
 		
 		
 		// TODO: self-refill
@@ -106,11 +105,20 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 		if (level.getGameTime() % 160 == 0) { // nested if statement to we dont run shieldCondition every tick
 			if (shieldCondition(player, 1f, DamageSource.GENERIC, stack) && plrEmc > 0) {
 				level.playSound(player, player, EffectInit.SHIELD_AMBIENT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+			} else {
+				System.out.println("FAILURE");
 			}
 		}
 	}
 	
-	
+	/**
+	 * Fills an ItemStack to max EMC capacity, pulling from the players inventory
+	 * @param stack
+	 * @param player
+	 */
+	public void autoRefill(ItemStack stack, Player player) {
+		//EmcHelper.consumeAvaliableEmc(player, CAPACITY - getStoredEmc(stack));
+	}
 	
 	// body / soul / life stone
 	public long rejuvenatePlayer(Level level, Player player, long plrEmc) {
@@ -137,13 +145,13 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	}
 	
 	
-	public long tryLeakEmc(ItemStack stack, Level level, Player player, long plrEmc) {
-		if (getDamage(stack) >= getMaxDamage(stack)/2) {
-			int remaining = getMaxDamage(stack)-getDamage(stack);
-			if (Math.round(level.getGameTime() % remaining) == 0) {
-				if (extractEmc(stack, 1, EmcAction.EXECUTE) > 0) {
-					if (player.getRandom().nextInt(Math.max(remaining, 16)) == 0 && !level.isClientSide) plrEmc -= performShenanigans(stack, level, player, plrEmc);
-				}
+	public long leakEmc(ItemStack stack, Level level, Player player, long plrEmc) {
+		int remaining = getMaxDamage(stack)-getDamage(stack);
+		if (Math.round(level.getGameTime() % remaining) == 0) {
+			if (extractEmc(stack, 1, EmcAction.EXECUTE) > 0) {
+				plrEmc--;
+				level.playSound(null, player, EffectInit.EMC_LEAK.get(), SoundSource.PLAYERS, 1, 1);
+				if (player.getRandom().nextInt(Math.max(remaining, 16)) == 0 && !level.isClientSide) plrEmc -= performShenanigans(stack, level, player, plrEmc);
 			}
 		}
 		

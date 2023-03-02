@@ -1,7 +1,5 @@
 package net.solunareclipse1.magitekkit.util;
 
-import net.minecraft.util.Mth;
-
 
 /**
  * This class contains some functions to help with custom durability bars

@@ -13,14 +13,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-import moze_intel.projecte.api.capabilities.item.IItemEmcHolder;
 import moze_intel.projecte.capability.IItemCapabilitySerializable;
 import moze_intel.projecte.capability.ItemCapability;
 import moze_intel.projecte.capability.ItemCapabilityWrapper;
 
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
-import net.solunareclipse1.magitekkit.common.item.curio.ConverterBracelet;
-import net.solunareclipse1.magitekkit.common.item.curio.ConverterBracelet.KleinBridgeManaItem;
+import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet;
+import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet.KleinBridgeManaItem;
 
 /**
  * this is here because botania doesnt like passing
@@ -42,19 +40,19 @@ public class MGTKCapabilityProvider extends ItemCapabilityWrapper {
 		super(stack, caps);
 		itemStack = stack;
 		this.capabilities = new ItemCapability<?>[caps.size()];
-		boolean isBracelet = (stack.getItem() instanceof ConverterBracelet);
+		boolean isBracelet = (stack.getItem() instanceof CovalenceBracelet);
 		for (int i = 0; i < caps.size(); i++) {
 			ItemCapability<?> cap = caps.get(i).get();
 			this.capabilities[i] = cap;
 			cap.setWrapper(this);
 			if (isBracelet) {
-				KleinBridgeManaItem braceletManaItem = new ConverterBracelet.KleinBridgeManaItem(stack);
+				KleinBridgeManaItem braceletManaItem = new CovalenceBracelet.KleinBridgeManaItem(stack);
 				if (cap instanceof ManaItemCapabilityWrapper) {
 					ManaItemCapabilityWrapper wrapper = (ManaItemCapabilityWrapper) cap;
 					wrapper.manaItem = braceletManaItem;
 				}
-				if (cap instanceof CurioItemCapabilityButBetter) {
-					CurioItemCapabilityButBetter wrapper = (CurioItemCapabilityButBetter) cap;
+				if (cap instanceof CurioEmcBridgeCapabilityWrapper) {
+					CurioEmcBridgeCapabilityWrapper wrapper = (CurioEmcBridgeCapabilityWrapper) cap;
 					wrapper.kleinManaItem = braceletManaItem;
 				}
 			}
@@ -70,7 +68,7 @@ public class MGTKCapabilityProvider extends ItemCapabilityWrapper {
 			cap.setWrapper(this);
 			if (cap instanceof ManaItemCapabilityWrapper) {
 				ManaItemCapabilityWrapper manaWrapper = (ManaItemCapabilityWrapper) cap;
-				manaWrapper.manaItem = new ConverterBracelet.KleinBridgeManaItem(stack);
+				manaWrapper.manaItem = new CovalenceBracelet.KleinBridgeManaItem(stack);
 			}
 		}
 	}

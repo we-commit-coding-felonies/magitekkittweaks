@@ -23,41 +23,49 @@ public class ManaItemCapabilityWrapper extends BasicItemCapability<IManaItem> im
 
 	@Override
 	public int getMana() {
+		if (manaItem == null) return 0;
 		return manaItem.getMana();
 	}
 
 	@Override
 	public int getMaxMana() {
+		if (manaItem == null) return 0;
 		return manaItem.getMaxMana();
 	}
 
 	@Override
 	public void addMana(int mana) {
+		if (manaItem == null) return;
 		manaItem.addMana(mana);
 	}
 
 	@Override
 	public boolean canReceiveManaFromPool(BlockEntity pool) {
+		if (manaItem == null) return false;
 		return manaItem.canReceiveManaFromPool(pool);
 	}
 
 	@Override
 	public boolean canReceiveManaFromItem(ItemStack otherStack) {
+		if (manaItem == null) return false;
 		return manaItem.canReceiveManaFromItem(otherStack);
 	}
 
 	@Override
 	public boolean canExportManaToPool(BlockEntity pool) {
+		if (manaItem == null) return false;
 		return manaItem.canExportManaToPool(pool);
 	}
 
 	@Override
 	public boolean canExportManaToItem(ItemStack otherStack) {
+		if (manaItem == null) return false;
 		return manaItem.canExportManaToItem(otherStack);
 	}
 
 	@Override
 	public boolean isNoExport() {
+		if (manaItem == null) return true;
 		return manaItem.isNoExport();
 	}
 }

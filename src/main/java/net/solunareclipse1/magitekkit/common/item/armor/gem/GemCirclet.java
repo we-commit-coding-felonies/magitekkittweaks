@@ -15,10 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 
-import moze_intel.projecte.handlers.InternalTimers;
-
-import net.solunareclipse1.magitekkit.api.item.IAlchShield;
-
 import vazkii.botania.common.item.ModItems;
 import vazkii.botania.common.item.equipment.bauble.ItemThirdEye;
 

@@ -3,13 +3,13 @@ package net.solunareclipse1.magitekkit.common.item.curio;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import net.solunareclipse1.magitekkit.capability.CurioItemCapabilityButBetter;
+import net.solunareclipse1.magitekkit.capability.CurioEmcBridgeCapabilityWrapper;
 import net.solunareclipse1.magitekkit.capability.ManaItemCapabilityWrapper;
 import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import vazkii.botania.api.mana.IManaItem;
 import vazkii.botania.common.helper.ItemNBTHelper;
 
-public class ConverterBracelet extends MGTKItem {
+public class CovalenceBracelet extends MGTKItem {
 	
 	/**
 	 * This number was chosen because it is just enough to cover the most single-tick mana usage item when wearing full gem<br>
@@ -19,10 +19,10 @@ public class ConverterBracelet extends MGTKItem {
 	 */
 	public static final long CAPACITY = 40000;
 	
-	public ConverterBracelet(Properties props) {
+	public CovalenceBracelet(Properties props) {
 		super(props);
 		addItemCapability(ManaItemCapabilityWrapper::new);
-		addItemCapability(CurioItemCapabilityButBetter::new);
+		addItemCapability(CurioEmcBridgeCapabilityWrapper::new);
 	}
 	
 

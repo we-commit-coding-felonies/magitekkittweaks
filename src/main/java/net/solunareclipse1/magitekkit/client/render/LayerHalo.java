@@ -13,10 +13,14 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
+import net.solunareclipse1.magitekkit.util.ColorsHelper;
+import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 
 public class LayerHalo extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
@@ -36,43 +40,44 @@ public class LayerHalo extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
 			AbstractClientPlayer player, float limbSwing, float limbSwingAmount, float partialTick,
 			float ageInTicks, float netHeadYaw, float headPitch)
 	{
+		float emcLevel = 0;
 		for (ItemStack stack : player.getArmorSlots()) {
 			if (!(stack.getItem() instanceof GemJewelryBase) || stack.isDamaged()) return;
+			if (stack.getItem() instanceof GemAmulet) {
+				GemAmulet amulet = (GemAmulet) stack.getItem();
+				emcLevel = (float) amulet.getStoredEmc(stack) / amulet.getMaximumEmc(stack);
+			}
 		}
+		if (emcLevel <= 0) return;
+		int timer = Math.round(ageInTicks);
+		if (timer % 20 == 0) System.out.println("EMC Percentage: "+emcLevel);
 		poseStack.pushPose();
 		renderer.getModel().jacket.translateAndRotate(poseStack);
 		poseStack.mulPose(Vector3f.XP.rotationDegrees(270)); // rotate upright
-		poseStack.scale(1.5f, 1.5f, 1.5f);
+		poseStack.scale(1.5f, 1.5f, 1.5f); // bigger!
 		poseStack.mulPose(Vector3f.YP.rotationDegrees(ageInTicks*0.6f % 360)); // spinny
 		poseStack.translate(-0.5, -0.25, -0.5); // positioning behind the head
 		ResourceLocation texture = HALO_TEXTURE;
+		// nerd
 		if (NERD_UUID.equals(player.getUUID())) texture = NERD_TEXTURE;
-		VertexConsumer builder = renderBuffer.getBuffer(MGTKRenderType.HALO_RENDERER.apply(texture));
+		VertexConsumer poly = renderBuffer.getBuffer(MGTKRenderType.HALO_RENDERER.apply(texture));
 		Matrix4f matrix4f = poseStack.last().pose();
-		
-		// fancy "breathing" effect
-		// modified from DuraBarHelper.fadingBarColor
-		float aVal, a1 = 192, a2 = 96, aDiff = a1-a2;
-		int timer = Math.round(ageInTicks);
-		int cycle = 280;
-		int swap = (cycle / 2);
-		float fade = (timer % cycle) % cycle;
-
-		if (fade < swap) {
-			aVal = a2 + ((aDiff * fade) / swap);
-			//return Mth.hsvToRgb(hVal, sVal, vVal);
-		} else {
-			aVal = a1 - ((aDiff * (fade - swap)) / swap);
-			//return Mth.hsvToRgb(hVal, sVal, vVal);
+		Color c1 = Color.COVALENCE_GREEN_TRUE;
+		Color c2 = Color.COVALENCE_BLUE;
+		if (player.getUUID().equals(SOL_UUID)) {
+			c1 = Color.MIDGREEN;
+			c2 = Color.MIDGREEN;
 		}
-		//System.out.println(aVal);
-		int a = Math.round(aVal);
-		int r = 179, g = 47, b = 103;
-		if (SOL_UUID.equals(player.getUUID())) {r = 0; g = 128; b = 0;}
-		builder.vertex(matrix4f, 0, 0, 0).color(r, g, b, a).uv(0, 0).endVertex();
-		builder.vertex(matrix4f, 0, 0, 1).color(r, g, b, a).uv(0, 1).endVertex();
-		builder.vertex(matrix4f, 1, 0, 1).color(r, g, b, a).uv(1, 1).endVertex();
-		builder.vertex(matrix4f, 1, 0, 0).color(r, g, b, a).uv(1, 0).endVertex();
+
+		int alpha = Math.round(ColorsHelper.fadingValue(timer, Math.round(Math.max(280*emcLevel, 10)), 0, 96, 192));
+		int[] color = ColorsHelper.rgbFromInt(Mth.hsvToRgb(ColorsHelper.fadingValue(timer, 2048, 0, c1.H/360f, c2.H/360f), 1.0f, 0.824f)); 
+		poly.vertex(matrix4f, 0, 0, 0).color(color[0], color[1], color[2], alpha).uv(0, 0).endVertex();
+		color = ColorsHelper.rgbFromInt(Mth.hsvToRgb(ColorsHelper.fadingValue(timer, 2048, 50, c1.H/360f, c2.H/360f), 1.0f, 0.824f));
+		poly.vertex(matrix4f, 0, 0, 1).color(color[0], color[1], color[2], alpha).uv(0, 1).endVertex();
+		color = ColorsHelper.rgbFromInt(Mth.hsvToRgb(ColorsHelper.fadingValue(timer, 2048, 100, c1.H/360f, c2.H/360f), 1.0f, 0.824f));
+		poly.vertex(matrix4f, 1, 0, 1).color(color[0], color[1], color[2], alpha).uv(1, 1).endVertex();
+		color = ColorsHelper.rgbFromInt(Mth.hsvToRgb(ColorsHelper.fadingValue(timer, 2048, 150, c1.H/360f, c2.H/360f), 1.0f, 0.824f));
+		poly.vertex(matrix4f, 1, 0, 0).color(color[0], color[1], color[2], alpha).uv(1, 0).endVertex();
 		poseStack.popPose();
 	}
 }

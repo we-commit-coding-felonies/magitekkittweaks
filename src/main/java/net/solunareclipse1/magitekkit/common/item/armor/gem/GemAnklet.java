@@ -20,8 +20,6 @@ import net.minecraftforge.fml.DistExecutor;
 import moze_intel.projecte.gameObjs.items.IFlightProvider;
 import moze_intel.projecte.gameObjs.items.IStepAssister;
 
-import net.solunareclipse1.magitekkit.api.item.IAlchShield;
-
 /**
  * Boots
  * 

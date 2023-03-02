@@ -5,9 +5,7 @@ import net.minecraft.world.item.ItemStack;
 /**
  * IBurnoutItem provides an alternative durability system. <br>
  * Default NBT tag is "burnout", stored as int. <br>
- * Minimum burnout is always 0. <br>
- *  <br>
- * TODO: documentation
+ * Minimum burnout is always 0.
  */
 public interface IBurnoutItem {
 	
