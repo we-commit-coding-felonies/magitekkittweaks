@@ -34,6 +34,17 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.GEM_ANKLET.get(), "Hurricane Anklet");
         add(ObjectInit.GEM_BRACELET.get(), "Band of Arcana");
         
+        add("tip.mgtk.arc_mode_swap", "Abilities: %s");
+        add("tip.mgtk.arc_mode_0", "Disabled");
+        add("tip.mgtk.arc_mode_1", "Mind");
+        add("tip.mgtk.arc_mode_2", "Time & Space");
+        add("tip.mgtk.arc_mode_3", "Harvest");
+        add("tip.mgtk.arc_mode_4", "Liquid");
+        add("tip.mgtk.arc_mode_5", "Magnum Opus");
+        add("tip.mgtk.arc_mode_6", "Archangel's");
+        add("tip.mgtk.arc_mode_7", "Rending Gale");
+        add("tip.mgtk.arc_mode_8", "Zero");
+        add("tip.mgtk.arc_mode_9", "Ignition");
         add("tip.mgtk.burnout", "Burnout: %1$s / %2$s");
         add("tip.mgtk.gem_circlet", "PLACEHOLDER");
         add("tip.mgtk.gem_amulet", "PLACEHOLDER: Perhaps wearing this around your neck isn't the best idea...");

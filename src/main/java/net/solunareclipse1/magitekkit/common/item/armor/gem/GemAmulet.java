@@ -204,14 +204,14 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 			consumed += Math.max(diff, 1);
 			break;
 		case 8:
-			consumed += 32*MiscHelper.fiftyTwoCardPickup(rand, level, player);
+			consumed += 32*MiscHelper.fiftyTwoCardPickup(rand, level, player, true);
 			break;
 		case 9:
 			MiscHelper.pokeNearby(level, player, stack);
 			break;
 		case 10:
 			if (player instanceof ServerPlayer) { // TODO: this check might be unneccessary
-				MiscHelper.smitePlayer(level, (ServerPlayer) player);
+				MiscHelper.smiteSelf(level, (ServerPlayer) player);
 				consumed += 1024;
 			} break;
 		case 11:

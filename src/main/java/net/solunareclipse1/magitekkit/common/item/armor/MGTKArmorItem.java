@@ -15,7 +15,7 @@ import net.minecraftforge.fml.ModList;
 
 import moze_intel.projecte.capability.ItemCapability;
 
-import net.solunareclipse1.magitekkit.capability.MGTKCapabilityProvider;
+import net.solunareclipse1.magitekkit.api.capability.MGTKCapabilityProvider;
 
 public class MGTKArmorItem extends ArmorItem {
 	
