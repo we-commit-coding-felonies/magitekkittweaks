@@ -1,7 +1,6 @@
 package net.solunareclipse1.magitekkit.common.event;
 
 import java.util.Optional;
-
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -14,6 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
+import moze_intel.projecte.events.PlayerEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
@@ -21,12 +21,19 @@ import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
+import morph.avaritia.entity.InfinityArrowEntity;
+import morph.avaritia.init.AvaritiaModContent;
+
 @Mod.EventBusSubscriber(modid = MagiTekkit.MODID)
 public class EntityLivingEventHandler {
 	
 	
 	@SubscribeEvent
 	public static void livingAttacked(LivingAttackEvent event) {
+		// Run the IFireProtector checks from projecte before proceeding
+		PlayerEvents.onAttacked(event);
+		if (event.isCanceled()) return;
+		
 		 // order of priority: offhand, curios, armor, inventory
 		if (event.getEntity() instanceof Player player) {
 			if (player.getOffhandItem().getItem() instanceof IAlchShield shieldItem) {
@@ -103,8 +110,17 @@ public class EntityLivingEventHandler {
 	 * @return true if source is unblockable
 	 */
 	public static boolean isUnblockableSource(DamageSource source) {
-		// creative player, bypass invul, void, drown, freeze, suffocate, starve
-		return (source.isCreativePlayer() || source.isBypassInvul() || source == DamageSource.OUT_OF_WORLD || source == DamageSource.DROWN || source == DamageSource.FREEZE || source == DamageSource.IN_WALL || source == DamageSource.STARVE);
+		// creative player, bypass invul, void, drown, freeze, suffocate, starve, avaritia
+		return source.isCreativePlayer() || source.isBypassInvul()
+				|| source == DamageSource.OUT_OF_WORLD
+				|| source == DamageSource.DROWN
+				|| source == DamageSource.FREEZE
+				|| source == DamageSource.IN_WALL
+				|| source == DamageSource.STARVE
+				|| source.getDirectEntity() instanceof InfinityArrowEntity
+				|| (!source.isProjectile()
+						&& source.getEntity() instanceof LivingEntity lEnt
+						&& lEnt.getMainHandItem().getItem() == AvaritiaModContent.INFINITY_SWORD.get());
 	}
 	
 	/**
@@ -125,41 +141,11 @@ public class EntityLivingEventHandler {
 		if (item instanceof GemJewelryBase) {
 			// gem jewelry always 100% dr, instead takes more dura damage
 			int dmg = 1; // 1, 2 if bypass armor, 3 if bypass magic
-			if (drMod < 1) dmg = drMod == 0.5 ? 3 : 2;
+			if (drMod < 1f) dmg = drMod < 0.9f ? 3 : 2;
 			stack.hurtAndBreak(dmg, entity, ent -> {});
 			//item.damageItem(stack, dmg, entity, ent -> {});
 			return item.getDr(stack);
 		}
 		return item.getDr(stack) * drMod;
 	}
-	
-	//        OLD
-	//private static float calcDamageReduction(DamageSource src, ItemStack stack) {
-	//	int currentBurnOut = stack.getOrCreateTag().getInt("pe_burnout");
-	//	VoidArmorItem item = (VoidArmorItem) stack.getItem();
-	//	if (src.isCreativePlayer() || src.isBypassInvul() || src == DamageSource.STARVE) return 0;
-	//	float mDr = item.getDrMax();
-	//	if (src.isBypassMagic()) mDr *= 0.3;
-	//	if (src.isBypassArmor()) mDr *= 0.85;
-	//	//if (src.isDamageHelmet()) {
-	//	//	if (item.getSlot() == EquipmentSlot.HEAD) mDr *= 4; else return 0;
-	//	//}
-	//	if (currentBurnOut > 0) {
-	//		//mDr *= 1.0f - (float) currentBurnOut / (float) item.getMaxBurnOut();
-	//	}
-	//	return mDr;
-	//}
-	//private static int calcBurnOut(DamageSource src, ItemStack stack, float blockedDamage) {
-	//	VoidArmorItem item = (VoidArmorItem) stack.getItem();
-	//	int currentBurnOut = stack.getOrCreateTag().getInt("pe_burnout");
-	//	int toAdd = Math.max(8, Math.round(blockedDamage) + 7);
-	//	
-	//	if (src.isCreativePlayer() || src.isBypassInvul() || src == DamageSource.STARVE) return 0;
-	//	if (src.isBypassMagic()) toAdd *= 2;
-	//	if (src.isBypassArmor()) toAdd *= 16;
-	//	
-	//	//if (currentBurnOut + toAdd >= item.getMaxBurnOut()) return item.getMaxBurnOut();
-	//	/**else**/ if (currentBurnOut < 0) return 0 + toAdd;
-	//	else return currentBurnOut + toAdd;
-	//}
 }

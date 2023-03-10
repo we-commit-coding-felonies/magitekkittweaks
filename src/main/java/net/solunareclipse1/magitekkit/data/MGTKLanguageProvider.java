@@ -59,5 +59,10 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.emc.leak", "Amulet leaks");
         add("subtitles.mgtk.matterarmor.absorb", "Damage absorbed");
         add("subtitles.mgtk.matterarmor.break", "Armor degrades");
+        
+        add("death.attack.transmutation", "%s was converted into EMC");
+        add("death.attack.transmutation.player", "%s became soil");
+        add("death.attack.mustang", "%s underwent combustion");
+        add("death.attack.mustang.player", "%s was incinerated by %s");
     }
 }

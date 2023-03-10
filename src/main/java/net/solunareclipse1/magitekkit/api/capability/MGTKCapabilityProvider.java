@@ -17,9 +17,6 @@ import moze_intel.projecte.capability.IItemCapabilitySerializable;
 import moze_intel.projecte.capability.ItemCapability;
 import moze_intel.projecte.capability.ItemCapabilityWrapper;
 
-import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet;
-import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet.*;
-
 /**
  * this is here because botania doesnt like passing
  * itemstacks as function arguments for IManaItem

@@ -5,13 +5,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 import net.minecraftforge.common.capabilities.Capability;
 
-import moze_intel.projecte.capability.BasicItemCapability;
-
 import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityWrapper;
 
 import vazkii.botania.api.BotaniaForgeCapabilities;
 import vazkii.botania.api.mana.IManaItem;
-import vazkii.botania.common.helper.ItemNBTHelper;
 
 /**
  * Works with CovalentBridgeCapabilityWrapper to provide Botania mana

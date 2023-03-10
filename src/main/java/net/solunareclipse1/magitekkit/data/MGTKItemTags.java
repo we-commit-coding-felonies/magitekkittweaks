@@ -36,7 +36,7 @@ public class MGTKItemTags extends ItemTagsProvider {
         
         tag(PETags.Items.CURIOS_RING)
         	.add(ObjectInit.COVALENCE_BRACELET.get())
-        	.add(ObjectInit.GEM_BRACELET.get())
+        	//.add(ObjectInit.GEM_BRACELET.get())
         ;
     }
 

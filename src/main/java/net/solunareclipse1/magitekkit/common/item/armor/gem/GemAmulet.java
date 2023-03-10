@@ -105,8 +105,6 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 		if (level.getGameTime() % 160 == 0) { // nested if statement to we dont run shieldCondition every tick
 			if (shieldCondition(player, 1f, DamageSource.GENERIC, stack) && plrEmc > 0) {
 				level.playSound(player, player, EffectInit.SHIELD_AMBIENT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
-			} else {
-				System.out.println("FAILURE");
 			}
 		}
 	}
@@ -169,8 +167,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	public long performShenanigans(ItemStack stack, Level level, Player player, long plrEmc) {
 		Random rand = player.getRandom();
 		long consumed = 0;
-		int chosen = rand.nextInt(12);
-		switch (chosen) {
+		switch (rand.nextInt(12)) {
 		case 0:
 			break;
 		case 1:
@@ -204,7 +201,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 			consumed += Math.max(diff, 1);
 			break;
 		case 8:
-			consumed += 32*MiscHelper.fiftyTwoCardPickup(rand, level, player, true);
+			//consumed += 32*MiscHelper.fiftyTwoCardPickup(rand, level, player, true); TODO fix
 			break;
 		case 9:
 			MiscHelper.pokeNearby(level, player, stack);

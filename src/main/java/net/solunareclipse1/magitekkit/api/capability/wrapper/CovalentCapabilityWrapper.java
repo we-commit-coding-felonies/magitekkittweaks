@@ -15,8 +15,8 @@ import vazkii.botania.common.helper.ItemNBTHelper;
  */
 public abstract class CovalentCapabilityWrapper<T> extends BasicItemCapability<T> {
 	private static final long CAPACITY_EMC = 40000;
-	private static final String TAG_POOL = "cov_bridge_pool";
-	private static final String TAG_STATE = "cov_bridge_state";
+	public static final String TAG_POOL = "cov_bridge_pool";
+	public static final String TAG_STATE = "cov_bridge_state";
 	
 	/**
 	 * Gets the current state of this item (true or false) <br>

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -15,28 +17,26 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.monster.Stray;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
-import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import moze_intel.projecte.gameObjs.entity.EntityHomingArrow;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
+import net.solunareclipse1.magitekkit.common.misc.MGTKDamageSource;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 /**
@@ -50,40 +50,6 @@ public class MiscHelper {
 		level.playSound(null, pos, soundsList[rand.nextInt(soundsList.length)], SoundSource.PLAYERS, 1, 1);
 	}
 	
-	/**
-	 * The classic card game to play with your friends.
-	 * Now with heat-seeking arrows of death!
-	 * <p>
-	 * Shoots a random amount of homing arrows in all directions
-	 * 
-	 * @param rand Random to use
-	 * @param level The level to shoot in
-	 * @param player The player shooting
-	 * @param homing If false, "normal" arrows will be spawned instead
-	 * 
-	 * @return how many arrows were spawned
-	 */
-	public static byte fiftyTwoCardPickup(Random rand, Level level, Player player, boolean homing) {
-		byte cost = 0;
-		for (int i = rand.nextInt(52); i < 52; i++) {
-			cost++;
-			if (homing) {
-				EntityHomingArrow arrow = new EntityHomingArrow(level, player, 2.0F);
-				arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, rand.nextFloat(3), 100);
-				level.addFreshEntity(arrow);
-			} else {
-				Arrow arrow = new Arrow(level, player);
-				arrow.setBaseDamage(20);
-				arrow.pickup = Pickup.CREATIVE_ONLY;
-				arrow.setCritArrow(true);
-				arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 10, 100);
-				level.addFreshEntity(arrow);
-			}
-			level.playSound(null, player, SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F / (level.random.nextFloat() * 0.4F + 1.2F));
-		}
-		return cost;
-	}
-	
 	public static void smiteSelf(Level level, ServerPlayer sPlayer) {
 		LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
 		if (bolt != null) {
@@ -93,9 +59,8 @@ public class MiscHelper {
 		}
 	}
 	
-	public static boolean smiteAllInArea(Level level, AABB area, ServerPlayer culprit) {
+	public static long smiteAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc) {
 		int smitten = 0;
-		long plrEmc = EmcHelper.getAvaliableEmc(culprit);
 		for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
 			if (ent.is(culprit)) continue;
 			if (plrEmc <= 1024*smitten) break;
@@ -107,16 +72,11 @@ public class MiscHelper {
 			}
 			smitten++;
 		}
-		if (smitten > 0) {
-			EmcHelper.consumeAvaliableEmc(culprit, 1024*smitten);
-			return true;
-		}
-		return false;
+		return 1024*smitten;
 	}
 	
-	public static boolean slowAllInArea(Level level, AABB area, ServerPlayer culprit) {
+	public static long slowAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc) {
 		int frozen = 0;
-		long plrEmc = EmcHelper.getAvaliableEmc(culprit);
 		for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
 			if (ent.is(culprit) || ent instanceof Stray) continue;
 			if (plrEmc <= 256*frozen) break;
@@ -137,22 +97,18 @@ public class MiscHelper {
 			ent.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 127));
 			WorldHelper.freezeInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
 			level.playSound(null, ent, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1, 1);
+			if (ent instanceof Blaze) ent.hurt(DamageSource.FREEZE, Float.MAX_VALUE);
 			ent.hurt(DamageSource.FREEZE, 1);
 			frozen++;
 		}
-		if (frozen > 0) {
-			EmcHelper.consumeAvaliableEmc(culprit, 256*frozen);
-			return true;
-		}
-		return false;
+		return 256*frozen;
 	}
 	
-	public static boolean burnAllInArea(Level level, AABB area, ServerPlayer culprit) {
+	public static long burnAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc) {
 		int burnt = 0;
-		long plrEmc = EmcHelper.getAvaliableEmc(culprit);
 		for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
-			if (ent.is(culprit) || ent instanceof Husk) continue;
-			if (plrEmc <= 256*burnt) break;
+			if (ent.is(culprit) || ent instanceof Blaze) continue;
+			if (plrEmc <= 512*burnt) break;
 			if (ent instanceof Stray stray) {
 				stray.convertTo(EntityType.SKELETON, true);
 				WorldHelper.freezeInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
@@ -161,20 +117,18 @@ public class MiscHelper {
 			    }
 				continue;
 			} else if (ent instanceof Zombie zombie) {
-				zombie.convertTo(EntityType.HUSK, true);
-				level.playSound(null, zombie, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
+				if (!(zombie instanceof Husk)) {
+					zombie.convertTo(EntityType.HUSK, true);
+					level.playSound(null, zombie, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
+				}
 			};
 			ent.setRemainingFireTicks(600);
 			burnInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
 			level.playSound(null, ent, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1, 1);
-			ent.hurt(DamageSource.IN_FIRE, 2);
+			ent.hurt(MGTKDamageSource.MUSTANG, 2);
 			burnt++;
 		}
-		if (burnt > 0) {
-			EmcHelper.consumeAvaliableEmc(culprit, 256*burnt);
-			return true;
-		}
-		return false;
+		return 512*burnt;
 	}
 	
 	/**
@@ -224,5 +178,37 @@ public class MiscHelper {
 		}
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 		return consumed;
+	}
+	
+	/**
+	 * Will draw the outline of an AABB using the given ParticleType <br>
+	 * This version is for use server-side (and sends a shitload of packets)
+	 */
+	public static void drawAABBWithParticlesServer(AABB box, SimpleParticleType particle, double stepSize, ServerLevel level) {
+		for (double i = box.minX; i < box.maxX; i += stepSize) {
+			level.sendParticles(particle, i, box.minY, box.minZ, 1, 0, 0, 0, 0);
+			level.sendParticles(particle, i, box.minY, box.maxZ, 1, 0, 0, 0, 0);
+		}
+		for (double i = box.minY; i < box.maxY; i += stepSize) {
+			level.sendParticles(particle, box.minX, i, box.minZ, 1, 0, 0, 0, 0);
+			level.sendParticles(particle, box.minX, i, box.maxZ, 1, 0, 0, 0, 0);
+		}
+		for (double i = box.minZ; i < box.maxZ; i += stepSize) {
+			level.sendParticles(particle, box.minX, box.minY, i, 1, 0, 0, 0, 0);
+			level.sendParticles(particle, box.minX, box.maxY, i, 1, 0, 0, 0, 0);
+		}
+		for (double i = box.maxX; i > box.minX; i -= stepSize) {
+			level.sendParticles(particle, i, box.maxY, box.maxZ, 1, 0, 0, 0, 0);
+			level.sendParticles(particle, i, box.maxY, box.minZ, 1, 0, 0, 0, 0);
+		}
+		for (double i = box.maxY; i > box.minY; i -= stepSize) {
+			level.sendParticles(particle, box.maxX, i, box.maxZ, 1, 0, 0, 0, 0);
+			level.sendParticles(particle, box.maxX, i, box.minZ, 1, 0, 0, 0, 0);
+		}
+		for (double i = box.maxZ; i > box.minZ; i -= stepSize) {
+			level.sendParticles(particle, box.maxX, box.maxY, i, 1, 0, 0, 0, 0);
+			level.sendParticles(particle, box.maxX, box.minY, i, 1, 0, 0, 0, 0);
+		}
+		
 	}
 }

@@ -24,9 +24,6 @@ import top.theillusivec4.curios.api.CuriosCapability;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurio;
 
-import moze_intel.projecte.capability.BasicItemCapability;
-import moze_intel.projecte.integration.curios.CurioItemCapability;
-
 import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 

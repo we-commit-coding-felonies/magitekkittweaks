@@ -107,6 +107,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	// IAlchShield stuff
 	@Override
 	public boolean shieldCondition(Player player, float damage, DamageSource source, ItemStack stack) {
+    	//System.out.println(source);
 		if (EntityLivingEventHandler.isUnblockableSource(source)) return false; // Unblockable damages
     	return fullPristineSet(player);
     }

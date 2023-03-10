@@ -7,6 +7,7 @@ import net.solunareclipse1.magitekkit.MagiTekkit;
 
 public class ModInit {
     public static void init(final FMLCommonSetupEvent event) {
+    	NetworkInit.register();
     }
     
     public static final String TAB_NAME = MagiTekkit.MODID;
