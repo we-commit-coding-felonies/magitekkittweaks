@@ -39,4 +39,9 @@ Custom code mod for the MagiTekkit modpack
 	mandatory=true
 	versionRange="*"
 	ordering="BEFORE"
+[[dependencies.magitekkit]]
+	modId="avaritia"
+	mandatory=true
+	versionRange="*"
+	ordering="BEFORE"
 	side="BOTH"

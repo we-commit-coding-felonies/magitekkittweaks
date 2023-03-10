@@ -1,7 +1,6 @@
 {
   "replace": false,
   "values": [
-    "magitekkit:covalence_bracelet",
-    "magitekkit:gem_bracelet"
+    "magitekkit:covalence_bracelet"
   ]
 }

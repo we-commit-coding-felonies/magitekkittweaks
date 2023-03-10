@@ -1,5 +1,9 @@
 {
   "block.magitekkit.gantium_block": "Block of Gantium",
+  "death.attack.mustang": "%s underwent combustion",
+  "death.attack.mustang.player": "%s was incinerated by %s",
+  "death.attack.transmutation": "%s was converted into EMC",
+  "death.attack.transmutation.player": "%s became soil",
   "item.magitekkit.covalence_bracelet": "Covalence Bracelet",
   "item.magitekkit.crimson_boots": "Crimson Boots",
   "item.magitekkit.crimson_chest": "Crimson Chestplate",

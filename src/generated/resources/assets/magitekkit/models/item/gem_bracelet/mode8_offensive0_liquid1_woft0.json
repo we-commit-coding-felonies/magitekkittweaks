@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "magitekkit:item/curio/band_of_arcana/mode8_offensive0_liquid1_woft0"
+  }
+}
