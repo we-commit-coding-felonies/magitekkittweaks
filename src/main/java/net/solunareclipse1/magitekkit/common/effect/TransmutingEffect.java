@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDamageSource;
+import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
@@ -64,7 +64,7 @@ public class TransmutingEffect extends MobEffect {
 		if (amplifier > 0) {
 			entity.setHealth(entity.getHealth()/1.1f);
 			entity.addEffect(new MobEffectInstance(EFFECTS_OF_DOOM[3]));
-			entity.hurt(MGTKDamageSource.TRANSMUTATION, 0.1f);
+			entity.hurt(MGTKDmgSrc.TRANSMUTATION, 0.1f);
 			if (entity instanceof ServerPlayer player) {
 				//EmcHelper.consumeAvaliableEmc(player, Long.MAX_VALUE);
 			}

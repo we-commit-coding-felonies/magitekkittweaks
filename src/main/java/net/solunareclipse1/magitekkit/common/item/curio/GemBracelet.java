@@ -55,6 +55,7 @@ import moze_intel.projecte.api.capabilities.item.IProjectileShooter;
 import moze_intel.projecte.capability.ExtraFunctionItemCapabilityWrapper;
 import moze_intel.projecte.capability.ModeChangerItemCapabilityWrapper;
 import moze_intel.projecte.capability.ProjectileShooterItemCapabilityWrapper;
+import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.gameObjs.registries.PEItems;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.PlayerHelper;
@@ -66,11 +67,13 @@ import net.solunareclipse1.magitekkit.api.item.ISwingItem;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
 import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDamageSource;
+import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
+import net.solunareclipse1.magitekkit.util.Constants.Xp;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.PlrHelper;
 import net.solunareclipse1.magitekkit.util.ProjectileHelper;
@@ -93,6 +96,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	//////////////////////////////////////////////
 	public static final String TAG_MODE = "arc_mode";
 	public static final String TAG_EXP = "arc_experience";
+	public static final String TAG_LVL = "arc_levels";
 	public static final String TAG_LIQUID = "arc_liquid";
 	public static final String TAG_WOFT = "arc_woft";
 	public static final String TAG_OFFENSIVE = "arc_offensive";
@@ -136,8 +140,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	//////////////////////////////////////////////////////////////
 	// KEYPRESS HANDLING, ABILITIES DEFINING, AND FUNCTIONALITY //
 	//////////////////////////////////////////////////////////////
-
-
+	
 	// IExtraFunction (C)
 	@Override
 	public boolean doExtraFunction(@NotNull ItemStack stack, @NotNull Player player, @Nullable InteractionHand hand) {
@@ -145,35 +148,35 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			boolean didDo = false;
 			switch (getMode(stack)) {
-			case 1: // Mind
-				if (ExperienceHelper.getPlayerXP(player) > 0 && plrEmc >= 8) {
-					EmcHelper.consumeAvaliableEmc(player, 8);
-					insertXp(stack, PlrHelper.extractXp(player, PlrHelper.getXp(player)));
+			case 1: // Mind (deposit all xp)
+				long plrExp = PlrHelper.getXp(player);
+				if (plrExp > 0) {
+					insertXp(stack, PlrHelper.extractXp(player, Xp.VANILLA_MAX_POINTS));
 					player.level.playSound(null, player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1, 2f);
 					didDo = true;
 				}
 				break;
-			case 2: // Watch
+			case 2: // Watch (toggle time accel)
 				changeWoft(stack);
 				player.level.playSound(null, player, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 1, 1.4f);
 				didDo = true;
 				break;
-			case 3: // Harvest
+			case 3: // Harvest (aoe harvest & grow)
 				if (plrEmc >= 24) {
 					EmcHelper.consumeAvaliableEmc(player, 24);
 					WorldHelper.growNearbyRandomly(true, player.level, player.blockPosition(), player);
 					didDo = true;
 				}
 				break;
-			case 4: // Liquid
+			case 4: // Liquid (swap current liquid)
 				changeLiquid(stack);
 				player.level.playSound(null, player, getLiquid(stack) ? SoundEvents.BUCKET_FILL_LAVA : SoundEvents.BUCKET_FILL, SoundSource.PLAYERS, 1, 0.7f);
 				didDo = true;
 				break;
-			case 5: // Philo
+			case 5: // Philo (crafting grid)
 				didDo = PEItems.PHILOSOPHERS_STONE.get().doExtraFunction(stack, player, hand);
 				break;
-			case 6: // Archangels
+			case 6: // Archangels (scatter sniper-arrows)
 				if (plrEmc >= 256 && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
 					int shot;
 					for (shot = 0; shot < 28; shot++) {
@@ -187,7 +190,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 					}
 				} // TODO: aimbot
 				break;
-			case 7: // SWRG
+			case 7: // SWRG (aoe smite)
 				if (player instanceof ServerPlayer) {
 					if (plrEmc >= 1024 && !player.getCooldowns().isOnCooldown(PEItems.SWIFTWOLF_RENDING_GALE.get())) {
 						didDo = EmcHelper.consumeAvaliableEmc(player, MiscHelper.smiteAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc)) > 0;
@@ -195,7 +198,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 					}
 				}
 				break;
-			case 8: // Zero
+			case 8: // Zero (aoe freeze)
 				if (player instanceof ServerPlayer) {
 					if (plrEmc >= 256 && !player.getCooldowns().isOnCooldown(PEItems.ZERO_RING.get())) {
 						didDo = EmcHelper.consumeAvaliableEmc(player, MiscHelper.slowAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc)) > 0;
@@ -203,7 +206,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 					}
 				}
 				break;
-			case 9: // Ignition
+			case 9: // Ignition (aoe burn)
 				if (player instanceof ServerPlayer) {
 					if (plrEmc >= 512 && !player.getCooldowns().isOnCooldown(PEItems.IGNITION_RING.get())) {
 						didDo = EmcHelper.consumeAvaliableEmc(player, MiscHelper.burnAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc)) > 0;
@@ -227,22 +230,36 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			boolean didDo = false;
 			switch (getMode(stack)) {
-			case 1: // Mind
+			case 1: // Mind (withdraw all)
 				if (getXp(stack) > 0) {
-					ExperienceHelper.addPlayerXP(player, extractXp(stack, getXp(stack)));
+					int amount;
+					
+					if (getXp(stack) > Integer.MAX_VALUE) amount = Integer.MAX_VALUE;
+					else amount = (int) getXp(stack);
+					
+					ExperienceHelper.addPlayerXP(player, (int) extractXp(stack, amount));
+					
+					
+					//PlrHelper.insertXp(player, extractXp(stack, Xp.VANILLA_MAX_POINTS)); // borked dense
 					player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 2f);
 					didDo = true;
 				}
 				break;
-			case 2: // Watch
+			case 2: // Watch (Teleport)
 				if (plrEmc >= 72) {
 					didDo = PEItems.VOID_RING.get().doExtraFunction(stack, player, hand);
+					if (didDo) EmcHelper.consumeAvaliableEmc(player, 72);
 				}
 				break;
 			case 3: // Harvest
 				System.out.println("NYI: " + getMode(stack));
 				break;
 			case 4: // Liquid
+				ItemPE coolDownItem;
+				if (plrEmc >= 64 && ItemNBTHelper.getBoolean(stack, TAG_LIQUID, false)) {
+					coolDownItem = PEItems.VOLCANITE_AMULET.get();
+					shootLavaProjectile(player);
+				}
 				didDo = ItemNBTHelper.getBoolean(stack, TAG_LIQUID, false) ? shootLavaProjectile(player) : PEItems.EVERTIDE_AMULET.get().shootProjectile(player, stack, hand);
 				break;
 			case 5: // Philo
@@ -286,41 +303,42 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	@NotNull
 	@Override
 	public InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
-		if (!level.isClientSide && playerHasFullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
+		if (!level.isClientSide() && playerHasFullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
 			boolean didDo = false;
 			ItemStack stack = player.getItemInHand(hand);
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			switch (getMode(stack)) {
-			case 0:
+			case 1: // Mind (deposit 1 lvl)
+				int toDo = player.isCrouching() ? 10 : 1;
+				
+				for (int i = 0; i < toDo; i++) {
+					if (player.experienceProgress > 0f) {
+						int amount = (int) player.experienceProgress * player.getXpNeededForNextLevel();
+						insertXp(stack, amount);
+						player.totalExperience -= amount;
+						player.experienceProgress = 0;
+					} else {
+						int amount = (int) PlrHelper.xpCalcValueOfSingleLevel(player.experienceLevel);
+						insertXp(stack, PlrHelper.extractXpButBad(player, amount));
+					}
+				}
+				player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
+				didDo = true;
 				break;
-			case 1:
-				long toCalc = Long.MAX_VALUE-2;//player.getRandom().nextLong(0, Long.MAX_VALUE);
-				player.sendMessage(new TextComponent(PlrHelper.xpLvlToPoints(1431655783)+""), player.getUUID());
-				//System.out.println("The level is: " + PlrHelper.xpPointsToLvl(toCalc));
-				break;
-			case 2:
+			case 2: // Watch (gravity attract)
 				System.out.println("NYI: 2");
 				break;
-			case 3: // Harvest (handled in useOn)
-			case 4: // Liquid (handled in useOn)
-			case 5: // Philo (handled in useOn)
-				break;
-			case 6: // Archangels (handled in onUsingTick)
+			case 6: // Archangels (debuff arrow stream init)
 				player.startUsingItem(hand);
+				didDo = true;
 				break;
 			case 7:
 				System.out.println("NYI: 7");
 				break;
-			case 8: // Zero (le snowball funny) (placeholder)
-				for (int i = 0; i < 10; i++) {
-			        Snowball snowball = new Snowball(level, player);
-			        snowball.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 3F, 4.0F);
-			        level.addFreshEntity(snowball);
-			        level.playSound(null, player, SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
-			        if (!didDo) didDo = true;
-				}
+			case 8: // Zero (place ice midair)
+				System.out.println("NYI: 8");
 				break;
-			case 9: // Ignition (handled in useOn)
+			default:
 				break;
 			}
 			if (didDo) return InteractionResultHolder.success(stack);
@@ -334,7 +352,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			Level level = player.level;
 			switch (getMode(stack)) {
-			case 6: // Archangels
+			case 6: // Archangels (debuff arrow stream)
 				if (plrEmc >= 128 && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
 					ProjectileHelper.shootArrowTipped(level, player, 0.01f, 3, 4, (byte) 0, false, true, Pickup.CREATIVE_ONLY, new MobEffectInstance(EffectInit.TRANSMUTING.get(), 15));
 					EmcHelper.consumeAvaliableEmc(player, 128);
@@ -348,15 +366,48 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	
 	@Override
 	public boolean onSwingAir(Context ctx) {
-		boolean didDo = false;
-		switch (getMode(ctx.getSender().getMainHandItem())) {
-		case 6: // archangels
-			didDo = shootHomingVolley(ctx.getSender());
-			break;
-		default:
-			break;
+		// this should never run clientside, so a check for that is unnecessary
+		ServerPlayer player = ctx.getSender();
+		if (playerHasFullPristineSet(player) && getCharge(player.getMainHandItem()) == 1) {
+			boolean didDo = false;
+			ServerLevel level = player.getLevel();
+			ItemStack stack = player.getMainHandItem();
+			long plrEmc = EmcHelper.getAvaliableEmc(player);
+			switch (getMode(stack)) {
+			case 1: // Mind (extract 1 / 10 levels)
+				if (getXp(stack) > 0) {
+					int toDo = player.isCrouching() ? 10 : 1;
+					
+					for (int i = 0; i < toDo; i++) {
+						if (player.experienceProgress > 0f) {
+							int amount = (int) (player.getXpNeededForNextLevel() - (player.experienceProgress * player.getXpNeededForNextLevel()));
+							insertXp(stack, amount);
+							player.experienceProgress = 0;
+						}
+						ExperienceHelper.addPlayerXP(player, extractXp(stack, PlrHelper.xpGetAmountForLvlUp(player)));
+					}
+					
+					player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
+					didDo = true;
+				}
+				break;
+			case 6: // Archangels (homing shotgun)
+				didDo = shootHomingVolley(player);
+				break;
+			case 8: // Zero (high-velocity snowball shotgun)
+				for (int i = 0; i < 10; i++) {
+			        Snowball snowball = new Snowball(level, player);
+			        snowball.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 4F, 4.0F);
+			        level.addFreshEntity(snowball);
+			        level.playSound(null, player, SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
+			        if (!didDo) didDo = true;
+				}
+			default:
+				break;
+			}
+			return didDo;
 		}
-		return didDo;
+		return false;
 	}
 
 	@Override
@@ -555,41 +606,144 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	
 	//// Mind stone
 	// https://github.com/sinkillerj/ProjectE/blob/mc1.18.x/src/main/java/moze_intel/projecte/gameObjs/items/rings/MindStone.java
-	
-	// Item
-	public int getXp(ItemStack stack) {
-		return ItemNBTHelper.getInt(stack, TAG_EXP, 0);
-	}
-
-	public void setXp(ItemStack stack, int amount) {
-		ItemNBTHelper.setInt(stack, TAG_EXP, amount);
+	public long getXp(ItemStack stack) {
+		return ItemNBTHelper.getLong(stack, TAG_EXP, 0);
 	}
 	
-	public void insertXp(ItemStack stack, int amount) {
-		if (amount <= 0 || getXp(stack) == Integer.MAX_VALUE) return;
-		int newXp = getXp(stack) + amount;
-		if (newXp < 0) {
-			newXp = Integer.MAX_VALUE;
-		}
-		setXp(stack, newXp);
+	public void setXp(ItemStack stack, long amount) {
+		ItemNBTHelper.setLong(stack, TAG_EXP, amount);
 	}
-
-	public int extractXp(ItemStack stack, int amount) {
-		if (amount <= 0 || getXp(stack) <= 0) return 0;
-		int curXp = getXp(stack);
-		int newXp, extracted;
-
-		if (curXp < amount) {
-			newXp = 0;
-			extracted = curXp;
+	
+	public void insertXp(ItemStack stack, long amount) {
+		long xp = getXp(stack);
+		if (Long.MAX_VALUE - xp < amount) {
+			xp = Long.MAX_VALUE;
 		} else {
-			newXp = curXp - amount;
-			extracted = amount;
+			xp += amount;
 		}
-
-		setXp(stack, newXp);
-		return extracted;
+		setXp(stack, xp);
 	}
+	
+	public long extractXp(ItemStack stack, long amount) {
+		long xp = getXp(stack);
+		if (xp < amount) {
+			setXp(stack, 0);
+			return xp;
+		} else {
+			setXp(stack, xp - amount);
+			return amount;
+		}
+	}
+	
+	
+	// BORKED DENSEXP STUFF
+	// TODO: make this work because storing 2^60 levels is cool
+	//public static long[] getXp(ItemStack stack) {
+	//	long[] stored = {
+	//		ItemNBTHelper.getLong(stack, TAG_LVL, 0),
+	//		ItemNBTHelper.getLong(stack, TAG_EXP, 0)
+	//	};
+	//	return stored;
+	//}
+	//
+	//public static void setXp(ItemStack stack, long[] denseXp) {
+	//	ItemNBTHelper.setLong(stack, TAG_LVL, denseXp[0]);
+	//	ItemNBTHelper.setLong(stack, TAG_EXP, denseXp[1]);
+	//}
+	//
+	//public static void insertXp(ItemStack stack, long amount) {
+	//	if (amount <= 0 || xpStorageIsFull(stack)) {
+	//		if (xpStorageIsFull(stack)) LoggerHelper.printInfo("BandOfArcana", "MindStoneFull",
+	//				"Failed to insert XP into ItemStack " + stack + ", as it is full. XP has been voided.");
+	//		return;
+	//	}
+	//	
+	//	long[] newXp = getXp(stack);
+	//	
+	//	// rawPoints overflow protection
+	//	if (Long.MAX_VALUE - newXp[1] < amount) {
+	//		// we know for a fact we can afford at least 1 level
+	//		// thus, we can take just enough from amount to convert a single level
+	//		amount -= PlrHelper.xpCalcValueOfSingleLevel(newXp[0] + 1) - newXp[1];
+	//		// we do the conversion, which makes the remainder value 0
+	//		// as a result, rawPoints will no longer overflow
+	//		newXp[1] = 0;
+	//		newXp[0]++;
+	//	}
+	//	long rawPoints = newXp[1] + amount;
+	//	
+	//	
+	//	newXp[1] = rawPoints;
+	//	
+	//	// convert the raw points into levels
+	//	while (newXp[0] < Xp.MAX_LVL && rawPoints >= PlrHelper.xpCalcValueOfSingleLevel(newXp[0] + 1)) {
+	//		newXp[1] -= PlrHelper.xpCalcValueOfSingleLevel(++newXp[0]);
+	//	}		
+	//	setXp(stack, newXp);
+	//	
+	//	// OLD
+	//	//int newXp = getXp(stack) + amount;
+	//	//if (newXp < 0) {
+	//	//	newXp = Integer.MAX_VALUE;
+	//	//}
+	//	//setXp(stack, newXp);
+	//}
+	//
+	//public static long extractXp(ItemStack stack, long amount) {
+	//	if (amount <= 0 || xpStorageIsEmpty(stack)) return 0;
+	//	
+	//	long[] newXp = getXp(stack);
+	//	long extracted;
+	//	
+	//	// if we have enough raw points stored, we can just use those
+	//	if (newXp[1] >= amount) {
+	//		extracted = amount;
+	//		newXp[1] -= extracted;
+	//	} else {
+	//		
+	//		// drain all the extra points first
+	//		extracted = newXp[1];
+	//		newXp[1] = 0;
+	//		
+	//		// converting levels into their value in points
+	//		while (extracted < amount && newXp[0] > 0) {
+	//			extracted += PlrHelper.xpCalcValueOfSingleLevel(newXp[0]);
+	//			newXp[0]--;
+	//			if (extracted > amount) {
+	//				// leave extra points behind that we dont need
+	//				newXp[1] = extracted - amount;
+	//				extracted = amount;
+	//			}
+	//		}
+	//		
+	//	}
+	//	setXp(stack, newXp);
+	//	return extracted;
+	//	
+	//	// OLD
+	//	//int curXp = getXp(stack);
+	//	//int newXp, extracted;
+	//	//
+	//	//if (curXp < amount) {
+	//	//	newXp = 0;
+	//	//	extracted = curXp;
+	//	//} else {
+	//	//	newXp = curXp - amount;
+	//	//	extracted = amount;
+	//	//}
+	//	//
+	//	//setXp(stack, newXp);
+	//	//return extracted;
+	//}
+	//
+	//public static boolean xpStorageIsFull(ItemStack stack) {
+	//	return getXp(stack)[0] >= Xp.MAX_LVL;
+	//}
+	//
+	//public static boolean xpStorageIsEmpty(ItemStack stack) {
+	//	return getXp(stack)[0] <= 0
+	//			&& getXp(stack)[1] <= 0;
+	//}
 
 	// Player
 
@@ -729,7 +883,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 						double seenPercent = (double)Explosion.getSeenPercent(cent, ent);
 						double invDist = (1.0D - distance) * seenPercent;
 						ent.setRemainingFireTicks(1200);
-						ent.hurt(MGTKDamageSource.MUSTANG, (float) Math.pow(((int)((invDist * invDist + invDist) / 2.0D * 7.0D * 8d + 1.0D)), 2));
+						ent.hurt(MGTKDmgSrc.MUSTANG, (float) Math.pow(((int)((invDist * invDist + invDist) / 2.0D * 7.0D * 8d + 1.0D)), 2));
 					}
 				}
 			}

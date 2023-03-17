@@ -36,7 +36,7 @@ import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
-import net.solunareclipse1.magitekkit.common.misc.MGTKDamageSource;
+import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 /**
@@ -125,7 +125,7 @@ public class MiscHelper {
 			ent.setRemainingFireTicks(600);
 			burnInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
 			level.playSound(null, ent, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1, 1);
-			ent.hurt(MGTKDamageSource.MUSTANG, 2);
+			ent.hurt(MGTKDmgSrc.MUSTANG, 2);
 			burnt++;
 		}
 		return 512*burnt;
