@@ -112,7 +112,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
     	return fullPristineSet(player);
     }
 
-	public boolean fullPristineSet(Player player) {
+	public static boolean fullPristineSet(Player player) {
 		for (ItemStack stack : player.getArmorSlots()) {
 			if (stack.getItem() instanceof GemJewelryBase && !stack.isDamaged()) continue;
 			else return false;

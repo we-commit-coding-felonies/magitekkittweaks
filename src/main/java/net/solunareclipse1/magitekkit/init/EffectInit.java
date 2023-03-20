@@ -31,6 +31,7 @@ public class EffectInit {
     public static final RegistryObject<SoundEvent> ARMOR_ABSORB = registerSound("item.matterarmor.absorb");
     public static final RegistryObject<SoundEvent> ARMOR_BREAK = registerSound("item.matterarmor.break");
     public static final RegistryObject<SoundEvent> JEWELRY_BREAK = registerSound("item.jewelry.break");
+    public static final RegistryObject<SoundEvent> WOFT_TICK = registerSound("item.woft.tick");
     
     // MobEffects
     public static final RegistryObject<MobEffect> TRANSMUTING = MOB_EFFECTS.register("transmuting", () -> new TransmutingEffect());

@@ -28,6 +28,7 @@ public interface ISwingItem {
 	 * @param evt
 	 */
 	default void sendEmptySwingToServer(PlayerInteractEvent.LeftClickEmpty event) {
+		//event.getPlayer().setDeltaMovement(event.getPlayer().getDeltaMovement().add(event.getPlayer().getLookAngle()));
 		NetworkInit.toServer(new LeftClickAirPacket());
 	}
 	

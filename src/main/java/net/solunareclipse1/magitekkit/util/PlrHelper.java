@@ -20,17 +20,23 @@ public class PlrHelper {
 	
 	/**
 	 * inserts xp points into the player <br>
-	 * modified from {@link Player#giveExperiencePoints}
+	 * will discard xp if the player cant hold any more
 	 * @param player
 	 * @param amount of xp in points to insert
 	 */
 	public static void insertXp(Player player, long amount) {
 		long newXp = getXp(player) + amount;
-		player.experienceLevel = xpPointsToLvl(newXp);
-		long extra = newXp - xpLvlToPoints(player.experienceLevel);
-		player.experienceProgress = (float) extra / (float) player.getXpNeededForNextLevel();
-		// xp bar seems to not visually update without changing this
-		player.totalExperience = (int) newXp;
+		if (newXp >= Xp.VANILLA_MAX_POINTS) {
+			player.experienceLevel = Xp.VANILLA_MAX_LVL;
+			player.experienceProgress = 0;
+			player.totalExperience = Integer.MAX_VALUE;
+		} else {
+			player.experienceLevel = xpPointsToLvl(newXp);
+			long extra = newXp - xpLvlToPoints(player.experienceLevel);
+			player.experienceProgress = (float) extra / (float) player.getXpNeededForNextLevel();
+			// xp bar seems to not visually update without changing this
+			player.totalExperience = (int) newXp;
+		}
 	}
 	
 	/**
@@ -188,5 +194,19 @@ public class PlrHelper {
 		// this uses dir to check if we were > or <= when we found the lvl
 		// if we were >, we need to -1 so that the level is worth less than input
 		return dir ? lvl-1 : lvl;
+	}
+	
+	/**
+	 * Runs the same logic as {@link Player#getXpNeededForNextLevel()} using an arbitrary current level, rather than the players current level
+	 * 
+	 * @param curLvl the xp level
+	 * @return xp needed to curLvl++
+	 */
+	public static int xpNeededToLevelUpFrom(int curLvl) {
+		if (curLvl >= 30) {
+			return 112 + (curLvl - 30) * 9;
+		} else {
+			return curLvl >= 15 ? 37 + (curLvl - 15) * 5 : 7 + curLvl * 2;
+		}
 	}
 }

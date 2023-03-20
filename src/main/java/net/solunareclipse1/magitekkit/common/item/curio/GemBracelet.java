@@ -1,37 +1,57 @@
 package net.solunareclipse1.magitekkit.common.item.curio;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.Stack;
+import java.util.UUID;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.BucketPickup;
 import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunk.BoundTickingBlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk.RebindableTickingBlockEntityWrapper;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.Material;
@@ -41,7 +61,10 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+import net.minecraftforge.common.ForgeMod;
+import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fluids.FluidStack;
@@ -55,6 +78,8 @@ import moze_intel.projecte.api.capabilities.item.IProjectileShooter;
 import moze_intel.projecte.capability.ExtraFunctionItemCapabilityWrapper;
 import moze_intel.projecte.capability.ModeChangerItemCapabilityWrapper;
 import moze_intel.projecte.capability.ProjectileShooterItemCapabilityWrapper;
+import moze_intel.projecte.gameObjs.PETags;
+import moze_intel.projecte.gameObjs.PETags.BlockEntities;
 import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.gameObjs.registries.PEItems;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
@@ -72,8 +97,10 @@ import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
 import net.solunareclipse1.magitekkit.util.Constants.Xp;
+
+import morph.avaritia.handler.ArmorHandler;
+
 import net.solunareclipse1.magitekkit.util.EmcHelper;
-import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.PlrHelper;
 import net.solunareclipse1.magitekkit.util.ProjectileHelper;
@@ -83,17 +110,16 @@ import vazkii.botania.api.mana.BurstProperties;
 import vazkii.botania.api.mana.ILensEffect;
 import vazkii.botania.common.entity.EntityManaBurst;
 import vazkii.botania.common.handler.ModSounds;
-import vazkii.botania.common.helper.ExperienceHelper;
 import vazkii.botania.common.helper.ItemNBTHelper;
 
 
-// This file is split into sections for organization
-// Please try to keep it that way!
+// TODO: serious code-cleanup
 public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, IProjectileShooter, IExtraFunction, ISwingItem, ILensEffect {
 
 	//////////////////////////////////////////////
 	// CONSTANTS, GLOBAL VARS, AND CONSTRUCTORS //
 	//////////////////////////////////////////////
+	public static final Vec3 FORWARD_RELATIVE = new Vec3(0,0,1);
 	public static final String TAG_MODE = "arc_mode";
 	public static final String TAG_EXP = "arc_experience";
 	public static final String TAG_LVL = "arc_levels";
@@ -117,6 +143,8 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 		super(props);
 		
 		// Listeners
+		MinecraftForge.EVENT_BUS.addListener(this::onStopUsing);
+		MinecraftForge.EVENT_BUS.addListener(this::onFinishUsing);
 		MinecraftForge.EVENT_BUS.addListener(this::sendEmptySwingToServer);
 		MinecraftForge.EVENT_BUS.addListener(this::onSwingBlock);
 
@@ -148,19 +176,21 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			boolean didDo = false;
 			switch (getMode(stack)) {
+			
 			case 1: // Mind (deposit all xp)
-				long plrExp = PlrHelper.getXp(player);
-				if (plrExp > 0) {
-					insertXp(stack, PlrHelper.extractXp(player, Xp.VANILLA_MAX_POINTS));
+				if (PlrHelper.getXp(player) > 0) {
+					insertXp(stack, PlrHelper.extractAll(player));
 					player.level.playSound(null, player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1, 2f);
 					didDo = true;
 				}
 				break;
+				
 			case 2: // Watch (toggle time accel)
 				changeWoft(stack);
 				player.level.playSound(null, player, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 1, 1.4f);
 				didDo = true;
 				break;
+				
 			case 3: // Harvest (aoe harvest & grow)
 				if (plrEmc >= 24) {
 					EmcHelper.consumeAvaliableEmc(player, 24);
@@ -168,14 +198,17 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 					didDo = true;
 				}
 				break;
+				
 			case 4: // Liquid (swap current liquid)
 				changeLiquid(stack);
 				player.level.playSound(null, player, getLiquid(stack) ? SoundEvents.BUCKET_FILL_LAVA : SoundEvents.BUCKET_FILL, SoundSource.PLAYERS, 1, 0.7f);
 				didDo = true;
 				break;
+				
 			case 5: // Philo (crafting grid)
 				didDo = PEItems.PHILOSOPHERS_STONE.get().doExtraFunction(stack, player, hand);
 				break;
+				
 			case 6: // Archangels (scatter sniper-arrows)
 				if (plrEmc >= 256 && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
 					int shot;
@@ -190,6 +223,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 					}
 				} // TODO: aimbot
 				break;
+				
 			case 7: // SWRG (aoe smite)
 				if (player instanceof ServerPlayer) {
 					if (plrEmc >= 1024 && !player.getCooldowns().isOnCooldown(PEItems.SWIFTWOLF_RENDING_GALE.get())) {
@@ -198,6 +232,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 					}
 				}
 				break;
+				
 			case 8: // Zero (aoe freeze)
 				if (player instanceof ServerPlayer) {
 					if (plrEmc >= 256 && !player.getCooldowns().isOnCooldown(PEItems.ZERO_RING.get())) {
@@ -206,6 +241,7 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 					}
 				}
 				break;
+				
 			case 9: // Ignition (aoe burn)
 				if (player instanceof ServerPlayer) {
 					if (plrEmc >= 512 && !player.getCooldowns().isOnCooldown(PEItems.IGNITION_RING.get())) {
@@ -214,84 +250,108 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 					}
 				}
 				break;
+				
 			default:
 				break;
 			}
 			return didDo;
 		}
 		return false;
-		//this.use
 	}
 
+	
 	// IProjectileShooter
 	@Override
-	public boolean shootProjectile(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
-		if (!player.level.isClientSide && playerHasFullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
+	public boolean shootProjectile(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {		
+		if (!player.level.isClientSide() && playerHasFullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			boolean didDo = false;
+			ItemCooldowns cooldown = player.getCooldowns();
 			switch (getMode(stack)) {
+			
 			case 1: // Mind (withdraw all)
-				if (getXp(stack) > 0) {
-					int amount;
-					
-					if (getXp(stack) > Integer.MAX_VALUE) amount = Integer.MAX_VALUE;
-					else amount = (int) getXp(stack);
-					
-					ExperienceHelper.addPlayerXP(player, (int) extractXp(stack, amount));
-					
-					
-					//PlrHelper.insertXp(player, extractXp(stack, Xp.VANILLA_MAX_POINTS)); // borked dense
-					player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 2f);
-					didDo = true;
+				long stackXp = getXp(stack);
+				long plrExp = PlrHelper.getXp(player);
+				if (stackXp > 0) {
+					long toWithdraw = Math.min(stackXp, Xp.VANILLA_MAX_POINTS - plrExp);
+					if (toWithdraw > 0) {
+						PlrHelper.insertXp(player, extractXp(stack, toWithdraw));
+						player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 2f);
+						didDo = true;
+					}
 				}
 				break;
+				
 			case 2: // Watch (Teleport)
 				if (plrEmc >= 72) {
 					didDo = PEItems.VOID_RING.get().doExtraFunction(stack, player, hand);
 					if (didDo) EmcHelper.consumeAvaliableEmc(player, 72);
 				}
 				break;
+				
 			case 3: // Harvest
 				System.out.println("NYI: " + getMode(stack));
 				break;
-			case 4: // Liquid
-				ItemPE coolDownItem;
-				if (plrEmc >= 64 && ItemNBTHelper.getBoolean(stack, TAG_LIQUID, false)) {
-					coolDownItem = PEItems.VOLCANITE_AMULET.get();
-					shootLavaProjectile(player);
+				
+			case 4: // Liquid (Liquid orb)
+				boolean isLava = ItemNBTHelper.getBoolean(stack, TAG_LIQUID, false);
+				
+				ItemPE cdItem = isLava ? PEItems.VOLCANITE_AMULET.get() : PEItems.EVERTIDE_AMULET.get();
+				
+				if (!cooldown.isOnCooldown(cdItem)) {
+					didDo = isLava ? shootLavaProjectile(player) : PEItems.EVERTIDE_AMULET.get().shootProjectile(player, stack, hand);
 				}
-				didDo = ItemNBTHelper.getBoolean(stack, TAG_LIQUID, false) ? shootLavaProjectile(player) : PEItems.EVERTIDE_AMULET.get().shootProjectile(player, stack, hand);
+				if (didDo) {
+					cooldown.addCooldown(cdItem, 5);
+				}
 				break;
-			case 5: // Philo
-				didDo = PEItems.PHILOSOPHERS_STONE.get().shootProjectile(player, stack, hand);
+				
+			case 5: // Philo (Mob transmute orb)
+				if (!cooldown.isOnCooldown(PEItems.PHILOSOPHERS_STONE.get())) {
+					didDo = PEItems.PHILOSOPHERS_STONE.get().shootProjectile(player, stack, hand);
+				}
 				break;
-			case 6: // Archangels
-				if (plrEmc >= 1024 && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
+				
+			case 6: // Archangels (sniper arrow)
+				if (plrEmc >= 1024 && !cooldown.isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
 					ProjectileHelper.shootArrow(player.level, player, 10, 10, 0, Byte.MAX_VALUE, true, false, Pickup.CREATIVE_ONLY);
 					EmcHelper.consumeAvaliableEmc(player, 1024);
-					player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 5);
+					cooldown.addCooldown(PEItems.ARCHANGEL_SMITE.get(), 5);
 					didDo = true;
 				}
 				break;
-			case 7: // SWRG
-				if (player.level.getLevelData() instanceof ServerLevelData lvlData) {
-					lvlData.setRainTime(6000);
-					lvlData.setThunderTime(6000);
-					lvlData.setRaining(true);
-					lvlData.setThundering(true);
+				
+			case 7: // SWRG (Self-fling / Summon lightning)
+				if (!cooldown.isOnCooldown(PEItems.SWIFTWOLF_RENDING_GALE.get())) {
+					if (plrEmc >= 128 && !player.isShiftKeyDown() && !player.getAbilities().flying) {
+						player.moveRelative(2, player.getLookAngle());
+						player.level.playSound(null, player, PESounds.WIND, SoundSource.PLAYERS, 1, 1);
+					} else if (plrEmc >= 8192 && player.isShiftKeyDown() && player.level.getLevelData() instanceof ServerLevelData lvlData) {
+						lvlData.setRainTime(6000);
+						lvlData.setThunderTime(6000);
+						lvlData.setRaining(true);
+						lvlData.setThundering(true);
+						EmcHelper.consumeAvaliableEmc(player, 8192);
+						didDo = true;
+					}
+					
 				}
 				break;
+				
 			case 8: // Zero
 				System.out.println("NYI: " + getMode(stack));
 				break;
+				
 			case 9: // Ignition
-				if (plrEmc >= 139264) {
+				if (plrEmc >= 139264 && !cooldown.isOnCooldown(PEItems.IGNITION_RING.get())) {
 					if (shootMustang(player, stack)) {
 						EmcHelper.consumeAvaliableEmc(player, 139264);
 						didDo = true;
 					}
+					cooldown.addCooldown(PEItems.IGNITION_RING.get(), 30);
 				}
 				break;
+				
 			default:
 				break;
 			}
@@ -303,41 +363,39 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	@NotNull
 	@Override
 	public InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
-		if (!level.isClientSide() && playerHasFullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
+		if (/*!level.isClientSide() && playerHasFullPristineSet(player) &&*/ getCharge(player.getItemInHand(hand)) == 1) {
 			boolean didDo = false;
 			ItemStack stack = player.getItemInHand(hand);
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			switch (getMode(stack)) {
-			case 1: // Mind (deposit 1 lvl)
-				int toDo = player.isCrouching() ? 10 : 1;
-				
-				for (int i = 0; i < toDo; i++) {
-					if (player.experienceProgress > 0f) {
-						int amount = (int) player.experienceProgress * player.getXpNeededForNextLevel();
-						insertXp(stack, amount);
-						player.totalExperience -= amount;
-						player.experienceProgress = 0;
-					} else {
-						int amount = (int) PlrHelper.xpCalcValueOfSingleLevel(player.experienceLevel);
-						insertXp(stack, PlrHelper.extractXpButBad(player, amount));
-					}
+			
+			case 1: // Mind (deposit 1 lvl / 10 lvl)
+				if (PlrHelper.getXp(player) > 0 && getXp(stack) < Long.MAX_VALUE) {
+					int lvls = player.isShiftKeyDown() ? 10 : 1;
+					insertXp(stack, PlrHelper.extractLvl(player, lvls));
 				}
 				player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
 				didDo = true;
 				break;
+				
 			case 2: // Watch (gravity attract)
-				System.out.println("NYI: 2");
+				player.startUsingItem(hand);
+				didDo = true;
 				break;
+				
 			case 6: // Archangels (debuff arrow stream init)
 				player.startUsingItem(hand);
 				didDo = true;
 				break;
+				
 			case 7:
 				System.out.println("NYI: 7");
 				break;
+				
 			case 8: // Zero (place ice midair)
 				System.out.println("NYI: 8");
 				break;
+				
 			default:
 				break;
 			}
@@ -348,21 +406,145 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	
 	@Override
 	public void onUsingTick(ItemStack stack, LivingEntity entity, int timeBeingUsed) {
-		if (entity instanceof Player player && !player.level.isClientSide()) {
+		//if (entity.level.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
+		//	Level world = entity.level;
+		//	world.setDayTime(Math.min(entity.level.getDayTime() + ((69420/10) + 1) * 4L, Long.MAX_VALUE));
+		//}
+		if (entity instanceof Player player && !player.level.isClientSide() && GemJewelryBase.fullPristineSet(player) && getCharge(stack) == 1) {
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			Level level = player.level;
 			switch (getMode(stack)) {
+
+			case 2: // Watch (Time Acceleration)
+				// yes, this is a jojo reference
+				if (plrEmc >= 1024) {
+					int ticker = Integer.MAX_VALUE - timeBeingUsed;
+					int bonusTicks = Math.min(180, ticker/12);
+					EmcHelper.consumeAvaliableEmc(player, getWoft(stack) ? 1024*(bonusTicks/10) : 128*(bonusTicks/10));
+					EmcHelper.consumeAvaliableEmc(player, 1024*(bonusTicks/10));
+					double entSlow = Math.max(Double.MIN_VALUE, 1d - (bonusTicks/180d));
+					double selfSpeed = Math.min(12d, Math.max(2d/3d, 2d/3d*(bonusTicks/10d)));
+					//double rate = Math.min(2, timeBeingUsed/1000);
+					//(20 - ((int)rate*10 - 1))
+					if (timeBeingUsed % (20 - bonusTicks/10) == 0) {
+						player.level.playSound(null, player, EffectInit.WOFT_TICK.get(), SoundSource.PLAYERS, 1, 1);
+					}
+					player.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(selfSpeed);
+					player.getAttribute(Attributes.ATTACK_SPEED).setBaseValue(selfSpeed*10);
+					player.getAttribute(ForgeMod.SWIM_SPEED.get()).setBaseValue(selfSpeed*10);
+					int size = getWoft(stack) ? 24 : 12;
+					AABB area = AABB.ofSize( player.position(), size, size, size);
+					// following is modified from projecte woft code
+					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
+						// dont affect ourself or players with full gem / infinity armor
+						if ( ent.is(player) || (ent instanceof Player plr && (GemJewelryBase.fullPristineSet(plr) || ArmorHandler.isInfinite(plr))) ) {
+							continue;
+						}
+						ent.setDeltaMovement(ent.getDeltaMovement().multiply(entSlow, entSlow, entSlow));
+						ent.invulnerableTime = Math.max(0, ent.invulnerableTime-bonusTicks/20);
+					}
+					
+					for (Projectile proj : level.getEntitiesOfClass(Projectile.class, area)) {
+						proj.setDeltaMovement(proj.getDeltaMovement().multiply(entSlow, entSlow, entSlow));
+					} // TODO: fix issues with projectiles not visually being where they are supposed to
+					
+					if (getWoft(stack)) {
+						// speedUpBlockEntities()
+						for (BlockEntity blockEntity : WorldHelper.getBlockEntitiesWithinAABB(level, area)) {
+							if (!blockEntity.isRemoved() && !BlockEntities.BLACKLIST_TIME_WATCH_LOOKUP.contains(blockEntity.getType())) {
+								BlockPos pos = blockEntity.getBlockPos();
+								if (level.shouldTickBlocksAt(ChunkPos.asLong(pos))) {
+									LevelChunk chunk = level.getChunkAt(pos);
+									RebindableTickingBlockEntityWrapper tickingWrapper = chunk.tickersInLevel.get(pos);
+									if (tickingWrapper != null && !tickingWrapper.isRemoved()) {
+										if (tickingWrapper.ticker instanceof BoundTickingBlockEntity tickingBE) {
+											//In general this should always be the case, so we inline some of the logic
+											// to optimize the calls to try and make extra ticks as cheap as possible
+											if (chunk.isTicking(pos)) {
+												ProfilerFiller profiler = level.getProfiler();
+												profiler.push(tickingWrapper::getType);
+												BlockState state = chunk.getBlockState(pos);
+												if (blockEntity.getType().isValid(state)) {
+													for (int i = 0; i < bonusTicks; i++) {
+														tickingBE.ticker.tick(level, pos, state, blockEntity);
+													}
+												}
+												profiler.pop();
+											}
+										} else {
+											//Fallback to just trying to make it tick extra
+											for (int i = 0; i < bonusTicks; i++) {
+												tickingWrapper.tick();
+											}
+										}
+									}
+								}
+							}
+						}
+						
+						// speedUpRandomTicks()
+						for (BlockPos pos : WorldHelper.getPositionsFromBox(area)) {
+							if (WorldHelper.isBlockLoaded(level, pos)) {
+								BlockState state = level.getBlockState(pos);
+								Block block = state.getBlock();
+								if (state.isRandomlyTicking() && !state.is(PETags.Blocks.BLACKLIST_TIME_WATCH)
+									&& !(block instanceof LiquidBlock) // Don't speed non-source fluid blocks - dupe issues
+									&& !(block instanceof BonemealableBlock) && !(block instanceof IPlantable)) {// All plants should be sped using Harvest Goddess
+									pos = pos.immutable();
+									for (int i = 0; i < bonusTicks; i++) {
+										state.randomTick((ServerLevel)level, pos, level.random);
+									}
+								}
+							}
+						}
+						
+						// global time acceleration
+						// TODO: make the sun/moon not teleport
+						if (level.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
+							ServerLevel serverWorld = (ServerLevel) level;
+							serverWorld.setDayTime(Math.min(level.getDayTime() + ((bonusTicks/10) + 1) * 6L, Long.MAX_VALUE));
+						}
+					}
+				}
+				
+				
+				// old stuff
+				//Vec3 delt = player.getDeltaMovement().normalize().scale(0.25);
+				//System.out.println(UUID.randomUUID());
+				//System.out.println(player.getSpeed());
+				//player.setDeltaMovement(player.getDeltaMovement().add(delt));
+				//player.moveRelative(0.5f, new Vec3(0,0,delt.x));
+				//player.push(v.x, v.y, v.z);
+				break;
+				
 			case 6: // Archangels (debuff arrow stream)
 				if (plrEmc >= 128 && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
 					ProjectileHelper.shootArrowTipped(level, player, 0.01f, 3, 4, (byte) 0, false, true, Pickup.CREATIVE_ONLY, new MobEffectInstance(EffectInit.TRANSMUTING.get(), 15));
 					EmcHelper.consumeAvaliableEmc(player, 128);
 				}
 				break;
+				
 			default:
 				break;
 			}
+		} else if (getCharge(stack) == 0) {
+			resetTimeAccelSpeed(entity);
 		}
 	}
+	
+	/**
+	 * sets the base movement & swim speed of an entity to 0.1 & 1 respectively(player default) <br>
+	 * intended to be used to clear the WoFT speedup effect on players
+	 * @param player player to reset the speed of
+	 */
+	public void resetTimeAccelSpeed(LivingEntity ent) {
+		ent.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.1);
+		ent.getAttribute(Attributes.ATTACK_SPEED).setBaseValue(4.0);
+		ent.getAttribute(ForgeMod.SWIM_SPEED.get()).setBaseValue(1.0);
+	}
+	
+	public void onStopUsing(LivingEntityUseItemEvent.Stop event) {resetTimeAccelSpeed(event.getEntityLiving());}
+	public void onFinishUsing(LivingEntityUseItemEvent.Finish event) {resetTimeAccelSpeed(event.getEntityLiving());}
 	
 	@Override
 	public boolean onSwingAir(Context ctx) {
@@ -374,26 +556,30 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 			ItemStack stack = player.getMainHandItem();
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			switch (getMode(stack)) {
-			case 1: // Mind (extract 1 / 10 levels)
-				if (getXp(stack) > 0) {
-					int toDo = player.isCrouching() ? 10 : 1;
-					
-					for (int i = 0; i < toDo; i++) {
-						if (player.experienceProgress > 0f) {
-							int amount = (int) (player.getXpNeededForNextLevel() - (player.experienceProgress * player.getXpNeededForNextLevel()));
-							insertXp(stack, amount);
-							player.experienceProgress = 0;
+			
+			case 1: // Mind (withdraw 1 / 10 levels)
+				if (getXp(stack) > 0 && PlrHelper.getXp(player) < Xp.VANILLA_MAX_POINTS) {
+					int lvls = player.isShiftKeyDown() ? 10 : 1;
+					long amount = 0;
+					for (int i = 0; i < lvls; i++) {
+						int curLvl = player.experienceLevel + i;
+						// only factor in current progress for the first level
+						if (i == 0 && player.experienceProgress > 0) {
+							amount += PlrHelper.xpNeededToLevelUpFrom(curLvl) - player.experienceProgress * PlrHelper.xpNeededToLevelUpFrom(curLvl);
+						} else {
+							amount += PlrHelper.xpNeededToLevelUpFrom(curLvl);
 						}
-						ExperienceHelper.addPlayerXP(player, extractXp(stack, PlrHelper.xpGetAmountForLvlUp(player)));
 					}
-					
+					PlrHelper.insertXp(player, extractXp(stack, amount));
 					player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
 					didDo = true;
 				}
 				break;
+				
 			case 6: // Archangels (homing shotgun)
 				didDo = shootHomingVolley(player);
 				break;
+				
 			case 8: // Zero (high-velocity snowball shotgun)
 				for (int i = 0; i < 10; i++) {
 			        Snowball snowball = new Snowball(level, player);
@@ -402,6 +588,8 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 			        level.playSound(null, player, SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
 			        if (!didDo) didDo = true;
 				}
+				break;
+				
 			default:
 				break;
 			}
@@ -412,30 +600,83 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 
 	@Override
 	public boolean onSwingBlock(PlayerInteractEvent.LeftClickBlock evt) {
-		boolean didDo = false;
-		if (!evt.getPlayer().level.isClientSide && evt.getUseItem() != Event.Result.DENY && !evt.getItemStack().isEmpty() && evt.getItemStack().getItem() == this) {
+		if (!evt.getPlayer().level.isClientSide() && evt.getUseItem() != Event.Result.DENY && !evt.getItemStack().isEmpty() && evt.getItemStack().getItem() == this) {
 			ItemStack stack = evt.getItemStack();
-			switch (getMode(stack)) {
-			case 6: // Archangels
-				didDo = shootHomingVolley(evt.getPlayer());
-				break;
-			default:
-				break;
+			Player player = evt.getPlayer();
+			if (GemJewelryBase.fullPristineSet(player) && getCharge(stack) == 1) {
+				boolean didDo = false;
+				switch (getMode(stack)) {
+				
+				case 1: // Mind (withdraw 1 / 10 levels)
+					if (getXp(stack) > 0 && PlrHelper.getXp(player) < Xp.VANILLA_MAX_POINTS) {
+						int lvls = player.isShiftKeyDown() ? 10 : 1;
+						long amount = 0;
+						for (int i = 0; i < lvls; i++) {
+							int curLvl = player.experienceLevel + i;
+							// only factor in current progress for the first level
+							if (i == 0 && player.experienceProgress > 0) {
+								amount += PlrHelper.xpNeededToLevelUpFrom(curLvl) - player.experienceProgress * PlrHelper.xpNeededToLevelUpFrom(curLvl);
+							} else {
+								amount += PlrHelper.xpNeededToLevelUpFrom(curLvl);
+							}
+						}
+						PlrHelper.insertXp(player, extractXp(stack, amount));
+						player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
+						didDo = true;
+					}
+					break;
+					
+				case 6: // Archangels
+					didDo = shootHomingVolley(player);
+					break;
+					
+				default:
+					break;
+				}
+				return didDo;
 			}
 		}
-		return didDo;
+		return false;
 		//return shootHomingVolley(evt.getPlayer());
 	}
 
 	@Override
 	public boolean onLeftClickEntity(ItemStack stack, Player player, Entity entity) {
-		if (!player.level.isClientSide && stack.getItem() instanceof GemBracelet) {
+		if (!player.level.isClientSide() && stack.getItem() instanceof GemBracelet) {
 			boolean didDo = false;
 			switch (getMode(stack)) {
-			case 6: // Archangels
+			
+			case 1: // Mind (withdraw 1 / 10 levels)
+				if (getXp(stack) > 0 && PlrHelper.getXp(player) < Xp.VANILLA_MAX_POINTS) {
+					int lvls = player.isShiftKeyDown() ? 10 : 1;
+					long amount = 0;
+					for (int i = 0; i < lvls; i++) {
+						int curLvl = player.experienceLevel + i;
+						// only factor in current progress for the first level
+						if (i == 0 && player.experienceProgress > 0) {
+							amount += PlrHelper.xpNeededToLevelUpFrom(curLvl) - player.experienceProgress * PlrHelper.xpNeededToLevelUpFrom(curLvl);
+						} else {
+							amount += PlrHelper.xpNeededToLevelUpFrom(curLvl);
+						}
+					}
+					PlrHelper.insertXp(player, extractXp(stack, amount));
+					player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
+					didDo = true;
+				}
+				break;
+				
+			case 5: // Philo (transmutation punch)
+				break;
+			
+			case 6: // Archangels (homing shotgun)
 				didDo = shootHomingVolley(player);
 				break;
+				
 			case 9:
+				if (!entity.fireImmune() && !entity.isOnFire() && !entity.isInWaterRainOrBubble() && !player.isInWaterRainOrBubble()) {
+					
+				}
+				break;
 				
 			default:
 				break;
@@ -763,10 +1004,26 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	
 	@Override
 	public int getUseDuration(ItemStack stack) {
-		if (getMode(stack) == 6) {
-			return Integer.MAX_VALUE;
+		return Integer.MAX_VALUE;
+	}
+	
+	// TODO: make first person anims not look dumb with these
+	@Override
+	public UseAnim getUseAnimation(ItemStack stack) {
+		if (getCharge(stack) == 1) {
+			switch (getMode(stack)) {
+			
+			case 2:
+				return getWoft(stack) ? UseAnim.SPEAR : UseAnim.BLOCK;
+			
+			case 6: // archangels
+				return UseAnim.SPYGLASS;
+			
+			default:
+				break;
+			}
 		}
-		return 0;
+		return UseAnim.NONE;
 	}
 	
 	/**
@@ -816,11 +1073,9 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 	 * @return if projectile was shot
 	 */
 	public static boolean shootMustang(Player player, ItemStack stack) {
-		if (player.getCooldowns().isOnCooldown(PEItems.IGNITION_RING.get())) return false;
 		if (player.level.isRainingAt(player.blockPosition())) {
 			player.level.playSound(null, player, SoundEvents.NOTE_BLOCK_HAT, SoundSource.PLAYERS, 1F, 1.7F);
 			player.level.playSound(null, player, SoundEvents.LAVA_EXTINGUISH, SoundSource.PLAYERS, 0.5F, 2f);
-			player.getCooldowns().addCooldown(PEItems.IGNITION_RING.get(), 30);
 			return false;
 		}
 		EntityManaBurst burst = new EntityManaBurst(player);
@@ -844,7 +1099,6 @@ public class GemBracelet extends MGTKItem implements IModeChanger, IItemCharge, 
 		
 		player.level.addFreshEntity(burst);
 		player.level.playSound(null, player, SoundEvents.NOTE_BLOCK_HAT, SoundSource.PLAYERS, 1F, 1.7F);
-		player.getCooldowns().addCooldown(PEItems.IGNITION_RING.get(), 30);
 		return true;
 	}
 	

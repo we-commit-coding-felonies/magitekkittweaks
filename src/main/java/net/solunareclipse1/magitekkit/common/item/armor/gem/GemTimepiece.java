@@ -50,17 +50,21 @@ public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmo
 	@Override
 	public void onArmorTick(ItemStack stack, Level level, Player player) {
 		long plrEmc = jewelryTick(stack, level, player);
-		if (!stack.isDamaged()) {
-			
+		
+		// Set bonus
+		if (fullPristineSet(player)) {
 			if (player.isShiftKeyDown()) {
-				fastDescend(player, level);
+				plrEmc = repelEntities(player, level, plrEmc);
 			} else {
 				plrEmc = vacuumItems(player, level, plrEmc);
 			}
-			
-			
-			if (fullPristineSet(player) && player.isShiftKeyDown()) {
-				plrEmc = repelEntities(player, level, plrEmc);
+		}
+		
+		// Standalone
+		if (!stack.isDamaged()) {
+			if (player.isShiftKeyDown() && !player.getAbilities().flying) {
+				//player.setDeltaMovement(player.getDeltaMovement().add(player.getViewVector(0)));
+				fastDescend(player, level);
 			}
 		}
 	}

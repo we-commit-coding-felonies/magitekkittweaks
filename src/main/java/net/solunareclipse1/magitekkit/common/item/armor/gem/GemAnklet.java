@@ -19,6 +19,8 @@ import net.minecraftforge.fml.DistExecutor;
 
 import moze_intel.projecte.gameObjs.items.IFlightProvider;
 import moze_intel.projecte.gameObjs.items.IStepAssister;
+import moze_intel.projecte.gameObjs.items.armor.GemFeet;
+import moze_intel.projecte.gameObjs.registries.PEItems;
 
 /**
  * Boots
@@ -36,31 +38,17 @@ public class GemAnklet extends GemJewelryBase implements IFlightProvider, IStepA
 		tips.add(new TranslatableComponent("tip.mgtk.gem_anklet").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 
-	private static boolean isJumpPressed() {
-		return DistExecutor.unsafeRunForDist(() -> () -> Minecraft.getInstance().options.keyJump.isDown(), () -> () -> false);
-	}
-
 	@Override
 	public void onArmorTick(ItemStack stack, Level level, Player player) {
-		if (!level.isClientSide) {
-			ServerPlayer playerMP = (ServerPlayer) player;
-			playerMP.fallDistance = 0;
-		} else {
-			if (!player.getAbilities().flying && isJumpPressed()) {
-				player.setDeltaMovement(player.getDeltaMovement().add(0, 0.1, 0));
-			}
-			if (!player.isOnGround()) {
-				if (player.getDeltaMovement().y() <= 0) {
-					player.setDeltaMovement(player.getDeltaMovement().multiply(1, 0.9, 1));
-				}
-				if (!player.getAbilities().flying) {
-					if (player.zza < 0) {
-						player.setDeltaMovement(player.getDeltaMovement().multiply(0.9, 1, 0.9));
-					} else if (player.zza > 0 && player.getDeltaMovement().lengthSqr() < 3) {
-						player.setDeltaMovement(player.getDeltaMovement().multiply(1.1, 1, 1.1));
-					}
-				}
-			}
+		//long plrEmc = jewelryTick(stack, level, player); //
+		
+		// Set-bonus
+		//if (fullPristineSet(player)) {
+		//}
+
+		// Standalone
+		if (!stack.isDamaged()) {
+			PEItems.GEM_BOOTS.get().onArmorTick(stack, level, player);
 		}
 	}
 

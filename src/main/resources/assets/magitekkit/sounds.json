@@ -52,6 +52,11 @@
   "item.emc.leak": {
     "subtitle": "subtitles.mgtk.emc.leak",
     "sounds": [ "projecte:item/chargetick" ]
+  },
+
+  "item.woft.tick": {
+    "subtitle": "subtitles.mgtk.woft.tick",
+    "sounds": [ "projecte:item/tock" ]
   }
 
 }
