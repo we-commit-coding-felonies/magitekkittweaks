@@ -120,6 +120,10 @@ repositories {
     	name "Covers1624 maven"
     	url "https://maven.covers1624.net"
     }
+    maven {
+        name = 'tterrag maven'
+        url = 'https://maven.tterrag.com/'
+    }
 }
 
 dependencies {
@@ -137,6 +141,10 @@ dependencies {
     
     implementation fg.deobf("curse.maven:avaritia-261348:${avaritia_version}")
     implementation fg.deobf("curse.maven:codechickenlib-242818:${codechickenlib_version_cf}")
+    
+    implementation fg.deobf("com.simibubi.create:create-${mc_version}:${create_version}:slim") { transitive = false }
+    implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${mc_version}:${flywheel_version}")
+    implementation fg.deobf("com.tterrag.registrate:Registrate:MC${mc_version}-${registrate_version}")
 }
 
 

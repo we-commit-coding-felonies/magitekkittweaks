@@ -32,16 +32,22 @@ Custom code mod for the MagiTekkit modpack
 	modId="projecte"
 	mandatory=true
 	versionRange="*"
-	ordering="BEFORE"
+	ordering="AFTER"
 	side="BOTH"
 [[dependencies.magitekkit]]
 	modId="botania"
 	mandatory=true
 	versionRange="*"
-	ordering="BEFORE"
+	ordering="AFTER"
 [[dependencies.magitekkit]]
 	modId="avaritia"
 	mandatory=true
 	versionRange="*"
-	ordering="BEFORE"
+	ordering="AFTER"
+	side="BOTH"
+[[dependencies.magitekkit]]
+	modId="create"
+	mandatory=true
+	versionRange="*"
+	ordering="AFTER"
 	side="BOTH"

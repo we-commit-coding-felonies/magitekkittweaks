@@ -59,10 +59,26 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.emc.leak", "Amulet leaks");
         add("subtitles.mgtk.matterarmor.absorb", "Damage absorbed");
         add("subtitles.mgtk.matterarmor.break", "Armor degrades");
+        add("subtitles.mgtk.woft.tick", "Time accelerates");
+
+        add("death.attack.aoe", "%s rests in pieces");
+        add("death.attack.aoe.player", "%s was butchered by %s");
+        add("death.attack.aoe2", "%s was rended asunder");
+        add("death.attack.aoe2.player", "%s was decimated by %s");
+        add("death.attack.transmutation", "%s became EMC");
+        add("death.attack.transmutation.player", "%s was forever changed by %s");
+        add("death.attack.mustang", "%s phlogistonated");
+        add("death.attack.mustang.player", "%s was immolated by %s");
+        add("death.attack.emcnuke", "%s was atomized by a catastrophic energy release");
+        add("death.attack.emcnuke.player", "%s underwent fission because of %s");
+        add("death.attack.god", "%s became a work of fiction");
+        add("death.attack.god.player", "%s was retconned by %s");
         
-        add("death.attack.transmutation", "%s was converted into EMC");
-        add("death.attack.transmutation.player", "%s became soil");
-        add("death.attack.mustang", "%s underwent combustion");
-        add("death.attack.mustang.player", "%s was incinerated by %s");
+        // since avaritia cant do it themselves, apparently
+        add("death.attack.infinity", "%s stopped existing");
+        add("death.attack.infinity.1", "%s was divided by zero");
+        add("death.attack.infinity.2", "%s's entropy was maximized");
+        add("death.attack.infinity.3", "%s is gone");
+        add("death.attack.infinity.4", "%s--;");
     }
 }

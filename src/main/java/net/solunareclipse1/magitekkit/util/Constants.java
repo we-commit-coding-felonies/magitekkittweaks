@@ -9,7 +9,18 @@ package net.solunareclipse1.magitekkit.util;
 public class Constants {
 	public class EmcCosts {
 		public static final int
-				ARCHANGELS = 384;
+				ALCHSHIELD_MIN = 64,
+				//// Band of Arcana
+				// Harvest
+				BOA_BONEMEAL = 64,
+				BOA_ARROW = 384,
+				BOA_LIGHTNING = 2304,
+				BOA_TEMPERATURE = 768;
+	}
+	
+	public class Cooldowns {
+		public static final byte
+				BOA_TEMPERATURE_AOE = 30;
 	}
 	
 	public class Xp {

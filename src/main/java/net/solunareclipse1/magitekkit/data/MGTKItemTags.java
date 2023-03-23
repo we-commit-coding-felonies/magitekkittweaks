@@ -3,7 +3,10 @@ package net.solunareclipse1.magitekkit.data;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.tags.BlockTagsProvider;
 import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
@@ -19,6 +22,9 @@ public class MGTKItemTags extends ItemTagsProvider {
 	public MGTKItemTags(DataGenerator generator, BlockTagsProvider blockTags, ExistingFileHelper helper) {
         super(generator, blockTags, MagiTekkit.MODID, helper);
     }
+
+	public void init() {
+	}
 
     @Override
     protected void addTags() {

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
+import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -29,6 +30,40 @@ import net.solunareclipse1.magitekkit.init.EffectInit;
  * @author solunareclipse1
  */
 public class EmcHelper {
+	
+	/**
+	 * checks if the player has any emc <br>
+	 * very similar to getAvaliableEmc, but will return immediately upon finding any amount of EMC to speed things up a tad
+	 * @param player
+	 * @return true if player has any emc
+	 */
+	public static boolean hasEmc(Player player) {
+		if (player.isCreative()) {
+			return true;
+		}
+		
+		// Curios
+		IItemHandler curios = PlayerHelper.getCurios(player);
+		if (curios != null) {
+			for (int i = 0; i < curios.getSlots(); i++) {
+				ItemStack stack = curios.getStackInSlot(i);
+				if (stack.isEmpty()) continue;
+				if (getAvaliableEmcOfStack(stack) > 0) return true;
+			}
+		}
+
+		// Inventory
+		Optional<IItemHandler> itemHandlerCap = player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).resolve();
+		if (itemHandlerCap.isPresent()) {
+			IItemHandler inv = itemHandlerCap.get();
+			for (int i = 0; i < inv.getSlots(); i++) {
+				ItemStack stack = inv.getStackInSlot(i);
+				if (stack.isEmpty()) continue;
+				if (getAvaliableEmcOfStack(stack) > 0) return true;
+			}
+		}
+		return false;
+	}
 	
 	/**
 	 * Gets all available EMC held by a player, from klein stars and fuel items

@@ -1,5 +1,7 @@
 package net.solunareclipse1.magitekkit.common.item.armor.gem;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -27,9 +29,12 @@ import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 import net.solunareclipse1.magitekkit.common.event.EntityLivingEventHandler;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
+import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
+import morph.avaritia.util.InfinityDamageSource;
 import vazkii.botania.api.mana.IManaDiscountArmor;
 
 /**
@@ -41,6 +46,15 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	public GemJewelryBase(EquipmentSlot slot, Properties props, float baseDr) {
 		super(GemJewelryMaterial.MAT, slot, props, baseDr);
 	}
+	/** Damage sources with corresponging cost multipliers. 0.5 would mean 1/2 cost */
+	//public static final Map<DamageSource, Float> DMG_SRC_MODS = new HashMap<>();
+	/** Damage sources in here will *never* be blocked by the gem shield */
+	public static DamageSource[] dmgSrcBlacklist = {
+			DamageSource.DROWN,
+			DamageSource.FREEZE,
+			DamageSource.OUT_OF_WORLD,
+			DamageSource.STARVE
+	};
 
 	@Override
 	public int getBarColor(ItemStack stack) {
@@ -72,7 +86,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	 * Common tick function for all 4 pieces
 	 * called in onArmorTick
 	 * <p>
-	 * returns players avaliable emc so we dont have to call getAvaliableEmc() multiple times per tick
+	 * we store the players avaliable emc in a variable so we dont have to call getAvaliableEmc whenever we want to change it
 	 * 
 	 * @param stack The armor piece ItemStack
 	 * @param level The level
@@ -80,60 +94,92 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	 * @return The avaliable EMC in the player's inventory
 	 */
 	protected long jewelryTick(ItemStack stack, Level level, Player player) {
-		long plrEmc = EmcHelper.getAvaliableEmc(player);
-		
-		// slow, expensive auto-repair
-		//if (stack.isDamaged() && level.getGameTime() % 200 == 0 && player instanceof ServerPlayer) {
-		//	if (plrEmc >= 65536) {
-		//		plrEmc -= EmcHelper.consumeAvaliableEmc(player, 65536);
-		//		stack.hurt(-1, player.getRandom(), (ServerPlayer) player);
-		//	}
-		//}
-		
+		long plrEmc = EmcHelper.getAvaliableEmc(player);		
 		return plrEmc;
 	}
 
 
 	// IFireProtector
-	// only if full set + undamaged
 	@Override
-	public boolean canProtectAgainstFire(ItemStack stack, ServerPlayer player) {return fullPristineSet(player);}
-	
-	
-	
-	
-	
-	
+	public boolean canProtectAgainstFire(ItemStack stack, ServerPlayer player) {
+		return isBarrierActive(player);
+	}
+
 	// IAlchShield stuff
 	@Override
 	public boolean shieldCondition(Player player, float damage, DamageSource source, ItemStack stack) {
-    	//System.out.println(source);
-		if (EntityLivingEventHandler.isUnblockableSource(source)) return false; // Unblockable damages
-    	return fullPristineSet(player);
+    	return sourceBlockedByGemShield(source) && isBarrierActive(player);
     }
+	
+	/** used in both canProtectAgainstFire and shieldCondition */
+	public static boolean isBarrierActive(Player player) {
+		if (fullPristineSet(player)) {
+	    	return EmcHelper.hasEmc(player);
+		}
+		return false;
+	}
 
+	/**
+	 * true if the player is wearing a full undamaged set of Gem Jewelry <br>
+	 * used for set bonus logic
+	 * @param player
+	 * @return if player has the full set
+	 */
 	public static boolean fullPristineSet(Player player) {
 		for (ItemStack stack : player.getArmorSlots()) {
 			if (stack.getItem() instanceof GemJewelryBase && !stack.isDamaged()) continue;
-			else return false;
+			return false;
 		}
 		return true;
 	}
 	
+	/**
+	 * checks if a given damage source can be blocked by the gem shield
+	 * @param source
+	 * @return if the source can be blocked by the gem shield
+	 */
+	public static boolean sourceBlockedByGemShield(DamageSource source) {
+		// hardcoded checks for things that should absolutely never be blocked
+		if (source instanceof InfinityDamageSource
+				|| source.isCreativePlayer()
+				|| source.isBypassInvul())
+			return false;
+		if (source instanceof MGTKDmgSrc src && src.isBypassAlchShield()) return false;
+		
+		for (int i = 0; i < dmgSrcBlacklist.length; i++) {
+			if (source == dmgSrcBlacklist[i]) return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Gets the cost multiplier for a given source <br>
+	 * default to 1.0f (no multiplier)
+	 * @param source
+	 * @return
+	 */
+	public static float getCostMultiplierForSource(DamageSource source) {
+		// overriders, we always use the biggest
+		float mult = 1f;
+		if (source.isBypassArmor()) mult = 1.1f;
+		if (source.isMagic() || source.isBypassMagic()) mult = 1.5f;
+		if (source instanceof MGTKDmgSrc src) {
+			if (src.isBypassDr()) mult = 2f;
+			if (src.isDivine()) mult = 42f;
+			// adders, order doesnt matter
+			if (src.isAlchemy()) mult += 0.1f;
+		}
+		return mult;
+	}
+	
 	public long calcShieldingCost(Player player, float damage, DamageSource source, ItemStack stack) {
-		float modifier = 1;
-		if (source.isBypassMagic()) modifier = 1.5f;
-		else if (source.isBypassArmor()) modifier = 1.1f;
-		// cost = max( 64, (modifier*damage)^2 )
-		return Math.round( Math.max( 64, Math.pow(modifier*damage, 2) ) );
+		// (dmg*mod)^2 = emc
+		return (long) Math.max(EmcCosts.ALCHSHIELD_MIN, Math.pow(damage*getCostMultiplierForSource(source), 2));
 	}
 	
 	public float calcAffordableDamage(Player player, float damage, DamageSource source, ItemStack stack, long emcHeld) {
-		// does the inverse of calcShieldingCost()
-		float mod = 1;
-		if (source.isBypassMagic()) mod = 2/3;
-		else if (source.isBypassArmor()) mod = 10/11;
-		return (float) (mod*Math.sqrt(emcHeld));
+		// sqrt(emc)/mod = dmg
+		return (float) (Math.sqrt(emcHeld)/getCostMultiplierForSource(source));
 	}
 	
 	@Override

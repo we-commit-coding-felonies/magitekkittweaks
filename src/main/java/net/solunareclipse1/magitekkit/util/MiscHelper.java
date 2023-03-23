@@ -59,11 +59,11 @@ public class MiscHelper {
 		}
 	}
 	
-	public static long smiteAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc) {
+	public static long smiteAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc, int costPer) {
 		int smitten = 0;
 		for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
 			if (ent.is(culprit)) continue;
-			if (plrEmc <= 1024*smitten) break;
+			if (plrEmc <= costPer*smitten) break;
 			LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
 			if (bolt != null) {
 				bolt.moveTo(Vec3.atCenterOf(ent.blockPosition()));
@@ -72,14 +72,14 @@ public class MiscHelper {
 			}
 			smitten++;
 		}
-		return 1024*smitten;
+		return costPer*smitten;
 	}
 	
-	public static long slowAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc) {
+	public static long slowAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc, int costPer) {
 		int frozen = 0;
 		for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
 			if (ent.is(culprit) || ent instanceof Stray) continue;
-			if (plrEmc <= 256*frozen) break;
+			if (plrEmc <= costPer*frozen) break;
 			if (ent instanceof Skeleton skel) {
 				skel.convertTo(EntityType.STRAY, true);
 				WorldHelper.freezeInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
@@ -94,21 +94,21 @@ public class MiscHelper {
 				}
 			};
 			ent.clearFire();
-			ent.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 127));
+			ent.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 100));
 			WorldHelper.freezeInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
 			level.playSound(null, ent, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1, 1);
 			if (ent instanceof Blaze) ent.hurt(DamageSource.FREEZE, Float.MAX_VALUE);
 			ent.hurt(DamageSource.FREEZE, 1);
 			frozen++;
 		}
-		return 256*frozen;
+		return costPer*frozen;
 	}
 	
-	public static long burnAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc) {
+	public static long burnAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc, int costPer) {
 		int burnt = 0;
 		for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
 			if (ent.is(culprit) || ent instanceof Blaze) continue;
-			if (plrEmc <= 512*burnt) break;
+			if (plrEmc <= costPer*burnt) break;
 			if (ent instanceof Stray stray) {
 				stray.convertTo(EntityType.SKELETON, true);
 				WorldHelper.freezeInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
@@ -122,13 +122,13 @@ public class MiscHelper {
 					level.playSound(null, zombie, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
 				}
 			};
-			ent.setRemainingFireTicks(600);
+			ent.setRemainingFireTicks(costPer);
 			burnInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
 			level.playSound(null, ent, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1, 1);
 			ent.hurt(MGTKDmgSrc.MUSTANG, 2);
 			burnt++;
 		}
-		return 512*burnt;
+		return costPer*burnt;
 	}
 	
 	/**
