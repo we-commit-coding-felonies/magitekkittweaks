@@ -25,7 +25,9 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
-    mappings channel: 'parchment', version: '2022.09.04-1.18.2'
+	mappings channel: 'parchment', version: '2022.09.04-1.18.2'
+	accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+	
     runs {
         client {
             workingDirectory project.file('run')
@@ -96,7 +98,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     maven {
-    	name "JEI Maven"
+    	name "JEI maven"
         url "https://dvs1.progwml6.com/files/maven"
     }
     maven {
@@ -107,20 +109,42 @@ repositories {
         }
     }
     maven {
-        name "Curios Maven"
+        name "Curios maven"
         url "https://maven.theillusivec4.top/"
+    }
+    maven {
+    	name "BlameJared maven"
+    	url 'https://maven.blamejared.com'
+    }
+    maven {
+    	name "Covers1624 maven"
+    	url "https://maven.covers1624.net"
+    }
+    maven {
+        name = 'tterrag maven'
+        url = 'https://maven.tterrag.com/'
     }
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.2-40.1.80'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.2.0'
 
-    implementation fg.deobf("curse.maven:projecte-226410:${projecte_version}")
+    implementation fg.deobf("curse.maven:projecte-226410:${projecte_version}-api")
+    
+    implementation fg.deobf("vazkii.botania:Botania:${mc_version}-${botania_version}")
+    runtimeOnly fg.deobf("vazkii.patchouli:Patchouli:${mc_version}-${patchouli_version}")
+    
+    implementation fg.deobf("top.theillusivec4.curios:curios-forge:${mc_version}-${curios_version}")
 
     compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api")
     implementation fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}")
-    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${mc_version}-${curios_version}")
-    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${mc_version}-${curios_version}:api")
+    
+    implementation fg.deobf("curse.maven:avaritia-261348:${avaritia_version}")
+    implementation fg.deobf("curse.maven:codechickenlib-242818:${codechickenlib_version_cf}")
+    
+    implementation fg.deobf("com.simibubi.create:create-${mc_version}:${create_version}:slim") { transitive = false }
+    implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${mc_version}:${flywheel_version}")
+    implementation fg.deobf("com.tterrag.registrate:Registrate:MC${mc_version}-${registrate_version}")
 }
 
 

@@ -17,6 +17,7 @@ public class Generators {
             MGTKBlockTags blockTags = new MGTKBlockTags(generator, event.getExistingFileHelper());
             generator.addProvider(blockTags);
             generator.addProvider(new MGTKItemTags(generator, blockTags, event.getExistingFileHelper()));
+            generator.addProvider(new MGTKEntityTags(generator, event.getExistingFileHelper()));
         }
         if (event.includeClient()) {
             generator.addProvider(new MGTKBlockStates(generator, event.getExistingFileHelper()));

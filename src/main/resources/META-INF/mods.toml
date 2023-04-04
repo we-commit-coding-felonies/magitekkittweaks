@@ -12,11 +12,10 @@ displayURL="https://github.com/we-commit-coding-felonies/magitekkittweaks"
 #updateJSONURL="https://github.com/we-commit-coding-felonies/magitekkittweaks"
 logoFile="logo.png"
 authors="solunareclipse1"
-#credits="None"
+credits="ProjectE, Botania"
 description='''
 Custom code mod for the MagiTekkit modpack
 '''
-
 [[dependencies.magitekkit]]
     modId="forge"
     mandatory=true
@@ -29,3 +28,26 @@ Custom code mod for the MagiTekkit modpack
     versionRange="[1.18.2,1.19)"
     ordering="NONE"
     side="BOTH"
+[[dependencies.magitekkit]]
+	modId="projecte"
+	mandatory=true
+	versionRange="*"
+	ordering="AFTER"
+	side="BOTH"
+[[dependencies.magitekkit]]
+	modId="botania"
+	mandatory=true
+	versionRange="*"
+	ordering="AFTER"
+[[dependencies.magitekkit]]
+	modId="avaritia"
+	mandatory=true
+	versionRange="*"
+	ordering="AFTER"
+	side="BOTH"
+[[dependencies.magitekkit]]
+	modId="create"
+	mandatory=true
+	versionRange="*"
+	ordering="AFTER"
+	side="BOTH"

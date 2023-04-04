@@ -3,15 +3,28 @@ package net.solunareclipse1.magitekkit.data;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.tags.BlockTagsProvider;
 import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
+
+import moze_intel.projecte.gameObjs.PETags;
+
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
+
+import vazkii.botania.common.lib.ModTags;
 
 public class MGTKItemTags extends ItemTagsProvider {
 	public MGTKItemTags(DataGenerator generator, BlockTagsProvider blockTags, ExistingFileHelper helper) {
         super(generator, blockTags, MagiTekkit.MODID, helper);
     }
+
+	public void init() {
+	}
 
     @Override
     protected void addTags() {
@@ -19,23 +32,22 @@ public class MGTKItemTags extends ItemTagsProvider {
         	.add(ObjectInit.GANTIUM_BLOCK_ITEM.get())
         ;
         
-        tag(ObjectInit.VOID_ARMOR)
-    		.add(ObjectInit.VOID_HELM.get())
-    		.add(ObjectInit.VOID_CHEST.get())
-    		.add(ObjectInit.VOID_LEGS.get())
-    		.add(ObjectInit.VOID_BOOTS.get())
-    	;
+        tag(ItemTags.FREEZE_IMMUNE_WEARABLES)
+        	.add(ObjectInit.GEM_AMULET.get())
+        ;
         
-        tag(ObjectInit.PHIL_ARMOR)
-			.add(ObjectInit.PHIL_HELM.get())
-			.add(ObjectInit.PHIL_CHEST.get())
-			.add(ObjectInit.PHIL_LEGS.get())
-			.add(ObjectInit.PHIL_BOOTS.get())
-		;
+        tag(ModTags.Items.BURST_VIEWERS)
+        	.add(ObjectInit.GEM_CIRCLET.get())
+        ;
+        
+        tag(PETags.Items.CURIOS_RING)
+        	.add(ObjectInit.COVALENCE_BRACELET.get())
+        	//.add(ObjectInit.GEM_BRACELET.get())
+        ;
     }
 
     @Override
     public String getName() {
-        return "ProjectTweaks Item Tags";
+        return "MagiTekkit Item Tags";
     }
 }

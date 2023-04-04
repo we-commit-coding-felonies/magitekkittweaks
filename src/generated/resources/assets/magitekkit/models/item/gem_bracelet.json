@@ -1,0 +1,724 @@
+{
+  "overrides": [
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 0.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode0_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 0.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode0_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 0.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode0_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 0.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode0_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 0.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode0_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 0.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode0_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 0.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode0_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 0.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode0_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 1.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode1_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 1.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode1_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 1.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode1_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 1.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode1_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 1.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode1_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 1.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode1_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 1.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode1_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 1.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode1_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 2.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode2_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 2.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode2_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 2.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode2_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 2.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode2_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 2.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode2_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 2.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode2_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 2.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode2_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 2.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode2_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 3.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode3_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 3.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode3_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 3.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode3_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 3.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode3_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 3.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode3_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 3.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode3_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 3.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode3_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 3.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode3_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 4.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode4_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 4.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode4_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 4.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode4_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 4.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode4_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 4.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode4_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 4.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode4_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 4.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode4_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 4.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode4_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 5.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode5_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 5.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode5_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 5.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode5_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 5.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode5_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 5.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode5_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 5.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode5_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 5.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode5_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 5.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode5_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 6.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode6_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 6.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode6_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 6.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode6_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 6.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode6_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 6.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode6_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 6.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode6_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 6.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode6_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 6.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode6_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 7.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode7_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 7.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode7_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 7.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode7_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 7.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode7_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 7.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode7_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 7.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode7_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 7.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode7_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 7.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode7_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 8.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode8_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 8.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode8_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 8.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode8_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 8.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode8_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 8.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode8_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 8.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode8_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 8.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode8_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 8.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode8_offensive1_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 9.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode9_offensive0_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 9.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode9_offensive0_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 9.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode9_offensive0_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 9.0,
+        "magitekkit:arc_offensive": 0.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode9_offensive0_liquid1_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 9.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode9_offensive1_liquid0_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 9.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 0.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode9_offensive1_liquid0_woft1"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 9.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 0.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode9_offensive1_liquid1_woft0"
+    },
+    {
+      "predicate": {
+        "magitekkit:arc_mode": 9.0,
+        "magitekkit:arc_offensive": 1.0,
+        "magitekkit:arc_liquid": 1.0,
+        "magitekkit:arc_woft": 1.0
+      },
+      "model": "magitekkit:item/gem_bracelet/mode9_offensive1_liquid1_woft1"
+    }
+  ]
+}
