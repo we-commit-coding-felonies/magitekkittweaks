@@ -65,8 +65,12 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("death.attack.aoe.player", "%s was butchered by %s");
         add("death.attack.aoe2", "%s was rended asunder");
         add("death.attack.aoe2.player", "%s was decimated by %s");
-        add("death.attack.transmutation", "%s became EMC");
-        add("death.attack.transmutation.player", "%s was forever changed by %s");
+        add("death.attack.transmutation", "%s turned into an unspeakable horror");
+        add("death.attack.transmutation.player", "%s was horrifically disfigured by %s");
+        add("death.attack.transmutation.strong", "%s experienced the law of equivalent exchange");
+        add("death.attack.transmutation.strong.player", "%s's carbon was transmuted by %s");
+        add("death.attack.transmutation.potion", "%s was converted into EMC");
+        add("death.attack.transmutation.potion.player", "%s became one with %s's fuel source");
         add("death.attack.mustang", "%s phlogistonated");
         add("death.attack.mustang.player", "%s was immolated by %s");
         add("death.attack.emcnuke", "%s was atomized by a catastrophic energy release");

@@ -8,8 +8,20 @@ public class MGTKDmgSrc extends DamageSource {
 		super(msgId);
 	}
 
-	/** status effect damage, ignores almost all forms of protection, doesnt aggro */
+	/** alchemical magic, bypasses armor & enchants & DR */
 	public static final MGTKDmgSrc TRANSMUTATION = (MGTKDmgSrc) new MGTKDmgSrc("transmutation")
+			.setAlchemy()
+			.bypassDr().bypassMagic().bypassArmor()
+			.setMagic();
+
+	/** alchemical magic, ignores almost all forms of protection */
+	public static final MGTKDmgSrc TRANSMUTATION_2 = (MGTKDmgSrc) new MGTKDmgSrc("transmutation.strong")
+			.setAlchemy()
+			.bypassNotInvul()
+			.setMagic();
+
+	/** alchemical magic status effect damage, ignores almost all forms of protection, doesnt aggro */
+	public static final MGTKDmgSrc TRANSMUTATION_POTION = (MGTKDmgSrc) new MGTKDmgSrc("transmutation.potion")
 			.setAlchemy()
 			.bypassNotInvul()
 			.setNoAggro().setMagic();

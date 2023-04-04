@@ -8,6 +8,8 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
 import net.solunareclipse1.magitekkit.network.packet.server.LeftClickAirPacket;
 
@@ -32,11 +34,25 @@ public class NetworkInit {
                 .consumer(LeftClickAirPacket::handle)
                 .add();
         
+        
+        
         // server -> client
         CHANNEL.messageBuilder(MustangExplosionPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
 				.encoder(MustangExplosionPacket::enc)
         		.decoder(MustangExplosionPacket::dec)
         		.consumer(MustangExplosionPacket::handle)
+        		.add();
+        
+        CHANNEL.messageBuilder(DrawParticleLinePacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(DrawParticleLinePacket::enc)
+        		.decoder(DrawParticleLinePacket::dec)
+        		.consumer(DrawParticleLinePacket::handle)
+        		.add();
+        
+        CHANNEL.messageBuilder(DrawParticleAABBPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(DrawParticleAABBPacket::enc)
+        		.decoder(DrawParticleAABBPacket::dec)
+        		.consumer(DrawParticleAABBPacket::handle)
         		.add();
     }
     

@@ -15,6 +15,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor.CrimsonArmorMaterial;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
@@ -23,8 +25,8 @@ import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAnklet;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemCirclet;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemTimepiece;
-import net.solunareclipse1.magitekkit.common.item.curio.GemBracelet;
 import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet;
+import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
 
 public class ObjectInit {
 	private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MagiTekkit.MODID);
@@ -76,7 +78,7 @@ public class ObjectInit {
     public static final RegistryObject<GemAmulet> GEM_AMULET = ITEMS.register("gem_amulet", () -> new GemAmulet(ITEM_PROPERTIES_JEWELRY, 0.25f));
     public static final RegistryObject<GemTimepiece> GEM_TIMEPIECE = ITEMS.register("gem_timepiece", () -> new GemTimepiece(ITEM_PROPERTIES_JEWELRY, 0.25f));
     public static final RegistryObject<GemAnklet> GEM_ANKLET = ITEMS.register("gem_anklet", () -> new GemAnklet(ITEM_PROPERTIES_JEWELRY, 0.25f));
-    public static final RegistryObject<GemBracelet> GEM_BRACELET = ITEMS.register("gem_bracelet", () -> new GemBracelet(ITEM_PROPERTIES_GENERIC.stacksTo(1)));
+    public static final RegistryObject<BandOfArcana> GEM_BRACELET = ITEMS.register("gem_bracelet", () -> new BandOfArcana(ITEM_PROPERTIES_GENERIC.stacksTo(1)));
 
     
     
@@ -86,8 +88,21 @@ public class ObjectInit {
     		.setTrackingRange(256)
     		.setUpdateInterval(10)
     		.build("free_lava_projectile"));
-    
-    
+    public static final RegistryObject<EntityType<SmartArrow>> SMART_ARROW = ENTITIES.register("smart_arrow", () -> EntityType.Builder.<SmartArrow>of(SmartArrow::new, MobCategory.MISC)
+			.sized(0.5F, 0.5F)
+			.clientTrackingRange(4)
+			.updateInterval(20)
+			.fireImmune()
+			.noSummon()
+			.build("smart_arrow"));
+    public static final RegistryObject<EntityType<SentientArrow>> SENTIENT_ARROW = ENTITIES.register("sentient_arrow", () -> EntityType.Builder.<SentientArrow>of(SentientArrow::new, MobCategory.MISC)
+			.sized(0.5F, 0.5F)
+			.clientTrackingRange(4)
+			.updateInterval(20)
+			.fireImmune()
+			.noSummon()
+			.build("sentient_arrow"));
+
     
     
     // mcjty my beloved

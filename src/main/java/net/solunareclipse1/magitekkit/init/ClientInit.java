@@ -14,7 +14,7 @@ import moze_intel.projecte.rendering.EntitySpriteRenderer;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.client.render.LayerHalo;
-import net.solunareclipse1.magitekkit.common.item.curio.GemBracelet;
+import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
 
 import vazkii.botania.common.helper.ItemNBTHelper;
 
@@ -29,11 +29,11 @@ public class ClientInit {
     public static void init(final FMLClientSetupEvent event) {
     	event.enqueueWork(() -> {
 			//Property Overrides
-    		GemBracelet bracelet = ObjectInit.GEM_BRACELET.get();																													
-    		ItemProperties.register(bracelet.asItem(), ARC_MODE, (stack, level, entity, seed) -> ItemNBTHelper.getByte(stack, GemBracelet.TAG_MODE, (byte) 0));
-    		ItemProperties.register(bracelet.asItem(), ARC_OFFENSIVE, (stack, level, entity, seed) -> ItemNBTHelper.getBoolean(stack, GemBracelet.TAG_OFFENSIVE, false) ? 1 : 0);
-    		ItemProperties.register(bracelet.asItem(), ARC_LIQUID, (stack, level, entity, seed) -> ItemNBTHelper.getBoolean(stack, GemBracelet.TAG_LIQUID, false) ? 1 : 0);
-    		ItemProperties.register(bracelet.asItem(), ARC_WOFT, (stack, level, entity, seed) -> ItemNBTHelper.getBoolean(stack, GemBracelet.TAG_WOFT, false) ? 1 : 0);
+    		BandOfArcana bracelet = ObjectInit.GEM_BRACELET.get();																													
+    		ItemProperties.register(bracelet.asItem(), ARC_MODE, (stack, level, entity, seed) -> ItemNBTHelper.getByte(stack, BandOfArcana.TAG_MODE, (byte) 0));
+    		ItemProperties.register(bracelet.asItem(), ARC_OFFENSIVE, (stack, level, entity, seed) -> ItemNBTHelper.getBoolean(stack, BandOfArcana.TAG_OFFENSIVE, false) ? 1 : 0);
+    		ItemProperties.register(bracelet.asItem(), ARC_LIQUID, (stack, level, entity, seed) -> ItemNBTHelper.getBoolean(stack, BandOfArcana.TAG_LIQUID, false) ? 1 : 0);
+    		ItemProperties.register(bracelet.asItem(), ARC_WOFT, (stack, level, entity, seed) -> ItemNBTHelper.getBoolean(stack, BandOfArcana.TAG_WOFT, false) ? 1 : 0);
 		});
     }
 

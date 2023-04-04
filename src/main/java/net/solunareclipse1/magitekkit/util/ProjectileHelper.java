@@ -4,21 +4,49 @@ import java.util.Random;
 
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 import moze_intel.projecte.gameObjs.entity.EntityHomingArrow;
 
 /**
  * Contains stuff for working with / firing projectiles
  * @author solunareclipse1
- *
  */
 public class ProjectileHelper {
+	
+	/**
+	 * Conjures an arrow
+	 */
+	//public static void conjureArrow(Projectile proj, LivingEntity shooter, float velocity, float spread) {
+	//	float pX = player.getXRot(),
+	//			pY = player.getYRot(),
+	//			pZ = 0,
+	//			pVelocity = 5,
+	//			pInaccuracy = 0;
+	//	float f = -Mth.sin(pY * ((float)Math.PI / 180F)) * Mth.cos(pX * ((float)Math.PI / 180F));
+	//	float f1 = -Mth.sin((pX + pZ) * ((float)Math.PI / 180F));
+	//	float f2 = Mth.cos(pY * ((float)Math.PI / 180F)) * Mth.cos(pX * ((float)Math.PI / 180F));
+	//	if (true) { // arrow.shoot((double)f, (double)f1, (double)f2, pVelocity, pInaccuracy);
+	//		pX = f; pY = f1; pZ = f2;
+	//		Vec3 vec3 = (new Vec3(pX, pY, pZ)).normalize().add(arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy, arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy, arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy).scale((double)pVelocity);
+	//		arrow.setDeltaMovement(vec3);
+	//		double d0 = vec3.horizontalDistance();
+	//		arrow.setYRot((float)(Mth.atan2(vec3.x, vec3.z) * (double)(180F / (float)Math.PI)));
+	//		arrow.setXRot((float)(Mth.atan2(vec3.y, d0) * (double)(180F / (float)Math.PI)));
+	//		arrow.yRotO = arrow.getYRot();
+	//		arrow.xRotO = arrow.getXRot();
+	//	}
+	//	Vec3 vec3 = pShooter.getDeltaMovement();
+	//	arrow.setDeltaMovement(arrow.getDeltaMovement().add(vec3.x, shooter.isOnGround() ? 0.0D : vec3.y, vec3.z));
+	//}
 	
 	/**
 	 * Helper for shooting arrows <br>

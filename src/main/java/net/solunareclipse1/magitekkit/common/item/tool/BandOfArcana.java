@@ -1,4 +1,4 @@
-package net.solunareclipse1.magitekkit.common.item.curio;
+package net.solunareclipse1.magitekkit.common.item.tool;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +21,8 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -29,6 +31,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -44,6 +47,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
@@ -51,6 +55,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.NameTagItem;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -114,6 +119,8 @@ import net.solunareclipse1.magitekkit.api.capability.wrapper.ChargeItemCapabilit
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.item.ISwingItem;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
@@ -121,11 +128,12 @@ import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
 import net.solunareclipse1.magitekkit.util.Constants.Cooldowns;
 import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
 import net.solunareclipse1.magitekkit.util.Constants.Xp;
-
+import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.PlrHelper;
@@ -149,21 +157,19 @@ import vazkii.botania.common.item.ModItems;
 import vazkii.botania.common.item.relic.ItemDice;
 import vazkii.botania.xplat.IXplatAbstractions;
 
-
-// TODO: serious code-cleanup
-public class GemBracelet extends MGTKItem
+public class BandOfArcana extends MGTKItem
 	implements IModeChanger, IItemCharge, IProjectileShooter, IExtraFunction, ISwingItem, ILensEffect, CustomArmPoseItem {
 
 	//////////////////////////////////////////////
 	// CONSTANTS, GLOBAL VARS, AND CONSTRUCTORS //
 	//////////////////////////////////////////////
 	public static final Vec3 FORWARD_RELATIVE = new Vec3(0,0,1);
-	public static final String TAG_MODE = "arc_mode";
-	public static final String TAG_EXP = "arc_experience";
-	public static final String TAG_LVL = "arc_levels";
-	public static final String TAG_LIQUID = "arc_liquid";
-	public static final String TAG_WOFT = "arc_woft";
-	public static final String TAG_OFFENSIVE = "arc_offensive";
+	public static final String TAG_MODE = "boa_mode";
+	public static final String TAG_EXP = "boa_experience";
+	public static final String TAG_LVL = "boa_levels";
+	public static final String TAG_LIQUID = "boa_liquid";
+	public static final String TAG_WOFT = "boa_woft";
+	public static final String TAG_OFFENSIVE = "boa_offensive";
 	private static final String[] KEY_MODES = {
 			"tip.mgtk.arc_mode_0", // Disabled
 			"tip.mgtk.arc_mode_1", // Mind
@@ -250,7 +256,7 @@ public class GemBracelet extends MGTKItem
 			}
 	};
 	
-	public GemBracelet(Properties props) {
+	public BandOfArcana(Properties props) {
 		super(props);
 		
 		// Listeners
@@ -277,10 +283,21 @@ public class GemBracelet extends MGTKItem
 	//////////////////////////////////////////////////////////////
 	// KEYPRESS HANDLING, ABILITIES DEFINING, AND FUNCTIONALITY //
 	//////////////////////////////////////////////////////////////
+	@Override
+	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
+		if (!selected) {
+			if ( entity instanceof Player player && !(player.isUsingItem() && player.getUseItem().equals(stack)) ) {
+				for (Attribute attribute : getTimeAccelAttributes()) {
+					player.getAttribute(attribute).removeModifier(TIME_ACCEL_UUID);
+				}
+			}
+		}
+	}
 	
 	// IExtraFunction (C)
 	@Override
 	public boolean doExtraFunction(@NotNull ItemStack stack, @NotNull Player player, @Nullable InteractionHand hand) {
+		//this.inventoryTick(pStack, pLevel, pEntity, pSlotId, pIsSelected);
 		if (!player.level.isClientSide && GemJewelryBase.fullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			boolean didDo = false;
@@ -320,19 +337,28 @@ public class GemBracelet extends MGTKItem
 				didDo = PEItems.PHILOSOPHERS_STONE.get().doExtraFunction(stack, player, hand);
 				break;
 				
-			case 6: // Archangels (scatter sniper-arrows)
+			case 6: // Archangels (scatter smart arrows)
 				if (plrEmc >= EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
 					int shot;
-					for (shot = 0; shot < 28; shot++) {
+					for (shot = 0; shot < (player.isOnGround() ? 28 : 56); shot++) {
 						if ((shot+1)*EmcCosts.BOA_ARROW >= plrEmc) break;
-						ProjectileHelper.shootArrow(player.level, player, 10, player.getRandom().nextFloat(10), 300, Byte.MAX_VALUE, true, false, Pickup.CREATIVE_ONLY);
-						if (!didDo) didDo = true;
+						else {
+							SmartArrow arrow = new SmartArrow(player.level, player, 1);
+							if (!player.isOnGround()) {
+								arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 0.5f, 300);
+							} else {
+								arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
+							}
+							player.level.addFreshEntity(arrow);
+							player.level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (player.level.random.nextFloat() * 0.4F + 1.2F) + (1 / 3) * 0.5F));
+							didDo = true;
+						}
 					}
 					if (didDo) {
 						EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW*shot);
-						player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 30);
+						player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), shot/2);
 					}
-				} // TODO: aimbot
+				}
 				break;
 				
 			case 7: // SWRG (aoe smite)
@@ -427,12 +453,26 @@ public class GemBracelet extends MGTKItem
 				}
 				break;
 				
-			case 6: // Archangels (sniper arrow)
-				if (plrEmc >= 1024 && !cooldown.isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-					ProjectileHelper.shootArrow(player.level, player, 10, 10, 0, Byte.MAX_VALUE, true, false, Pickup.CREATIVE_ONLY);
-					EmcHelper.consumeAvaliableEmc(player, 1024);
-					cooldown.addCooldown(PEItems.ARCHANGEL_SMITE.get(), 5);
-					didDo = true;
+			case 6: // Archangels (sentient arrow)
+				//if (plrEmc >= 1024 && !cooldown.isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
+				//	ProjectileHelper.shootArrow(player.level, player, 10, 10, 0, Byte.MAX_VALUE, true, false, Pickup.CREATIVE_ONLY);
+				//	EmcHelper.consumeAvaliableEmc(player, 1024);
+				//	cooldown.addCooldown(PEItems.ARCHANGEL_SMITE.get(), 5);
+				//	didDo = true;
+				//}
+				if (plrEmc >= EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
+					SentientArrow arrow = new SentientArrow(player.level, player, 1);
+					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1.2f, 0);
+					//if (!player.isOnGround()) {
+					//} else {
+					//	arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
+					//}
+					//arrow.setCritArrow(true);
+					player.level.addFreshEntity(arrow);
+					player.playSound(PESoundEvents.POWER.get(), 1, 0.1f);//
+					player.level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (player.level.random.nextFloat() * 0.4F + 1.2F) + (1 / 3) * 0.5F));
+					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW);
+					player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 200);
 				}
 				break;
 				
@@ -692,7 +732,7 @@ public class GemBracelet extends MGTKItem
 						&& player.getAttackStrengthScale(0.5f) > 0.9
 						&& entity instanceof LivingEntity lEnt
 						&& !lEnt.isDeadOrDying()
-						&& !lEnt.isInvulnerableTo(MGTKDmgSrc.TRANSMUTATION)
+						&& !lEnt.isInvulnerableTo(MGTKDmgSrc.TRANSMUTATION_POTION)
 						&& !(lEnt instanceof Player plr && ArmorHandler.isInfinite(plr))
 				) {
 					if (player.isShiftKeyDown() && plrEmc >= 131072) {
@@ -706,7 +746,7 @@ public class GemBracelet extends MGTKItem
 						}
 					}
 					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 1, 100), player);
-					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION, 2f);
+					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_POTION, 2f);
 					lEnt.hurt(DamageSource.playerAttack(player), lEnt.getHealth()/2);
 					EmcHelper.consumeAvaliableEmc(player, 1024);
 					player.level.playSound(null, player, ModSounds.terrasteelCraft, SoundSource.PLAYERS, 1, 2);
@@ -836,10 +876,40 @@ public class GemBracelet extends MGTKItem
 				}
 				break;
 				
-			case 6: // Archangels (debuff arrow stream)
-				if (plrEmc >= 128 && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-					ProjectileHelper.shootArrowTipped(level, player, 0.01f, 3, 4, (byte) 0, false, true, Pickup.CREATIVE_ONLY, new MobEffectInstance(EffectInit.TRANSMUTING.get(), 15));
-					EmcHelper.consumeAvaliableEmc(player, 128);
+			case 6: // Archangels (piercing arrow stream)
+				if (plrEmc >= Constants.EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
+					SmartArrow arrow = new SmartArrow(level, player, 1, 20, (byte)2);
+					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 5f, 0);
+					//if (true) { // arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 5, 0);
+					//	Entity pShooter = player;
+					//	float pX = player.getXRot(),
+					//			pY = player.getYRot(),
+					//			pZ = 0,
+					//			pVelocity = 5,
+					//			pInaccuracy = 0;
+					//	float f = -Mth.sin(pY * ((float)Math.PI / 180F)) * Mth.cos(pX * ((float)Math.PI / 180F));
+					//	float f1 = -Mth.sin((pX + pZ) * ((float)Math.PI / 180F));
+					//	float f2 = Mth.cos(pY * ((float)Math.PI / 180F)) * Mth.cos(pX * ((float)Math.PI / 180F));
+					//	if (true) { // arrow.shoot((double)f, (double)f1, (double)f2, pVelocity, pInaccuracy);
+					//		pX = f; pY = f1; pZ = f2;
+					//		Vec3 vec3 = (new Vec3(pX, pY, pZ)).normalize().add(arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy, arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy, arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy).scale((double)pVelocity);
+					//		arrow.setDeltaMovement(vec3);
+					//		double d0 = vec3.horizontalDistance();
+					//		arrow.setYRot((float)(Mth.atan2(vec3.x, vec3.z) * (double)(180F / (float)Math.PI)));
+					//		arrow.setXRot((float)(Mth.atan2(vec3.y, d0) * (double)(180F / (float)Math.PI)));
+					//		arrow.yRotO = arrow.getYRot();
+					//		arrow.xRotO = arrow.getXRot();
+					//	}
+					//	Vec3 vec3 = pShooter.getDeltaMovement();
+					//	arrow.setDeltaMovement(arrow.getDeltaMovement().add(vec3.x, pShooter.isOnGround() ? 0.0D : vec3.y, vec3.z));
+					//}
+					arrow.setNoGravity(true);
+					arrow.setCritArrow(true);
+					arrow.setPierceLevel(Byte.MAX_VALUE);
+					level.addFreshEntity(arrow);
+					level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (level.random.nextFloat() * 0.4F + 1.2F) + (6 / 3) * 0.5F));
+					//ProjectileHelper.shootArrowTipped(level, player, 0.01f, 3, 4, (byte) 0, false, true, Pickup.CREATIVE_ONLY, new MobEffectInstance(EffectInit.TRANSMUTING.get(), 15));
+					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW);
 				}
 				break;
 				
@@ -1354,10 +1424,17 @@ public class GemBracelet extends MGTKItem
 		if (debug) {
 			
 			//// drawing the hitbox
-			MiscHelper.drawAABBWithParticlesServer(box, ParticleTypes.DRIPPING_LAVA, 0.1, level);
+			for (ServerPlayer plr : level.players()) {
+				if (plr.blockPosition().closerToCenterThan(cent, 512d)) {
+					Vec3 minCorner = new Vec3(box.minX, box.minY, box.minZ);
+					Vec3 maxCorner = new Vec3(box.maxX, box.maxY, box.maxZ);
+					NetworkInit.toClient(new DrawParticleAABBPacket(minCorner, maxCorner, 0), plr);
+				}
+			}
+			//MiscHelper.drawAABBWithParticlesServer(box, ParticleTypes.DRIPPING_LAVA, 0.1, level);
 			
 			// center and blockcenter
-			level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, cent.x(), cent.y(), cent.z(), 1, 0, 0, 0, 0);
+			level.sendParticles(ParticleTypes.DRIPPING_HONEY, cent.x(), cent.y(), cent.z(), 1, 0, 0, 0, 0);
 			level.sendParticles(ParticleTypes.DRIPPING_OBSIDIAN_TEAR, bCent.getX(), bCent.getY(), bCent.getZ(), 1, 0, 0, 0, 0);
 			
 			// marking every individual block
@@ -1529,7 +1606,7 @@ public class GemBracelet extends MGTKItem
 			LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerLevel)entity.level))
 					.withRandom(entity.getRandom()).withParameter(LootContextParams.THIS_ENTITY, entity)
 					.withParameter(LootContextParams.ORIGIN, entity.position())
-					.withParameter(LootContextParams.DAMAGE_SOURCE, MGTKDmgSrc.TRANSMUTATION)
+					.withParameter(LootContextParams.DAMAGE_SOURCE, MGTKDmgSrc.TRANSMUTATION_POTION)
 					.withOptionalParameter(LootContextParams.KILLER_ENTITY, culprit)
 					.withOptionalParameter(LootContextParams.DIRECT_KILLER_ENTITY, cause);
 			if (culprit instanceof Player player) {
@@ -1572,7 +1649,12 @@ public class GemBracelet extends MGTKItem
 			}
 			
 			// we spawn one of the stacks in possible, chosen randomly, then delete entity
-			entity.spawnAtLocation(possible.get(entity.getRandom().nextInt(possible.size())));
+			ItemStack resultItem = possible.get(entity.getRandom().nextInt(possible.size()));
+			if (!(resultItem.getItem() instanceof NameTagItem)) {
+				Component name = new TextComponent(resultItem.getHoverName().getString() + " (formerly " + entity.getDisplayName().getString() + ")");
+				resultItem = resultItem.setHoverName(name);
+			}
+			entity.spawnAtLocation(resultItem);
 			entity.discard();
 			return true;
 		}

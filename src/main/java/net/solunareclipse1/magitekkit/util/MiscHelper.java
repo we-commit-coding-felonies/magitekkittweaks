@@ -2,14 +2,20 @@ package net.solunareclipse1.magitekkit.util;
 
 import java.util.List;
 import java.util.Random;
+
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.util.Tuple;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -32,12 +38,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import net.minecraftforge.api.distmarker.OnlyIn;
+
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+
+import vazkii.botania.client.fx.SparkleParticleData;
 
 /**
  * Some common functions that don't really fit in anywhere else
@@ -181,34 +191,69 @@ public class MiscHelper {
 	}
 	
 	/**
-	 * Will draw the outline of an AABB using the given ParticleType <br>
-	 * This version is for use server-side (and sends a shitload of packets)
+	 * Draws an AABB with particles
+	 * 
+	 * @param box the AABB to draw
+	 * @param particle the particle to use
+	 * @param stepSize lower = more particles
+	 * @param level the level to put particles in
+	 * @param fill if true, draws a solid box (filled with particles), instead of just an outline
 	 */
-	public static void drawAABBWithParticlesServer(AABB box, SimpleParticleType particle, double stepSize, ServerLevel level) {
-		for (double i = box.minX; i < box.maxX; i += stepSize) {
-			level.sendParticles(particle, i, box.minY, box.minZ, 1, 0, 0, 0, 0);
-			level.sendParticles(particle, i, box.minY, box.maxZ, 1, 0, 0, 0, 0);
-		}
-		for (double i = box.minY; i < box.maxY; i += stepSize) {
-			level.sendParticles(particle, box.minX, i, box.minZ, 1, 0, 0, 0, 0);
-			level.sendParticles(particle, box.minX, i, box.maxZ, 1, 0, 0, 0, 0);
-		}
-		for (double i = box.minZ; i < box.maxZ; i += stepSize) {
-			level.sendParticles(particle, box.minX, box.minY, i, 1, 0, 0, 0, 0);
-			level.sendParticles(particle, box.minX, box.maxY, i, 1, 0, 0, 0, 0);
-		}
-		for (double i = box.maxX; i > box.minX; i -= stepSize) {
-			level.sendParticles(particle, i, box.maxY, box.maxZ, 1, 0, 0, 0, 0);
-			level.sendParticles(particle, i, box.maxY, box.minZ, 1, 0, 0, 0, 0);
-		}
-		for (double i = box.maxY; i > box.minY; i -= stepSize) {
-			level.sendParticles(particle, box.maxX, i, box.maxZ, 1, 0, 0, 0, 0);
-			level.sendParticles(particle, box.maxX, i, box.minZ, 1, 0, 0, 0, 0);
-		}
-		for (double i = box.maxZ; i > box.minZ; i -= stepSize) {
-			level.sendParticles(particle, box.maxX, box.maxY, i, 1, 0, 0, 0, 0);
-			level.sendParticles(particle, box.maxX, box.minY, i, 1, 0, 0, 0, 0);
+	public static void drawAABBWithParticles(AABB box, ParticleOptions particle, double stepSize, ClientLevel level, boolean fill) {
+		if (fill) {
+    		for (double i = box.minX; i < box.maxX; i += stepSize) {
+        		for (double j = box.minY; j < box.maxY; j += stepSize) {
+            		for (double k = box.minZ; k < box.maxZ; k += stepSize) {
+                		level.addAlwaysVisibleParticle(particle, i, j, k, 0, 0, 0);
+            		}
+        		}
+    		}
 		}
 		
+		for (double i = box.minX; i < box.maxX; i += stepSize) {
+			level.addParticle(particle, i, box.minY, box.minZ, 0, 0, 0);
+			level.addParticle(particle, i, box.minY, box.maxZ, 0, 0, 0);
+		}
+		for (double i = box.minY; i < box.maxY; i += stepSize) {
+			level.addParticle(particle, box.minX, i, box.minZ, 0, 0, 0);
+			level.addParticle(particle, box.minX, i, box.maxZ, 0, 0, 0);
+		}
+		for (double i = box.minZ; i < box.maxZ; i += stepSize) {
+			level.addParticle(particle, box.minX, box.minY, i, 0, 0, 0);
+			level.addParticle(particle, box.minX, box.maxY, i, 0, 0, 0);
+		}
+		for (double i = box.maxX; i > box.minX; i -= stepSize) {
+			level.addParticle(particle, i, box.maxY, box.maxZ, 0, 0, 0);
+			level.addParticle(particle, i, box.maxY, box.minZ, 0, 0, 0);
+		}
+		for (double i = box.maxY; i > box.minY; i -= stepSize) {
+			level.addParticle(particle, box.maxX, i, box.maxZ, 0, 0, 0);
+			level.addParticle(particle, box.maxX, i, box.minZ, 0, 0, 0);
+		}
+		for (double i = box.maxZ; i > box.minZ; i -= stepSize) {
+			level.addParticle(particle, box.maxX, box.maxY, i, 0, 0, 0);
+			level.addParticle(particle, box.maxX, box.minY, i, 0, 0, 0);
+		}
+	}
+	
+	/**
+	 * Draws a line between 2 vectors using particles <br>
+	 * 
+	 * @param start point A
+	 * @param end point B
+	 * @param particle the particle to use
+	 * @param stepSize lower = more particles
+	 * @param level world/level particles are in
+	 */
+	public static void drawVectorWithParticles(Vec3 start, Vec3 end, ParticleOptions particle, double stepSize, ClientLevel level) {
+		Vec3 line = end.subtract(start);
+		Vec3 step = line.normalize().scale(stepSize);
+		int numSteps = (int) (line.length() / step.length());
+		
+		Vec3 curPos = start;
+		for (int i = 0; i < numSteps; i++) {
+			level.addParticle(particle, true, curPos.x, curPos.y, curPos.z, 0, 0, 0);
+			curPos = curPos.add(step);
+		}
 	}
 }

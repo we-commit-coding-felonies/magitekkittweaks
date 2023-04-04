@@ -7,7 +7,7 @@ import net.minecraftforge.client.model.generators.ItemModelBuilder;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.solunareclipse1.magitekkit.MagiTekkit;
-import net.solunareclipse1.magitekkit.common.item.curio.GemBracelet;
+import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
 import net.solunareclipse1.magitekkit.init.ClientInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 
@@ -30,7 +30,7 @@ public class MGTKItemModels extends ItemModelProvider {
         singleTexture(ObjectInit.GEM_TIMEPIECE.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/gem_jewelry/legs"));
         singleTexture(ObjectInit.GEM_ANKLET.getId().getPath(), mcLoc("item/generated"), "layer0", modLoc("item/armor/gem_jewelry/boots"));
         
-        GemBracelet bracelet = ObjectInit.GEM_BRACELET.get();
+        BandOfArcana bracelet = ObjectInit.GEM_BRACELET.get();
         ItemModelBuilder builder = getBuilder(bracelet.getRegistryName().getPath());
         // 80 texture files for 1 item
         // https://www.youtube.com/watch?v=KnhXwlFeRP8

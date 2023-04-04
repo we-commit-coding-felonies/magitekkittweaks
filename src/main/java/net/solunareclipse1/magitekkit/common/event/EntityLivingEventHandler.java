@@ -3,6 +3,7 @@ package net.solunareclipse1.magitekkit.common.event;
 import java.util.Optional;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -17,25 +18,40 @@ import moze_intel.projecte.events.PlayerEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 import morph.avaritia.entity.InfinityArrowEntity;
 import morph.avaritia.init.AvaritiaModContent;
+import vazkii.botania.common.entity.EntityDoppleganger;
 
 @Mod.EventBusSubscriber(modid = MagiTekkit.MODID)
 public class EntityLivingEventHandler {
 	
 	
+	/** what */
 	@SubscribeEvent
 	public static void livingAttacked(LivingAttackEvent event) {
 		// Run the IFireProtector checks from projecte before proceeding
 		PlayerEvents.onAttacked(event);
 		if (event.isCanceled()) return;
 		
+		Entity ent = event.getEntity();
+		
+		// this fixes the server getting stuck in an infinite loop when hit by piercing smart arrows
+		if (ent instanceof EntityDoppleganger gaia && gaia.getInvulTime() > 0) {
+			if (event.getSource().getDirectEntity() instanceof SmartArrow arrow) {
+				arrow.becomeInert();
+				arrow.expire();
+				event.setCanceled(true);
+				return;
+			}
+		}
+		
 		 // order of priority: offhand, curios, armor, inventory
-		if (event.getEntity() instanceof Player player) {
+		if (ent instanceof Player player) {
 			if (player.getOffhandItem().getItem() instanceof IAlchShield shieldItem) {
 				shieldItem.tryShield(event, player.getOffhandItem());
 				if (event.isCanceled()) return;

@@ -25,8 +25,9 @@ public class MGTKEntityTags extends EntityTypeTagsProvider {
 	public MGTKEntityTags(DataGenerator generator, ExistingFileHelper helper) {
         super(generator, MagiTekkit.MODID, helper);
     }
-	
+
 	public static final TagKey<EntityType<?>> ITEMIZER_ENTITY_BLACKLIST = makeTag("itemizer_entity_blacklist");
+	public static final TagKey<EntityType<?>> PHILO_HOMING_ARROW_BLACKLIST = makeTag("philo_homing_arrow_blacklist");
 
     @Override
     protected void addTags() {
@@ -34,6 +35,10 @@ public class MGTKEntityTags extends EntityTypeTagsProvider {
     		.add(EntityType.PLAYER)
     		.add(EntityType.ENDER_DRAGON)
         ;
+        
+        tag(PHILO_HOMING_ARROW_BLACKLIST)
+    		.add(EntityType.ARMOR_STAND)
+			.add(EntityType.ENDERMAN);
         
         tag(PETags.Entities.BLACKLIST_SWRG)
         	.add(ModEntities.DOPPLEGANGER)
