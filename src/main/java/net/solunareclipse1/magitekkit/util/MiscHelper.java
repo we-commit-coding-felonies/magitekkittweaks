@@ -29,6 +29,7 @@ import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.monster.Stray;
 import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -46,6 +47,8 @@ import moze_intel.projecte.utils.WorldHelper;
 
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.init.NetworkInit;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 
 import vazkii.botania.client.fx.SparkleParticleData;
 
@@ -106,7 +109,7 @@ public class MiscHelper {
 			ent.clearFire();
 			ent.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 100));
 			WorldHelper.freezeInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
-			level.playSound(null, ent, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1, 1);
+			level.playSound(null, ent, EffectInit.ZERO_FREEZE.get(), SoundSource.PLAYERS, 10f, 1f);
 			if (ent instanceof Blaze) ent.hurt(DamageSource.FREEZE, Float.MAX_VALUE);
 			ent.hurt(DamageSource.FREEZE, 1);
 			frozen++;
@@ -115,9 +118,13 @@ public class MiscHelper {
 	}
 	
 	public static long burnAllInArea(Level level, AABB area, ServerPlayer culprit, long plrEmc, int costPer) {
+		if (level.isRainingAt(culprit.blockPosition())) {
+			level.playSound(null, culprit, SoundEvents.LAVA_EXTINGUISH, SoundSource.HOSTILE, 1, 1);
+			return 0;
+		}
 		int burnt = 0;
 		for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
-			if (ent.is(culprit) || ent instanceof Blaze) continue;
+			if (ent.is(culprit) || ent instanceof Blaze || ent instanceof Husk || !culprit.hasLineOfSight(ent)) continue;
 			if (plrEmc <= costPer*burnt) break;
 			if (ent instanceof Stray stray) {
 				stray.convertTo(EntityType.SKELETON, true);
@@ -126,16 +133,21 @@ public class MiscHelper {
 					level.playSound(null, stray, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
 			    }
 				continue;
-			} else if (ent instanceof Zombie zombie) {
+			} else if (ent instanceof Zombie zombie && !(ent instanceof ZombifiedPiglin)) {
 				if (!(zombie instanceof Husk)) {
 					zombie.convertTo(EntityType.HUSK, true);
 					level.playSound(null, zombie, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
 				}
 			};
+			for (ServerPlayer plr : ((ServerLevel)level).players()) {
+				if (plr.blockPosition().closerToCenterThan(culprit.position(), 64)) {
+					NetworkInit.toClient(new DrawParticleLinePacket(culprit.getBoundingBox().getCenter(), ent.getBoundingBox().getCenter(), 3), plr);
+				}
+			}
 			ent.setRemainingFireTicks(costPer);
 			burnInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
-			level.playSound(null, ent, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1, 1);
-			ent.hurt(MGTKDmgSrc.MUSTANG, 2);
+			level.playSound(null, ent.blockPosition(), EffectInit.IGNITION_BURN.get(), SoundSource.PLAYERS, 1, 1);
+			ent.hurt(MGTKDmgSrc.MUSTANG, 10);
 			burnt++;
 		}
 		return costPer*burnt;

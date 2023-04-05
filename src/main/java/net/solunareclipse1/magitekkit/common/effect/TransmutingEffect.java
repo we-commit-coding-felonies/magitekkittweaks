@@ -33,7 +33,7 @@ public class TransmutingEffect extends MobEffect {
 			new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 60, 0, true, false),			// 3
 			new MobEffectInstance(MobEffects.GLOWING, 60, 0, true, false),					// 4
 			new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, true, false),				// 5
-			new MobEffectInstance(MobEffects.JUMP, -100, 255, true, false),					// 6
+			new MobEffectInstance(MobEffects.JUMP, 60, 255, true, false),					// 6
 			new MobEffectInstance(MobEffects.LEVITATION, 5, 122, true, false),				// 7
 			new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 122, true, false),		// 8
 			new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 60, 9, true, false),			// 9
@@ -70,44 +70,52 @@ public class TransmutingEffect extends MobEffect {
 	@Override
 	public void applyEffectTick(LivingEntity entity, int amplifier) {
 		entity.invulnerableTime = 0;
-		if (amplifier > 0) {
-			//entity.addEffect(new MobEffectInstance(EFFECTS_OF_DOOM[3]));
-			entity.hurt( MGTKDmgSrc.TRANSMUTATION_POTION, Math.max(1, entity.getHealth()/2f) );
-			MobEffectInstance effect = entity.getEffect(EffectInit.TRANSMUTING.get());
-			
-			// does stuff when effect runs out
-			if (effect != null && effect.getDuration() <= 1) {
-				if (entity.getRandom().nextInt(15+amplifier) == 0) {
-					// unlucky, effect gets stronger lol
-					entity.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 6+amplifier, amplifier + 1));
-				} else {
-					entity.curePotionEffects(getCurativeItems().get(0)); // do this so we can apply weaker effect
-					if (amplifier > 1) {
-						entity.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), amplifier, amplifier - 1));
+		MobEffectInstance effect = entity.getEffect(EffectInit.TRANSMUTING.get());
+		if (isDurationEffectTick(effect.getDuration(), amplifier)) {
+			if (amplifier > 0) {
+				//entity.addEffect(new MobEffectInstance(EFFECTS_OF_DOOM[3]));
+				entity.hurt( MGTKDmgSrc.TRANSMUTATION_POTION, Math.max(1, entity.getHealth()/2f) );
+				
+				// does stuff when effect runs out
+				if (effect != null && effect.getDuration() <= 2) {
+					if (entity.getRandom().nextInt(15+amplifier) == 0) {
+						// unlucky, effect gets stronger lol
+						entity.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 6+amplifier, amplifier + 1));
 					} else {
-						entity.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 300*amplifier, 0));
+						entity.curePotionEffects(getCurativeItems().get(0)); // do this so we can apply weaker effect
+						if (amplifier > 1) {
+							entity.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), amplifier, amplifier - 1));
+						} else {
+							entity.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 300*amplifier, 0));
+						}
+					}
+				}
+				return;
+			} else {
+				int rangeOfEffects = 13+1; // index of last universal, +1 to account for nextInt() being exclusive
+				
+				if (entity instanceof ServerPlayer player) {
+					ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+					if (chestplate.getItem() instanceof GemAmulet amulet) {
+						amulet.leakEmc(chestplate, player.level, player, EmcHelper.getAvaliableEmc(player));
+					}
+					rangeOfEffects = EFFECTS_OF_DOOM.length; // if we are a player more effects are avaliable
+				}
+				
+				if (!entity.level.isClientSide()) {
+					if (entity.getRandom().nextInt(12) == 0) {
+						int amount = entity.getRandom().nextInt(4);
+						for (int i = 0; i < amount; i++) {
+							MobEffectInstance fx = new MobEffectInstance(EFFECTS_OF_DOOM[entity.getRandom().nextInt(rangeOfEffects)]);
+							entity.addEffect(fx);
+						}
 					}
 				}
 			}
-			return;
 		} else {
-			int rangeOfEffects = 13+1; // index of last universal, +1 to account for nextInt() being exclusive
-			
-			if (entity instanceof ServerPlayer player) {
-				ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-				if (chestplate.getItem() instanceof GemAmulet amulet) {
-					amulet.leakEmc(chestplate, player.level, player, EmcHelper.getAvaliableEmc(player));
-				}
-				rangeOfEffects = EFFECTS_OF_DOOM.length; // if we are a player more effects are avaliable
-			}
-			
-			if (entity.getRandom().nextInt(12) == 0) {
-				int amount = entity.getRandom().nextInt(4);
-				for (int i = 0; i < amount; i++) {
-					MobEffectInstance fx = new MobEffectInstance(EFFECTS_OF_DOOM[entity.getRandom().nextInt(rangeOfEffects)]);
-					entity.addEffect(fx);
-				}
-			}
+			// removes effects sticking around clientside
+			entity.curePotionEffects(getCurativeItems().get(0));
+			entity.curePotionEffects(new ItemStack(Items.MILK_BUCKET));
 		}
 	}
 	

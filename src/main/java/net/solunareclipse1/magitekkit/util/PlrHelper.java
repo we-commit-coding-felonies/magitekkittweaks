@@ -77,7 +77,7 @@ public class PlrHelper {
 			if (player.experienceProgress <= 0 && player.experienceLevel <= 0) break;
 			
 			if (player.experienceProgress > 0) {
-				extracted += (int) player.experienceProgress * player.getXpNeededForNextLevel();
+				extracted += (int) (player.experienceProgress * player.getXpNeededForNextLevel());
 				player.experienceProgress = 0;
 			} else if (player.experienceLevel > 0) {
 				player.experienceLevel--;
@@ -98,7 +98,7 @@ public class PlrHelper {
 		long extracted = 0;
 		
 		if (player.experienceProgress > 0) {
-			extracted += (long) player.experienceProgress * player.getXpNeededForNextLevel();
+			extracted += (long) (player.experienceProgress * player.getXpNeededForNextLevel());
 			player.experienceProgress = 0;
 		}
 		

@@ -1,0 +1,102 @@
+{
+  "item.alchshield.ambient": {
+    "subtitle": "subtitles.mgtk.alchshield.ambient",
+    "sounds": [{
+        "name": "minecraft:block/beacon/ambient",
+        "pitch": 0.5
+    }]
+  },
+
+  "item.alchshield.protect": {
+    "subtitle": "subtitles.mgtk.alchshield.protect",
+    "sounds": [ "magitekkit:item/alchshield/protect" ]
+  },
+
+  "item.alchshield.fail": {
+    "subtitle": "subtitles.mgtk.alchshield.fail",
+    "sounds": [ "magitekkit:item/alchshield/fail" ]
+  },
+
+  "item.emc.waste": {
+    "subtitle": "subtitles.mgtk.emc.waste",
+    "sounds": [ "magitekkit:item/emc/waste" ]
+  },
+
+  "item.matterarmor.absorb": {
+    "subtitle": "subtitles.mgtk.matterarmor.absorb",
+    "sounds": [{
+        "name": "projecte:item/pepower",
+        "pitch": 2.0
+    }]
+  },
+
+  "item.matterarmor.break": {
+    "subtitle": "subtitles.mgtk.matterarmor.break",
+    "sounds": [ "projecte:item/nova" ]
+  },
+
+  "item.jewelry.break": {
+    "subtitle": "subtitles.mgtk.jewelry.break",
+    "sounds": [
+      {
+        "name": "entity/endereye/dead1",
+        "volume": 1.3
+      },
+      {
+        "name": "entity/endereye/dead2",
+        "volume": 1.3
+      }
+    ]
+  },
+
+  "item.emc.leak": {
+    "subtitle": "subtitles.mgtk.emc.leak",
+    "sounds": [ "projecte:item/chargetick" ]
+  },
+
+  "item.boa.mode": {
+    "subtitle": "subtitles.mgtk.boa.mode",
+    "sounds": [
+      "block/end_portal/eyeplace1",
+      "block/end_portal/eyeplace2",
+      "block/end_portal/eyeplace3"
+    ]
+  },
+
+  "item.woft.tick": {
+    "subtitle": "subtitles.mgtk.woft.tick",
+    "sounds": [ "projecte:item/tock" ]
+  },
+
+  "item.zero.freeze": {
+    "subtitle": "subtitles.mgtk.zero.freeze",
+    "sounds": [
+      "magitekkit:item/zero/freeze1",
+      "magitekkit:item/zero/freeze2",
+      "magitekkit:item/zero/freeze3"
+    ]
+  },
+
+  "item.ignition.click": {
+    "subtitle": "subtitles.mgtk.ignition.click",
+    "sounds": [
+      "magitekkit:item/ignition/click1",
+      "magitekkit:item/ignition/click2",
+      "magitekkit:item/ignition/click3"
+    ]
+  },
+
+  "item.ignition.burn": {
+    "subtitle": "subtitles.mgtk.ignition.burn",
+    "sounds": [ "magitekkit:item/ignition/burn" ]
+  },
+
+  "item.matterarmor.absorb": {
+    "subtitle": "subtitles.mgtk.matterarmor.absorb",
+    "sounds": [{
+        "name": "projecte:item/pepower",
+        "pitch": 2.0
+    }]
+  }
+
+}

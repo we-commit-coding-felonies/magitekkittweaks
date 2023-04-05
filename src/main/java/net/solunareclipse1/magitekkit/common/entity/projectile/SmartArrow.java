@@ -3,6 +3,7 @@ package net.solunareclipse1.magitekkit.common.entity.projectile;
 import java.util.Comparator;
 import java.util.List;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
+import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
@@ -184,6 +185,7 @@ public class SmartArrow extends Arrow {
 					NetworkInit.toClient(new DrawParticleLinePacket(this.position(), targetPos, 1), plr);
 				}
 			}
+			level.playSound(null, this.blockPosition(), EffectInit.ARCHANGELS_REDIRECT.get(), this.getSoundSource(), 0.1f, 1);
 			changeTarget(targetPos);
 			changeAiState((byte) 1);
 		}
@@ -261,7 +263,7 @@ public class SmartArrow extends Arrow {
 	}
 	
 	public void expire() {
-		playSound(SoundEvents.PLAYER_BREATH, 1, 1);
+		playSound(EffectInit.ARCHANGELS_EXPIRE.get(), 1, 1);
 		discard();
 	}
 	

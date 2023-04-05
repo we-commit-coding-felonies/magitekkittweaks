@@ -8,6 +8,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
@@ -53,6 +54,12 @@ public class NetworkInit {
 				.encoder(DrawParticleAABBPacket::enc)
         		.decoder(DrawParticleAABBPacket::dec)
         		.consumer(DrawParticleAABBPacket::handle)
+        		.add();
+        
+        CHANNEL.messageBuilder(CreateLoopingSoundPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(CreateLoopingSoundPacket::enc)
+        		.decoder(CreateLoopingSoundPacket::dec)
+        		.consumer(CreateLoopingSoundPacket::handle)
         		.add();
     }
     

@@ -108,7 +108,7 @@ public class FreeLavaProjectile extends ThrowableProjectile {
 			Entity ent = result.getEntity();
 			if (ent.fireImmune()) return;
 			ent.setSecondsOnFire(5);
-			ent.hurt(MGTKDmgSrc.MUSTANG, 20);
+			ent.hurt(MGTKDmgSrc.MUSTANG, 512);
 		}
 	}
 

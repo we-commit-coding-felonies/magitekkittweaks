@@ -128,6 +128,7 @@ import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
+import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
 import net.solunareclipse1.magitekkit.util.Constants.Cooldowns;
@@ -314,7 +315,7 @@ public class BandOfArcana extends MGTKItem
 			case 2: // Watch (toggle local/global time manip)
 				if (!player.isUsingItem()) {
 					changeWoft(stack);
-					player.level.playSound(null, player, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 1, 1.4f);
+					player.level.playSound(null, player, EffectInit.WOFT_MODE.get(), SoundSource.PLAYERS, 1, 1.4f);
 					didDo = true;
 				}
 				break;
@@ -329,11 +330,12 @@ public class BandOfArcana extends MGTKItem
 				
 			case 4: // Liquid (swap current liquid)
 				changeLiquid(stack);
-				player.level.playSound(null, player, getLiquid(stack) ? SoundEvents.BUCKET_FILL_LAVA : SoundEvents.BUCKET_FILL, SoundSource.PLAYERS, 1, 0.7f);
+				player.level.playSound(null, player, getLiquid(stack) ? EffectInit.LIQUID_LAVA_SWITCH.get() : EffectInit.LIQUID_WATER_SWITCH.get(), SoundSource.PLAYERS, 1, 0.7f);
 				didDo = true;
 				break;
 				
 			case 5: // Philo (crafting grid)
+				player.level.playSound(null, player, EffectInit.PHILO_3X3GUI.get(), SoundSource.PLAYERS, 1, 2f);
 				didDo = PEItems.PHILOSOPHERS_STONE.get().doExtraFunction(stack, player, hand);
 				break;
 				
@@ -367,7 +369,7 @@ public class BandOfArcana extends MGTKItem
 						long consumed = EmcHelper.consumeAvaliableEmc(player, MiscHelper.smiteAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc, EmcCosts.BOA_LIGHTNING));
 						if (consumed > 0) {
 							didDo = true;
-							player.playSound(SoundEvents.TRIDENT_THUNDER, 1, 1);
+							player.level.playSound(null, player.blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1f, 1f);
 							player.getCooldowns().addCooldown( PEItems.SWIFTWOLF_RENDING_GALE.get(), (int)(10*(consumed/EmcCosts.BOA_LIGHTNING)) );
 						} else player.playSound(PESounds.UNCHARGE, 1, 2);
 					}
@@ -377,6 +379,7 @@ public class BandOfArcana extends MGTKItem
 			case 8: // Zero (aoe freeze)
 				if (player instanceof ServerPlayer) {
 					if (plrEmc >= EmcCosts.BOA_TEMPERATURE && !player.getCooldowns().isOnCooldown(PEItems.ZERO_RING.get())) {
+						player.level.playSound(null, player.blockPosition(), PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1f, 1f);
 						didDo = EmcHelper.consumeAvaliableEmc(player, MiscHelper.slowAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc, EmcCosts.BOA_TEMPERATURE)) > 0;
 						player.getCooldowns().addCooldown(PEItems.ZERO_RING.get(), Cooldowns.BOA_TEMPERATURE_AOE);
 					}
@@ -386,6 +389,7 @@ public class BandOfArcana extends MGTKItem
 			case 9: // Ignition (aoe burn)
 				if (player instanceof ServerPlayer) {
 					if (plrEmc >= EmcCosts.BOA_TEMPERATURE && !player.getCooldowns().isOnCooldown(PEItems.IGNITION_RING.get())) {
+						player.level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1f, 1f);
 						didDo = EmcHelper.consumeAvaliableEmc(player, MiscHelper.burnAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc, EmcCosts.BOA_TEMPERATURE)) > 0;
 						player.getCooldowns().addCooldown(PEItems.IGNITION_RING.get(), Cooldowns.BOA_TEMPERATURE_AOE);
 					}
@@ -469,9 +473,13 @@ public class BandOfArcana extends MGTKItem
 					//}
 					//arrow.setCritArrow(true);
 					player.level.addFreshEntity(arrow);
-					player.playSound(PESoundEvents.POWER.get(), 1, 0.1f);//
+					for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+						NetworkInit.toClient(new CreateLoopingSoundPacket((byte)1, arrow.getId()), plr);
+					}
+					//player.playSound(PESoundEvents.POWER.get(), 1, 0.1f);//
 					player.level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (player.level.random.nextFloat() * 0.4F + 1.2F) + (1 / 3) * 0.5F));
 					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW);
+					
 					player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 200);
 				}
 				break;
@@ -480,7 +488,7 @@ public class BandOfArcana extends MGTKItem
 				if (!cooldown.isOnCooldown(PEItems.SWIFTWOLF_RENDING_GALE.get())) {
 					if (plrEmc >= 128 && !player.isShiftKeyDown() && !player.getAbilities().flying) {
 						player.moveRelative(2, player.getLookAngle());
-						player.level.playSound(null, player, PESounds.WIND, SoundSource.PLAYERS, 1, 1);
+						player.level.playSound(null, player, EffectInit.SWRG_BOOST.get(), SoundSource.PLAYERS, 1, 1);
 					} else if (plrEmc >= 8192 && player.isShiftKeyDown() && player.level.getLevelData() instanceof ServerLevelData lvlData) {
 						lvlData.setRainTime(6000);
 						lvlData.setThunderTime(6000);
@@ -559,7 +567,10 @@ public class BandOfArcana extends MGTKItem
 			        snowball.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 4F, 4.0F);
 			        level.addFreshEntity(snowball);
 			        level.playSound(null, player, SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
-			        if (!didDo) didDo = true;
+			        if (!didDo) {
+			        	didDo = true;
+				        level.playSound(null, player, EffectInit.ZERO_FREEZE.get(), SoundSource.NEUTRAL, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
+			        }
 				}
 				break;
 				
@@ -685,6 +696,7 @@ public class BandOfArcana extends MGTKItem
 					player.sendMessage(PELang.DIVINING_THIRD_MAX.translate(maxValues[2]), Util.NIL_UUID);
 					player.getCooldowns().addCooldown(PEItems.HIGH_DIVINING_ROD.get(), 10);
 					didDo = true;
+					level.playSound(null, player, EffectInit.PHILO_XRAY.get(), SoundSource.PLAYERS, 1, 2);
 					break;
 					
 				case 6: // Archangels
@@ -739,17 +751,17 @@ public class BandOfArcana extends MGTKItem
 						int cdTime = (int) lEnt.getHealth()*7;
 						if (entityItemizer(lEnt, player, null)) {
 							didDo = true;
-							player.level.playSound(null, player, SoundEvents.BLAZE_DEATH, SoundSource.PLAYERS, 1, 2);
+							player.level.playSound(null, player, EffectInit.PHILO_ITEMIZE.get(), SoundSource.PLAYERS, 1, 2);
 							player.getCooldowns().addCooldown(PEItems.PHILOSOPHERS_STONE.get(), cdTime);
 							EmcHelper.consumeAvaliableEmc(player, 131072);
 							break;
 						}
 					}
-					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 1, 100), player);
-					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_POTION, 2f);
-					lEnt.hurt(DamageSource.playerAttack(player), lEnt.getHealth()/2);
+					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 1200, 0), player);
+					lEnt.setLastHurtByPlayer(player);
+					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_2, lEnt.getHealth()/2f);
 					EmcHelper.consumeAvaliableEmc(player, 1024);
-					player.level.playSound(null, player, ModSounds.terrasteelCraft, SoundSource.PLAYERS, 1, 2);
+					player.level.playSound(null, player, EffectInit.PHILO_ATTACK.get(), SoundSource.PLAYERS, 1, 2);
 					didDo = true;
 				}
 				break;
@@ -1039,7 +1051,7 @@ public class BandOfArcana extends MGTKItem
 		
 		// Displays a message over the hotbar on mode switch, corresponding to newMode
 		player.displayClientMessage(new TranslatableComponent("tip.mgtk.arc_mode_swap", new TranslatableComponent(KEY_MODES[newMode])), true);
-		player.level.playSound(null, player, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 1, 0.7f);
+		player.level.playSound(null, player, EffectInit.BOA_MODE.get(), SoundSource.PLAYERS, 1, 0.7f);
 		return true;
 	}
 
@@ -1236,8 +1248,7 @@ public class BandOfArcana extends MGTKItem
 	private boolean shootLavaProjectile(Player player) {
 		long consumed = EmcHelper.consumeAvaliableEmc(player, 64);
 		if (consumed >= 64) {
-			player.level.playSound(null, player, PESoundEvents.TRANSMUTE.get(), SoundSource.PLAYERS, 0.5f, 1);
-			player.level.playSound(null, player, SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 1, 1);
+			player.level.playSound(null, player, EffectInit.LIQUID_LAVA_CREATE.get(), SoundSource.PLAYERS, 1, 1);
 			FreeLavaProjectile proj = new FreeLavaProjectile(player, player.level);
 			proj.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1.5F, 1);
 			player.level.addFreshEntity(proj);
@@ -1276,7 +1287,7 @@ public class BandOfArcana extends MGTKItem
 	 */
 	public static boolean shootMustang(Player player, ItemStack stack) {
 		if (player.level.isRainingAt(player.blockPosition())) {
-			player.level.playSound(null, player, SoundEvents.NOTE_BLOCK_HAT, SoundSource.PLAYERS, 1F, 1.7F);
+			player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1F, 1.7F);
 			player.level.playSound(null, player, SoundEvents.LAVA_EXTINGUISH, SoundSource.PLAYERS, 0.5F, 2f);
 			return false;
 		}
@@ -1300,7 +1311,7 @@ public class BandOfArcana extends MGTKItem
 		}
 		
 		player.level.addFreshEntity(burst);
-		player.level.playSound(null, player, SoundEvents.NOTE_BLOCK_HAT, SoundSource.PLAYERS, 1F, 1.7F);
+		player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1F, 1.7F);
 		return true;
 	}
 	
@@ -1418,8 +1429,7 @@ public class BandOfArcana extends MGTKItem
 		///////////////////////
 
 		// big fwoosh of fire!
-		level.playSound(null, bCent, ModSounds.endoflame, SoundSource.NEUTRAL, 14, 1f);
-		level.playSound(null, bCent, SoundEvents.BLAZE_SHOOT, SoundSource.NEUTRAL, 2.5f, 1f);
+		level.playSound(null, bCent, EffectInit.IGNITION_BURN.get(), SoundSource.NEUTRAL, 3f, 1f);
 		//level.playSound(null, bCent, SoundEvents.GENERIC_EXPLODE, SoundSource.NEUTRAL, 2.5f, 0.1f);
 		if (debug) {
 			

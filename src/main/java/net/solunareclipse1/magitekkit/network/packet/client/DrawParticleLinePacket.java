@@ -19,6 +19,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;
 
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 
 import vazkii.botania.client.fx.SparkleParticleData;
@@ -71,9 +72,17 @@ public record DrawParticleLinePacket(Vec3 start, Vec3 end, int preset) {
         		//particles.put(ParticleTypes.CRIMSON_SPORE, 0.5);
         		//particles.put(ParticleTypes.WHITE_ASH, 0.5);
         		break;
+        		
+        	case 3: // ignition aoe
+        		//particles.put(ParticleTypes.BUBBLE_POP, 0.1);
+        		particles.put(WispParticleData.wisp(0.1f, 1, 0.2f, 0), 0.08); //.noClip(2, 1, 0.1f, 0, 20), 0.1);
+        		//particles.put(ParticleTypes.CRIMSON_SPORE, 0.5);
+        		//particles.put(ParticleTypes.WHITE_ASH, 0.5);
+        		break;
         	
         	default: // invalid
-        		level.playSound(null, start.x, start.y, start.z, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.MASTER, 100, 1);
+				LoggerHelper.printWarn("DrawParticleLinePacket", "InvalidPreset", "Line particles preset " + preset + " is undefined!");
+        		level.playSound(null, start.x, start.y, start.z, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.MASTER, 100, 2);
         		level.addAlwaysVisibleParticle(ParticleTypes.ELDER_GUARDIAN, start.x, start.y, start.z, 0, 0, 0);
         		level.addAlwaysVisibleParticle(ParticleTypes.DRAGON_BREATH, start.x, start.y, start.z, 0, 0, 0);
         		level.addAlwaysVisibleParticle(ParticleTypes.DRAGON_BREATH, end.x, end.y, end.z, 0, 0, 0);

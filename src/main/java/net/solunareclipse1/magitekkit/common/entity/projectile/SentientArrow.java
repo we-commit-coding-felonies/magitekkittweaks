@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.Lists;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -20,6 +21,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -37,6 +39,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Team;
 
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 
@@ -50,10 +54,13 @@ import net.solunareclipse1.magitekkit.util.EntityHelper;
 
 import vazkii.botania.client.fx.ModParticles;
 import vazkii.botania.client.fx.WispParticleData;
+import vazkii.botania.common.entity.EntityDoppleganger;
+import vazkii.botania.common.entity.EntityPixie;
 
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.common.effect.TransmutingEffect;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
+import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 
 /** relentlessly seeks target & pathfinds */
@@ -133,13 +140,29 @@ public class SentientArrow extends Arrow {
 		if (hasTarget()) {
 			if (canHitEntity(hitRes.getEntity())) {
 				if (hitRes.getEntity() instanceof LivingEntity entity) {
-					if (entity instanceof Player plr && GemJewelryBase.isBarrierActive(plr)) {
-						// massive shield damage
-						plr.hurt(MGTKDmgSrc.TRANSMUTATION, plr.getMaxHealth()*10);
-					} else {
-						entity.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 7, 1));
-						entity.playSound(PESoundEvents.DESTRUCT.get(), 1, 2f);
+					MobEffectInstance transEffect = new MobEffectInstance(EffectInit.TRANSMUTING.get(), 7, 1);
+					if (entity instanceof EntityDoppleganger gaia && getOwner() instanceof Player plr ) {
+						// gaia refuses to take damage unless its player damage
+						gaia.hurt(DamageSource.playerAttack(plr), gaia.getMaxHealth());
+						entity.invulnerableTime = 0;
+					} else if (entity instanceof Player plr && GemJewelryBase.isBarrierActive(plr)) {
+						// massive damage to alchshield
+						entity.hurt(MGTKDmgSrc.TRANSMUTATION, entity.getMaxHealth()*10);
+						entity.invulnerableTime = 0;
+					} else if (entity instanceof EntityPixie pixie) {
+						// die
+						pixie.setHealth(0);
+					} else if (!entity.addEffect(transEffect)) {
+						// if we cant do the effect, try to itemize
+						//if (!BandOfArcana.entityItemizer(entity, getOwner(), this)) {
+							// if that doesnt work, just do a shitload of damage
+							entity.hurt(MGTKDmgSrc.TRANSMUTATION, entity.getMaxHealth()/5);
+							entity.invulnerableTime = 0;
+						//}
 					}
+					entity.playSound(EffectInit.ARCHANGELS_SENTIENT_HIT.get(), 1, 2f);
+					
+					
 					if (entity.is(getTarget())) {
 						findNewTarget();
 					}
@@ -183,7 +206,8 @@ public class SentientArrow extends Arrow {
 			}
 			if (hasTarget()) {
 				seekTarget();
-				EntityHitResult hitresult = this.findHitEntity(position(), position().add(getDeltaMovement()));
+				Vec3 predictedPos = position().add(getDeltaMovement());
+				EntityHitResult hitresult = this.findHitEntity(position(), predictedPos);
 				
 				if (hitresult != null && hitresult.getType() == HitResult.Type.ENTITY) {
 					Entity entity = ((EntityHitResult)hitresult).getEntity();
@@ -195,9 +219,10 @@ public class SentientArrow extends Arrow {
 				
 				if (hitresult != null && hitresult.getType() != HitResult.Type.MISS && !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, hitresult)) {
 					this.onHit(hitresult);
+					predictedPos = hitresult.getEntity().position();
 					this.hasImpulse = true;
 				}
-				this.setPos(position().add(getDeltaMovement()));
+				this.setPos(predictedPos);
 				return;
 			}
 		}
@@ -250,7 +275,7 @@ public class SentientArrow extends Arrow {
 	}
 
 	@Nullable
-	protected LivingEntity getTarget() {
+	public LivingEntity getTarget() {
 		Entity tEnt = level.getEntity(entityData.get(TARGET_ID));
 		if (tEnt instanceof LivingEntity target) {
 			return target;
@@ -266,12 +291,12 @@ public class SentientArrow extends Arrow {
 		return getAiState() == 0;
 	}
 
-	protected boolean hasTarget() {
+	public boolean hasTarget() {
 		return getAiState() == 1;
 	}
 
 
-	protected boolean isInert() {
+	public boolean isInert() {
 		return getAiState() == 2;
 	}
 	
@@ -330,8 +355,8 @@ public class SentientArrow extends Arrow {
 	}
 	
 	public void expire() {
-		playSound(SoundEvents.PLAYER_BREATH, 1, 0.5f);
-		level.playSound(null, getOwner().blockPosition(), SoundEvents.PLAYER_BREATH, SoundSource.PLAYERS, 1, 0.1f);
+		playSound(EffectInit.ARCHANGELS_EXPIRE.get(), 1, 0.5f);
+		level.playSound(null, getOwner().blockPosition(), EffectInit.ARCHANGELS_EXPIRE.get(), SoundSource.PLAYERS, 1, 0.1f);
 		discard();
 	}
 	
@@ -343,5 +368,14 @@ public class SentientArrow extends Arrow {
 	@Override
 	public boolean ignoreExplosion() {
 		return getAiState() < 2;
+	}
+	
+	// doesnt seem to work
+	@Override
+	public int getTeamColor() {
+		//if (this.getTeam() == null) {
+		//	return 0xB32F67;
+		//}
+		return super.getTeamColor();
 	}
 }

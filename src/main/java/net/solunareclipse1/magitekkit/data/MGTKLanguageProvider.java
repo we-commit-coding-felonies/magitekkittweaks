@@ -12,6 +12,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+    	// blocks & items
         add("itemGroup." + MagiTekkit.MODID, "MagiTekkit");
         
         add(ObjectInit.GANTIUM_BLOCK.get(), "Block of Gantium");
@@ -34,6 +35,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.GEM_ANKLET.get(), "Hurricane Anklet");
         add(ObjectInit.GEM_BRACELET.get(), "Band of Arcana");
         
+        // tooltips
         add("tip.mgtk.arc_mode_swap", "Abilities: %s");
         add("tip.mgtk.arc_mode_0", "Disabled");
         add("tip.mgtk.arc_mode_1", "Mind");
@@ -50,17 +52,58 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.gem_amulet", "PLACEHOLDER: Perhaps wearing this around your neck isn't the best idea...");
         add("tip.mgtk.gem_timepiece", "2... 3... 5... 7... 11... 13...");
         add("tip.mgtk.gem_anklet", "Not to be confused with Anklet of the Wind");
-        
-        add("subtitles.mgtk.jewelry.break", "Jewellery shatters");
-        add("subtitles.mgtk.alchshield.ambient", "Alchemical barrier hums");
-        add("subtitles.mgtk.alchshield.protect", "Alchemical barrier deflects");
-        add("subtitles.mgtk.alchshield.fail", "Alchemical barrier shatters");
-        add("subtitles.mgtk.emc.waste", "EMC disperses");
-        add("subtitles.mgtk.emc.leak", "Amulet leaks");
-        add("subtitles.mgtk.matterarmor.absorb", "Damage absorbed");
-        add("subtitles.mgtk.matterarmor.break", "Armor degrades");
-        add("subtitles.mgtk.woft.tick", "Time accelerates");
 
+        
+        
+        // subtitles
+        add("subtitles.mgtk.alchshield.ambient", "Barrier hums");
+        add("subtitles.mgtk.alchshield.fail", "Barrier disintegrates");
+        add("subtitles.mgtk.alchshield.ignored", "Barrier pierced");
+        add("subtitles.mgtk.alchshield.protect", "Barrier deflects");
+        
+        add("subtitles.mgtk.emc.leak", "EMC leaks");
+        add("subtitles.mgtk.emc.waste", "EMC disperses");
+        
+        add("subtitles.mgtk.god.attack", "Deity attacks");
+        add("subtitles.mgtk.god.chat", "Deity speaks");
+
+        add("subtitles.mgtk.item.archangels.expire", "Magic arrow vanishes");
+        add("subtitles.mgtk.item.archangels.redirect", "Magic arrow aims");
+        add("subtitles.mgtk.item.archangels.sentient.ambient", "Whispers of sentience");
+        add("subtitles.mgtk.item.archangels.sentient.hit", "Magic arrow transmutes something");
+        
+        add("subtitles.mgtk.item.boa.mode", "Band of Arcana changes mode");
+        add("subtitles.mgtk.item.boa.liquid.destroy", "Liquid annihilated");
+        add("subtitles.mgtk.item.boa.liquid.water.create", "Water transmuted");
+        add("subtitles.mgtk.item.boa.liquid.water.switch", "Band of Arcana changes liquid");
+        add("subtitles.mgtk.item.boa.liquid.lava.create", "Lava transmuted");
+        add("subtitles.mgtk.item.boa.liquid.lava.switch", "Band of Arcana changes liquid");
+
+        add("subtitles.mgtk.item.ignition.burn", "Atmosphere ignites");
+        add("subtitles.mgtk.item.ignition.click", "Alchemical spark");
+        
+        add("subtitles.mgtk.item.matterarmor.absorb", "Damage absorbed");
+        add("subtitles.mgtk.item.matterarmor.degrade", "Armor degrades");
+        add("subtitles.mgtk.item.matterarmor.shatter", "Jewellery shatters");
+
+        add("subtitles.mgtk.item.philo.3x3gui", "Alchemist opens crafting grid");
+        add("subtitles.mgtk.item.philo.attack", "Magnum Opus transmutes entity");
+        add("subtitles.mgtk.item.philo.itemize", "Something becomes item");
+        add("subtitles.mgtk.item.philo.transmute", "Minium transmutation");
+        add("subtitles.mgtk.item.philo.xray", "Divining Rod activates");
+
+        add("subtitles.mgtk.item.swrg.boost", "Alchemy-induced gust");
+        add("subtitles.mgtk.item.swrg.smite", "Rending Gale smites");
+
+        add("subtitles.mgtk.item.woft.attract", "Gravity pulls");
+        add("subtitles.mgtk.item.woft.blink", "Alchemist teleports");
+        add("subtitles.mgtk.item.woft.mode", "Pocketwatch clicks");
+        add("subtitles.mgtk.item.woft.repel", "Gravity pushes");
+        add("subtitles.mgtk.item.woft.tick", "Time accelerates");
+
+        
+        
+        // death messages
         add("death.attack.aoe", "%s rests in pieces");
         add("death.attack.aoe.player", "%s was butchered by %s");
         add("death.attack.aoe2", "%s was rended asunder");
@@ -70,14 +113,13 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("death.attack.transmutation.strong", "%s experienced the law of equivalent exchange");
         add("death.attack.transmutation.strong.player", "%s's carbon was transmuted by %s");
         add("death.attack.transmutation.potion", "%s was converted into EMC");
-        add("death.attack.transmutation.potion.player", "%s became one with %s's fuel source");
+        add("death.attack.transmutation.potion.player", "%s is now a mere statistic thanks to %s");
         add("death.attack.mustang", "%s phlogistonated");
         add("death.attack.mustang.player", "%s was immolated by %s");
         add("death.attack.emcnuke", "%s was atomized by a catastrophic energy release");
         add("death.attack.emcnuke.player", "%s underwent fission because of %s");
-        add("death.attack.god", "%s became a work of fiction");
+        add("death.attack.god", "%s is a work of fiction");
         add("death.attack.god.player", "%s was retconned by %s");
-        
         // since avaritia cant do it themselves, apparently
         add("death.attack.infinity", "%s stopped existing");
         add("death.attack.infinity.1", "%s was divided by zero");

@@ -16,6 +16,7 @@ import net.minecraft.world.phys.Vec3;
 
 import net.minecraftforge.network.NetworkEvent;
 
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 
 import vazkii.botania.client.fx.WispParticleData;
@@ -64,9 +65,10 @@ public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, int preset) {
         		break;
         	
         	default: // invalid
-        		level.playSound(null, cent.x, cent.y, cent.z, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.MASTER, 100, 1);
+				LoggerHelper.printWarn("DrawParticleAABBPacket", "InvalidPreset", "AABB particles preset " + preset + " is undefined!");
+        		level.playSound(null, cent.x, cent.y, cent.z, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.MASTER, 100, 2);
         		level.addAlwaysVisibleParticle(ParticleTypes.ELDER_GUARDIAN, cent.x, cent.y, cent.z, 0, 0, 0);
-        		MiscHelper.drawAABBWithParticles(box.deflate(0.05), ParticleTypes.DRAGON_BREATH, stepSize, level, true);
+        		MiscHelper.drawAABBWithParticles(box, ParticleTypes.DRAGON_BREATH, stepSize, level, true);
         		particle = ParticleTypes.CAMPFIRE_SIGNAL_SMOKE;
         		break;
         	}

@@ -22,7 +22,7 @@ public class ColorsHelper {
 	 */
 	public enum Color {
 		MIDGREEN(0, 128, 0, 120, 100, 50),
-		PHILOSOPHERS(179, 47, 103, 335, 74, 70),
+		PHILOSOPHERS(179, 47, 103, 335, 74, 70), // 0xb32f67
 		COVALENCE_GREEN(0, 210, 74, 141, 100, 82),
 		COVALENCE_BLUE(0, 77, 210, 218, 100, 82),
 		COVALENCE_GREEN_TRUE(39, 210, 0, 109, 100, 82)
