@@ -79,6 +79,10 @@ public record DrawParticleLinePacket(Vec3 start, Vec3 end, int preset) {
         		//particles.put(ParticleTypes.CRIMSON_SPORE, 0.5);
         		//particles.put(ParticleTypes.WHITE_ASH, 0.5);
         		break;
+        		
+        	case 4: // sentient arrow manual redirect
+        		particles.put(ParticleTypes.ENCHANT, 0.1);
+        		break;
         	
         	default: // invalid
 				LoggerHelper.printWarn("DrawParticleLinePacket", "InvalidPreset", "Line particles preset " + preset + " is undefined!");

@@ -1,7 +1,10 @@
 package net.solunareclipse1.magitekkit.util;
 
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+
+import net.solunareclipse1.magitekkit.init.ObjectInit;
 
 import morph.avaritia.handler.ArmorHandler;
 import vazkii.botania.common.entity.EntityDoppleganger;
@@ -31,5 +34,9 @@ public class EntityHelper {
 		}
 		
 		return invincible;
+	}
+	
+	public static boolean isImmuneToGravityManipulation(Entity entity) {
+		return (entity instanceof Player player && player.getItemBySlot(EquipmentSlot.LEGS).is(ObjectInit.GEM_TIMEPIECE.get())) || isInvincible(entity);
 	}
 }

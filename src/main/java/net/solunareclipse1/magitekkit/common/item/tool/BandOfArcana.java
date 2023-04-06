@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllItems;
+import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.foundation.item.CustomArmPoseItem;
 
 import net.minecraft.ChatFormatting;
@@ -36,10 +37,12 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
@@ -50,6 +53,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
+import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemCooldowns;
@@ -130,12 +134,15 @@ import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
 import net.solunareclipse1.magitekkit.util.Constants.Cooldowns;
 import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
 import net.solunareclipse1.magitekkit.util.Constants.Xp;
 import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
+import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.PlrHelper;
 import net.solunareclipse1.magitekkit.util.ProjectileHelper;
@@ -171,6 +178,7 @@ public class BandOfArcana extends MGTKItem
 	public static final String TAG_LIQUID = "boa_liquid";
 	public static final String TAG_WOFT = "boa_woft";
 	public static final String TAG_OFFENSIVE = "boa_offensive";
+	public static final String TAG_ARROWTRACKER = "boa_arrowtracker";
 	private static final String[] KEY_MODES = {
 			"tip.mgtk.arc_mode_0", // Disabled
 			"tip.mgtk.arc_mode_1", // Mind
@@ -312,11 +320,21 @@ public class BandOfArcana extends MGTKItem
 				}
 				break;
 				
-			case 2: // Watch (toggle local/global time manip)
+			case 2: // Watch (ender chest / toggle local/global time manip)
 				if (!player.isUsingItem()) {
-					changeWoft(stack);
-					player.level.playSound(null, player, EffectInit.WOFT_MODE.get(), SoundSource.PLAYERS, 1, 1.4f);
-					didDo = true;
+					if (player.isShiftKeyDown()) {
+						changeWoft(stack);
+						player.level.playSound(null, player, EffectInit.WOFT_MODE.get(), SoundSource.PLAYERS, 1, 1.4f);
+						didDo = true;
+					} else {
+						// thanks botania :D
+						player.openMenu(new SimpleMenuProvider((windowId, playerInv, p) -> {
+							return ChestMenu.threeRows(windowId, playerInv, p.getEnderChestInventory());
+						}, stack.getHoverName()));
+						player.level.playSound(null, player, SoundEvents.ENDER_CHEST_OPEN, SoundSource.PLAYERS, 1F, 1f);
+						player.level.playSound(null, player, SoundEvents.ENDER_CHEST_CLOSE, SoundSource.PLAYERS, 1F, 1f);
+						didDo = true;
+					}
 				}
 				break;
 				
@@ -464,23 +482,54 @@ public class BandOfArcana extends MGTKItem
 				//	cooldown.addCooldown(PEItems.ARCHANGEL_SMITE.get(), 5);
 				//	didDo = true;
 				//}
+				if (hasTrackedArrow(stack)) {
+					SentientArrow arrow = getTrackedArrow(stack, player.level);
+					if (arrow == null) {
+						// arrow doesnt exist, stop trackingt
+						resetTrackedArrow(stack);
+					} else if (!player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
+						// try redirecting the arrow
+						if (arrow.manualRedirectByOwner(true)) {
+							// success
+							AllSoundEvents.WHISTLE_TRAIN_MANUAL.playFrom(player, 1, 3);
+							//player.level.playSound(null, player, AllSoundEvents.WHISTLE_HIGH, SoundSource.PLAYERS, 1, 1);
+							for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+								if (plr.blockPosition().closerToCenterThan(player.position(), 64)) {
+									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), 4), plr);
+									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getTarget().getBoundingBox().getCenter(), 4), plr);
+								}
+							}
+							didDo = true;
+						}
+						player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 10);
+						break;
+					}
+				}
 				if (plrEmc >= EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
+					System.out.println("======== CREATION ========");
 					SentientArrow arrow = new SentientArrow(player.level, player, 1);
+					System.out.println("NEW: " + arrow.getDeltaMovement());
+					System.out.println("PLAYER: " + player.getXRot() + " | " + player.getYRot());
 					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1.2f, 0);
+					System.out.println("SHOT: " + arrow.getDeltaMovement());
 					//if (!player.isOnGround()) {
 					//} else {
 					//	arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
 					//}
 					//arrow.setCritArrow(true);
 					player.level.addFreshEntity(arrow);
+					changeTrackedArrow(stack, arrow);
+					System.out.println("ADDED: " + arrow.getDeltaMovement());
 					for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
 						NetworkInit.toClient(new CreateLoopingSoundPacket((byte)1, arrow.getId()), plr);
 					}
 					//player.playSound(PESoundEvents.POWER.get(), 1, 0.1f);//
 					player.level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (player.level.random.nextFloat() * 0.4F + 1.2F) + (1 / 3) * 0.5F));
 					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW);
-					
-					player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 200);
+					didDo = true;
+					//if (!player.getName().getString().contains("Dev")) {
+					//	player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 200);
+					//}
 				}
 				break;
 				
@@ -550,6 +599,34 @@ public class BandOfArcana extends MGTKItem
 					PlrHelper.insertXp(player, extractXp(stack, amount));
 					player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
 					didDo = true;
+				}
+				break;
+				
+			case 2: // Watch (gravity attract / repel)
+				for ( LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(player.getBoundingBox().getCenter(), 24, 24, 24), ent -> !EntityHelper.isImmuneToGravityManipulation(ent)) ) {
+					//System.out.println(ent);
+					if (ent.is(player)) continue; // Heres a funny joke: NaN
+					
+					double dX = player.getX() - ent.getX();
+					double dY = player.getY() - ent.getY();
+					double dZ = player.getZ() - ent.getZ();
+					double dist = Math.sqrt(dX * dX + dY * dY + dZ * dZ);
+					double vel = 5.0D - dist / 15.0D;
+					if (vel > 0.0D) {
+						didDo = true;
+						vel *= vel;
+						Vec3 addVec = new Vec3(dX / dist * vel * 0.1, dY / dist * vel * 0.1, dZ / dist * vel * 0.1);
+						if (player.isShiftKeyDown()) addVec = addVec.reverse();
+						if (ent instanceof ServerPlayer plr) {
+							System.out.println("i like to move it move it");
+							NetworkInit.toClient(new ModifyPlayerVelocityPacket(addVec, (byte)1), plr);
+						} else {
+							ent.setDeltaMovement(ent.getDeltaMovement().add(addVec));
+						}
+					}
+				}
+				if (didDo) {
+					level.playSound(null, player.blockPosition(), player.isShiftKeyDown() ? EffectInit.WOFT_REPEL.get() : EffectInit.WOFT_ATTRACT.get(), SoundSource.PLAYERS, 1, 1);
 				}
 				break;
 				
@@ -757,9 +834,12 @@ public class BandOfArcana extends MGTKItem
 							break;
 						}
 					}
-					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 1200, 0), player);
 					lEnt.setLastHurtByPlayer(player);
-					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_2, lEnt.getHealth()/2f);
+					if (lEnt instanceof NeutralMob mob) {
+						mob.setPersistentAngerTarget(player.getUUID());
+					}
+					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_2, lEnt.getMaxHealth()/2f);
+					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 3, 2), player);
 					EmcHelper.consumeAvaliableEmc(player, 1024);
 					player.level.playSound(null, player, EffectInit.PHILO_ATTACK.get(), SoundSource.PLAYERS, 1, 2);
 					didDo = true;
@@ -1015,6 +1095,26 @@ public class BandOfArcana extends MGTKItem
 	
 	public void changeLiquid(ItemStack stack) {
 		ItemNBTHelper.setBoolean(stack, TAG_LIQUID, !getLiquid(stack));
+	}
+	
+	public boolean hasTrackedArrow(ItemStack stack) {
+		return ItemNBTHelper.getInt(stack, TAG_ARROWTRACKER, -1) != -1;
+	}
+	
+	@Nullable
+	public SentientArrow getTrackedArrow(ItemStack stack, Level level) {
+		Entity tracked = level.getEntity(ItemNBTHelper.getInt(stack, TAG_ARROWTRACKER, -1));
+		if (tracked != null && tracked instanceof SentientArrow arrow) {
+			return arrow;
+		} else return null;
+	}
+	
+	public void changeTrackedArrow(ItemStack stack, SentientArrow arrow) {
+		ItemNBTHelper.setInt(stack, TAG_ARROWTRACKER, arrow.getId());
+	}
+	
+	public void resetTrackedArrow(ItemStack stack) {
+		ItemNBTHelper.setInt(stack, TAG_ARROWTRACKER, -1);
 	}
 	
 	

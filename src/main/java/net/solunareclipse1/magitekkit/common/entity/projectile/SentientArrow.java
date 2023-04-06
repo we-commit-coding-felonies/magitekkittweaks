@@ -35,6 +35,7 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -131,7 +132,7 @@ public class SentientArrow extends Arrow {
 	@Override
 	protected boolean canHitEntity(Entity ent) {
 		// we will never hit our owner
-		boolean canHit = !ent.is(getOwner()) && !EntityHelper.isInvincible(ent) && !isInert();
+		boolean canHit = !ent.is(getOwner()) && !EntityHelper.isInvincible(ent); //&& !isInert();
 		return canHit && super.canHitEntity(ent);
 	}
 	
@@ -182,6 +183,10 @@ public class SentientArrow extends Arrow {
 
 	@Override
 	public void tick() {
+		//System.out.println(position() + " | " + getDeltaMovement());
+		//if (hasTarget()) {
+		//	System.out.println(getTarget().position() + " | " + getTarget().getDeltaMovement());
+		//}
         float r = Color.PHILOSOPHERS.R / 255.0f;
         float g = Color.PHILOSOPHERS.G / 255.0f;
         float b = Color.PHILOSOPHERS.B / 255.0f;
@@ -243,6 +248,12 @@ public class SentientArrow extends Arrow {
 				&& !entity.getType().is(MGTKEntityTags.PHILO_HOMING_ARROW_BLACKLIST)
 				&& (!entity.isInvisible() || entity.isCurrentlyGlowing())
 				&& !entity.hasEffect(EffectInit.TRANSMUTING.get());
+	}
+	
+	protected boolean isValidHomingTarget(Entity entity) {
+		if (entity instanceof LivingEntity ent) {
+			return isValidHomingTarget(ent);
+		} else return false;
 	}
 
 	protected void findNewTarget() {
@@ -317,20 +328,40 @@ public class SentientArrow extends Arrow {
 		if (target != null && isValidHomingTarget(target)) {
 			// line of sight check between AABB centers
 			BlockHitResult lineOfSight = level.clip(new ClipContext(getBoundingBox().getCenter(), target.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
-			if (true || lineOfSight.getType() != HitResult.Type.BLOCK) {
+			// check if our x / z position isnt exactly the same as targets
+			// fixes weird issue where arrow flies straight up
+			if ( /*(position().x != getTarget().position().x || position().z != getTarget().position().z)*/true || lineOfSight.getType() != HitResult.Type.BLOCK ) {
 				// we have direct line of sight, beeline
 				// virtually identical to SmartArrow
-				Vec3 vel = getDeltaMovement();
-				Vec3 arrowLoc = position();
-				Vec3 targetLoc = target.getBoundingBox().getCenter();
-				Vec3 lookVec = targetLoc.subtract(arrowLoc);
-				double theta = CalcHelper.wrap180Radian(CalcHelper.angleBetween(vel, lookVec));
-				//theta = CalcHelper.clampAbs(theta, Math.PI / 2); // gives arrow a turn radius
-				Vec3 crossProduct = vel.cross(lookVec).normalize();
-				Vec3 adjustedLookVec = CalcHelper.transform(crossProduct, theta, vel);
-				shoot(adjustedLookVec.x, adjustedLookVec.y, adjustedLookVec.z, 5F, 0);
+				//Vec3 vel = getDeltaMovement();
+				//Vec3 arrowLoc = position();
+				//Vec3 targetLoc = target.getBoundingBox().getCenter();
+				//Vec3 lookVec = targetLoc.subtract(arrowLoc);
+				//double theta = CalcHelper.wrap180Radian(CalcHelper.angleBetween(vel, lookVec));
+				//System.out.println("poggin: " + getTarget().position().subtract(position()));
+				//Vec3 between = getTarget().position().subtract(position());
+				//if (getTarget().position().subtract(position()) == new Vec3(0, between.y, 0)) {
+				//	theta = CalcHelper.clampAbs(theta, Math.PI / 2); // gives arrow a turn radius
+				//}
+				//Vec3 crossProduct = vel.cross(lookVec).normalize();
+				//Vec3 adjustedLookVec = CalcHelper.transform(crossProduct, theta, vel);
+				//shoot(adjustedLookVec.x, adjustedLookVec.y, adjustedLookVec.z, 5F, 0);
+				Vec3 between = getTarget().position().subtract(position()).normalize();
+				//System.out.println(between);
+				if (between.equals(Vec3.ZERO)) {
+					between = getTarget().getBoundingBox().getCenter().subtract(getBoundingBox().getCenter()).normalize();
+				}
+				shoot(between.x, between.y, between.z, 5, 0);
 				this.hasImpulse = true;
-			} /*else {
+			} /*else if (position().x == getTarget().position().x && position().z == getTarget().position().z) {
+				System.out.println("greetings");
+				if (getTarget().getY() > this.getY()) {
+					shoot(adjustedLookVec.x, adjustedLookVec.y, adjustedLookVec.z, 5F, 0);
+				}
+				this.setPos(getTarget().position());
+				this.hasImpulse = true;
+			}
+			/*else {
 				System.out.println(target);
 				// block in the way so we try pathfinding
 			}*/
@@ -339,6 +370,57 @@ public class SentientArrow extends Arrow {
 			resetTarget();
 			changeAiState((byte) 0);
 		}
+	}
+	
+	/**
+	 * called when owner shoots again before current arrow dies <br>
+	 * tries to swap target to the entity they are looking at, or just the nearest entity to them <br>
+	 * if no valid targets were found, we continue with our current target
+	 * 
+	 * @param cancelInert if true, finding a valid target will make the arrow stop being inert
+	 * @return if the redirect was successful
+	 */
+	public boolean manualRedirectByOwner(boolean cancelInert) {
+		if (cancelInert || !isInert()) {
+			Entity owner = getOwner();
+			if (owner == null) return false;
+			Vec3 ray = owner.getLookAngle().scale(128);
+			EntityHitResult hitRes = ProjectileUtil.getEntityHitResult(level, owner, owner.getEyePosition(), owner.getEyePosition().add(ray), owner.getBoundingBox().expandTowards(ray).inflate(1.0D), SentientArrow.this::isValidHomingTarget);
+			if (hitRes != null && hitRes.getEntity() != null) {
+				BlockHitResult sightCheck = level.clip(new ClipContext(owner.getEyePosition(), hitRes.getEntity().getBoundingBox().getCenter(), ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, owner));
+				if (sightCheck != null && sightCheck.getType() != HitResult.Type.MISS) return false; // check for blocks in the way
+				changeTarget(hitRes.getEntity());
+				changeAiState((byte)1);
+				return true;
+			} else {
+				Vec3 oldPos = this.position();
+				Entity oldTarget = getTarget();
+				setPos(owner.getEyePosition());
+				findNewTarget(); // lol,
+				setPos(oldPos); // lmao
+				Entity newTarget = getTarget();
+				if (newTarget != null) {
+					if (newTarget.is(oldTarget)) return false;
+					changeAiState((byte)1);
+					return true;
+				} else {
+					if (oldTarget != null) changeTarget(oldTarget);
+					return false;
+				}
+				//if (getTarget() != null && !getTarget().is(oldTarget)) {
+				//	// our new target is acceptable
+				//	changeAiState((byte)1);
+				//	System.out.println(hasTarget());
+				//	return true;
+				//} else if (getTarget() == null) {
+				//	if (oldTarget != null) changeTarget(oldTarget);
+				//	return false;
+				//} else {
+				//	return false;
+				//}
+			}
+		}
+		return false;
 	}
 	
 	/** makes the smart arrow stop being smart */
@@ -377,5 +459,10 @@ public class SentientArrow extends Arrow {
 		//	return 0xB32F67;
 		//}
 		return super.getTeamColor();
+	}
+	
+	@Override
+	public boolean shouldBeSaved() {
+		return false;
 	}
 }

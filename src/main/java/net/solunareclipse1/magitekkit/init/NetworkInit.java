@@ -11,6 +11,7 @@ import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
 import net.solunareclipse1.magitekkit.network.packet.server.LeftClickAirPacket;
 
@@ -60,6 +61,12 @@ public class NetworkInit {
 				.encoder(CreateLoopingSoundPacket::enc)
         		.decoder(CreateLoopingSoundPacket::dec)
         		.consumer(CreateLoopingSoundPacket::handle)
+        		.add();
+        
+        CHANNEL.messageBuilder(ModifyPlayerVelocityPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ModifyPlayerVelocityPacket::enc)
+        		.decoder(ModifyPlayerVelocityPacket::dec)
+        		.consumer(ModifyPlayerVelocityPacket::handle)
         		.add();
     }
     
