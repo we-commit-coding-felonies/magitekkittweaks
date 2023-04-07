@@ -71,6 +71,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.item.archangels.redirect", "Magic arrow aims");
         add("subtitles.mgtk.item.archangels.sentient.ambient", "Whispers of sentience");
         add("subtitles.mgtk.item.archangels.sentient.hit", "Magic arrow transmutes something");
+        add("subtitles.mgtk.item.archangels.sentient.yondu", "Alchemist retargets");
         
         add("subtitles.mgtk.item.boa.mode", "Band of Arcana changes mode");
         add("subtitles.mgtk.item.boa.liquid.destroy", "Liquid annihilated");

@@ -60,28 +60,23 @@ public record DrawParticleLinePacket(Vec3 start, Vec3 end, int preset) {
         		break;
         		
         	case 1: // projectile target-lock
-        		//particles.put(ParticleTypes.BUBBLE_POP, 0.1);
         		particles.put(SparkleParticleData.noClip(1, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 1), 0.1);
-        		//particles.put(ParticleTypes.CRIMSON_SPORE, 0.5);
-        		//particles.put(ParticleTypes.WHITE_ASH, 0.5);
         		break;
         		
-        	case 2: // projectile target-lock
-        		//particles.put(ParticleTypes.BUBBLE_POP, 0.1);
-        		particles.put(SparkleParticleData.noClip(2, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 20), 0.1);
-        		//particles.put(ParticleTypes.CRIMSON_SPORE, 0.5);
-        		//particles.put(ParticleTypes.WHITE_ASH, 0.5);
+        	case 2: // sentient arrow tracer
+        		particles.put(SparkleParticleData.sparkle(2, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 20), 0.1);
         		break;
         		
         	case 3: // ignition aoe
-        		//particles.put(ParticleTypes.BUBBLE_POP, 0.1);
-        		particles.put(WispParticleData.wisp(0.1f, 1, 0.2f, 0), 0.08); //.noClip(2, 1, 0.1f, 0, 20), 0.1);
-        		//particles.put(ParticleTypes.CRIMSON_SPORE, 0.5);
-        		//particles.put(ParticleTypes.WHITE_ASH, 0.5);
+        		particles.put(WispParticleData.wisp(0.1f, 1, 0.2f, 0), 0.08);
         		break;
         		
-        	case 4: // sentient arrow manual redirect
+        	case 4: // sentient arrow communicate
         		particles.put(ParticleTypes.ENCHANT, 0.1);
+        		break;
+        		
+        	case 5: // sentient arrow manual redirect
+        		particles.put(SparkleParticleData.noClip(2, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 20), 0.1);
         		break;
         	
         	default: // invalid

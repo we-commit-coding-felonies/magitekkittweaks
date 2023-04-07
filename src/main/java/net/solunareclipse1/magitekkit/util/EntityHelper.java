@@ -1,7 +1,14 @@
 package net.solunareclipse1.magitekkit.util;
 
+import java.util.List;
+import java.util.UUID;
+
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.entity.animal.Ocelot;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.player.Player;
 
 import net.solunareclipse1.magitekkit.init.ObjectInit;
@@ -38,5 +45,49 @@ public class EntityHelper {
 	
 	public static boolean isImmuneToGravityManipulation(Entity entity) {
 		return (entity instanceof Player player && player.getItemBySlot(EquipmentSlot.LEGS).is(ObjectInit.GEM_TIMEPIECE.get())) || isInvincible(entity);
+	}
+	
+	/**
+	 * true if given entity is tamed
+	 */
+	public static boolean isTamed(Entity entity) {
+		return entity instanceof TamableAnimal animal && animal.isTame()
+				|| entity instanceof AbstractHorse horse && horse.isTamed();
+	}
+	
+	/**
+	 * player-specific
+	 */
+	public static boolean isTamedBy(Entity entity, Player player) {
+		return entity instanceof TamableAnimal animal && animal.isOwnedBy(player)
+				|| entity instanceof AbstractHorse horse && horse.isTamed() && horse.getOwnerUUID().equals(player.getUUID());
+	}
+	
+	/**
+	 * checks if the entity trusts anything <br>
+	 * for things like foxes
+	 */
+	public static boolean hasTrust(Entity entity) {
+		// Fox, Ocelot
+		return entity instanceof Fox fox && !fox.getTrustedUUIDs().isEmpty()
+				|| entity instanceof Ocelot cat && cat.isTrusting();
+	}
+	
+	/**
+	 * checks if the entity trusts the given player <br>
+	 * for things like foxes
+	 */
+	public static boolean isTrustingOf(Entity entity, Player player) {
+		// Fox, Ocelot
+		return entity instanceof Fox fox && fox.getTrustedUUIDs().contains(player.getUUID())
+				|| entity instanceof Ocelot cat && cat.isTrusting();
+	}
+	
+	public static boolean isTamedOrTrusting(Entity entity) {
+		return isTamed(entity) || hasTrust(entity);
+	}
+	
+	public static boolean isTamedByOrTrusts(Entity entity, Player player) {
+		return isTamedBy(entity, player) || isTrustingOf(entity, player);
 	}
 }

@@ -65,6 +65,7 @@ public class EffectInit {
     public static final RegistryObject<SoundEvent> ARCHANGELS_REDIRECT = registerSound("item.archangels.redirect");
     public static final RegistryObject<SoundEvent> ARCHANGELS_SENTIENT_AMBIENT = registerSound("item.archangels.sentient.ambient");
     public static final RegistryObject<SoundEvent> ARCHANGELS_SENTIENT_HIT = registerSound("item.archangels.sentient.hit");
+    public static final RegistryObject<SoundEvent> ARCHANGELS_SENTIENT_YONDU = registerSound("item.archangels.sentient.yondu");
     public static final RegistryObject<SoundEvent> ARCHANGELS_EXPIRE = registerSound("item.archangels.expire");
     // SWRG
     public static final RegistryObject<SoundEvent> SWRG_SMITE = registerSound("item.swrg.smite");

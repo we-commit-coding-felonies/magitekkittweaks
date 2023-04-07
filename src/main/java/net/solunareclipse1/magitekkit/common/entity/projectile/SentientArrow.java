@@ -27,6 +27,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.projectile.Arrow;
@@ -132,7 +134,7 @@ public class SentientArrow extends Arrow {
 	@Override
 	protected boolean canHitEntity(Entity ent) {
 		// we will never hit our owner
-		boolean canHit = !ent.is(getOwner()) && !EntityHelper.isInvincible(ent); //&& !isInert();
+		boolean canHit = !ent.is(getOwner()) && !EntityHelper.isInvincible(ent) && (!EntityHelper.isTamedOrTrusting(ent) || ent.is(getTarget())); //&& !isInert();
 		return canHit && super.canHitEntity(ent);
 	}
 	
@@ -165,7 +167,10 @@ public class SentientArrow extends Arrow {
 					
 					
 					if (entity.is(getTarget())) {
-						findNewTarget();
+						resetTarget();
+						if (trySwappingTargetTo(findNewTarget())) {
+							doParticles();
+						} else changeAiState((byte) 0);
 					}
 				}
 			}
@@ -176,6 +181,10 @@ public class SentientArrow extends Arrow {
 	@Override
 	protected void onHitBlock(BlockHitResult hitRes) {
 		if (!hasTarget()) {
+			if (canChangeTarget() && trySwappingTargetTo(findNewTarget())) {
+				doParticles();
+				return;
+			}
 			becomeInert();
 			super.onHitBlock(hitRes);
 		}
@@ -204,8 +213,20 @@ public class SentientArrow extends Arrow {
 				if (searchTime > 9) {
 					becomeInert();
 				} else {
-					searchTime++;
-					findNewTarget();
+					if (trySwappingTargetTo(findNewTarget())) {
+						doParticles();
+					} else searchTime++;
+					//Entity newTarget = findNewTarget();
+					//if (newTarget != null) {
+					//	changeTarget(newTarget);
+					//	changeAiState((byte) 1);
+					//	searchTime = 0;
+					//	for (ServerPlayer plr : ((ServerLevel)level).players()) {
+					//		if (plr.blockPosition().closerToCenterThan(newTarget.position(), 64d)) {
+					//			NetworkInit.toClient(new DrawParticleLinePacket(getBoundingBox().getCenter(), newTarget.getBoundingBox().getCenter(), 2), plr);
+					//		}
+					//	}
+					//}
 					//setDeltaMovement(getDeltaMovement().scale(0.35));
 				}
 			}
@@ -241,13 +262,27 @@ public class SentientArrow extends Arrow {
 		return ItemStack.EMPTY;
 	}
 	
-	protected boolean isValidHomingTarget(LivingEntity entity) {
+	/**
+	 * majorly trimmed down verson of isValidHomingTarget(), called when actively homing
+	 * @param entity
+	 * @return
+	 */
+	protected boolean shouldContinueHomingTowards(LivingEntity entity) {
 		return entity != null
 				&& canHitEntity(entity)
-				&& !entity.is(getOwner())
-				&& !entity.getType().is(MGTKEntityTags.PHILO_HOMING_ARROW_BLACKLIST)
 				&& (!entity.isInvisible() || entity.isCurrentlyGlowing())
 				&& !entity.hasEffect(EffectInit.TRANSMUTING.get());
+	}
+	
+	protected boolean isValidHomingTarget(LivingEntity entity) {
+		return entity != null
+				&& getOwner() instanceof Player owner
+				&& owner != null
+				&& canHitEntity(entity)
+				&& !entity.getType().is(MGTKEntityTags.PHILO_HOMING_ARROW_BLACKLIST)
+				&& (!entity.isInvisible() || entity.isCurrentlyGlowing())
+				&& !entity.hasEffect(EffectInit.TRANSMUTING.get())
+				&& !EntityHelper.isTamedByOrTrusts(entity, owner);
 	}
 	
 	protected boolean isValidHomingTarget(Entity entity) {
@@ -255,34 +290,38 @@ public class SentientArrow extends Arrow {
 			return isValidHomingTarget(ent);
 		} else return false;
 	}
+	
+	/**
+	 * same as isValidHomingTarget(), but excludes anything that is tamed by anyone (rather than just by the owner) <br>
+	 * exists to make murdering of other players pets require manual targeting
+	 * @param entity
+	 * @return
+	 */
+	protected boolean isValidHomingTargetForAutomatic(LivingEntity entity) {
+		return isValidHomingTarget(entity) && !EntityHelper.isTamedOrTrusting(entity);
+	}
 
-	protected void findNewTarget() {
-		if (level.isClientSide()) return;
-		
-		List<LivingEntity> validTargets = level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(64), SentientArrow.this::isValidHomingTarget);
-		if (!validTargets.isEmpty()) {
-			validTargets.sort(Comparator.comparing(SentientArrow.this::distanceToSqr, Double::compare));
-			LivingEntity chosenTarget = null;
-			for (LivingEntity candidate : validTargets) {
-				// gets closest entity with line of sight
-				if (level.clip(new ClipContext(this.getBoundingBox().getCenter(), candidate.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this)).getType() == HitResult.Type.MISS) {
-					chosenTarget = candidate;
-					break;
+	protected Entity findNewTarget() {
+		if (!level.isClientSide()) {
+			List<LivingEntity> validTargets = level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(64), SentientArrow.this::isValidHomingTargetForAutomatic);
+			if (!validTargets.isEmpty()) {
+				validTargets.sort(Comparator.comparing(SentientArrow.this::distanceToSqr, Double::compare));
+				LivingEntity chosenTarget = null;
+				for (LivingEntity candidate : validTargets) {
+					// gets closest entity with line of sight
+					if (level.clip(new ClipContext(this.getBoundingBox().getCenter(), candidate.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this)).getType() == HitResult.Type.MISS) {
+						chosenTarget = candidate;
+						break;
+					}
 				}
-			}
-			if (chosenTarget == null) {
-				// if there were none with line of sight, just go with closest
-				chosenTarget = validTargets.get(0);
-			}
-			for (ServerPlayer plr : ((ServerLevel)level).players()) {
-				if (plr.blockPosition().closerToCenterThan(this.position(), 64d)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(getBoundingBox().getCenter(), chosenTarget.getBoundingBox().getCenter(), 2), plr);
+				if (chosenTarget == null) {
+					// if there were none with line of sight, just go with closest
+					chosenTarget = validTargets.get(0);
 				}
+				return chosenTarget;
 			}
-			changeTarget(chosenTarget);
-			changeAiState((byte) 1);
-			searchTime = 0;
 		}
+		return null;
 	}
 
 	@Nullable
@@ -325,50 +364,19 @@ public class SentientArrow extends Arrow {
 	
 	protected void seekTarget() {
 		LivingEntity target = getTarget();
-		if (target != null && isValidHomingTarget(target)) {
+		if (target != null && shouldContinueHomingTowards(target)) {
 			// line of sight check between AABB centers
-			BlockHitResult lineOfSight = level.clip(new ClipContext(getBoundingBox().getCenter(), target.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
-			// check if our x / z position isnt exactly the same as targets
-			// fixes weird issue where arrow flies straight up
-			if ( /*(position().x != getTarget().position().x || position().z != getTarget().position().z)*/true || lineOfSight.getType() != HitResult.Type.BLOCK ) {
-				// we have direct line of sight, beeline
-				// virtually identical to SmartArrow
-				//Vec3 vel = getDeltaMovement();
-				//Vec3 arrowLoc = position();
-				//Vec3 targetLoc = target.getBoundingBox().getCenter();
-				//Vec3 lookVec = targetLoc.subtract(arrowLoc);
-				//double theta = CalcHelper.wrap180Radian(CalcHelper.angleBetween(vel, lookVec));
-				//System.out.println("poggin: " + getTarget().position().subtract(position()));
-				//Vec3 between = getTarget().position().subtract(position());
-				//if (getTarget().position().subtract(position()) == new Vec3(0, between.y, 0)) {
-				//	theta = CalcHelper.clampAbs(theta, Math.PI / 2); // gives arrow a turn radius
-				//}
-				//Vec3 crossProduct = vel.cross(lookVec).normalize();
-				//Vec3 adjustedLookVec = CalcHelper.transform(crossProduct, theta, vel);
-				//shoot(adjustedLookVec.x, adjustedLookVec.y, adjustedLookVec.z, 5F, 0);
-				Vec3 between = getTarget().position().subtract(position()).normalize();
-				//System.out.println(between);
-				if (between.equals(Vec3.ZERO)) {
-					between = getTarget().getBoundingBox().getCenter().subtract(getBoundingBox().getCenter()).normalize();
-				}
-				shoot(between.x, between.y, between.z, 5, 0);
-				this.hasImpulse = true;
-			} /*else if (position().x == getTarget().position().x && position().z == getTarget().position().z) {
-				System.out.println("greetings");
-				if (getTarget().getY() > this.getY()) {
-					shoot(adjustedLookVec.x, adjustedLookVec.y, adjustedLookVec.z, 5F, 0);
-				}
-				this.setPos(getTarget().position());
-				this.hasImpulse = true;
+			BlockHitResult lineOfSight = level.clip(new ClipContext(this.getBoundingBox().getCenter(), target.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+			Vec3 between = target.position().subtract(position()).normalize();
+			if (between.equals(Vec3.ZERO)) {
+				between = target.getBoundingBox().getCenter().subtract(this.getBoundingBox().getCenter()).normalize();
 			}
-			/*else {
-				System.out.println(target);
-				// block in the way so we try pathfinding
-			}*/
+			shoot(between.x, between.y, between.z, 5, 0);
+			this.hasImpulse = true;
 		} else {
 			// NO TARGET
 			resetTarget();
-			changeAiState((byte) 0);
+			if (!isInert())	changeAiState((byte) 0);
 		}
 	}
 	
@@ -384,51 +392,75 @@ public class SentientArrow extends Arrow {
 		if (cancelInert || !isInert()) {
 			Entity owner = getOwner();
 			if (owner == null) return false;
+			//Entity oldTarget = getTarget();
 			Vec3 ray = owner.getLookAngle().scale(128);
 			EntityHitResult hitRes = ProjectileUtil.getEntityHitResult(level, owner, owner.getEyePosition(), owner.getEyePosition().add(ray), owner.getBoundingBox().expandTowards(ray).inflate(1.0D), SentientArrow.this::isValidHomingTarget);
-			if (hitRes != null && hitRes.getEntity() != null) {
+			if (hitRes != null) {
 				BlockHitResult sightCheck = level.clip(new ClipContext(owner.getEyePosition(), hitRes.getEntity().getBoundingBox().getCenter(), ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, owner));
 				if (sightCheck != null && sightCheck.getType() != HitResult.Type.MISS) return false; // check for blocks in the way
-				changeTarget(hitRes.getEntity());
-				changeAiState((byte)1);
-				return true;
-			} else {
-				Vec3 oldPos = this.position();
-				Entity oldTarget = getTarget();
-				setPos(owner.getEyePosition());
-				findNewTarget(); // lol,
-				setPos(oldPos); // lmao
-				Entity newTarget = getTarget();
-				if (newTarget != null) {
-					if (newTarget.is(oldTarget)) return false;
-					changeAiState((byte)1);
+				if (trySwappingTargetTo(hitRes.getEntity())) {
+					doParticles();
 					return true;
-				} else {
-					if (oldTarget != null) changeTarget(oldTarget);
-					return false;
 				}
-				//if (getTarget() != null && !getTarget().is(oldTarget)) {
-				//	// our new target is acceptable
-				//	changeAiState((byte)1);
-				//	System.out.println(hasTarget());
-				//	return true;
-				//} else if (getTarget() == null) {
-				//	if (oldTarget != null) changeTarget(oldTarget);
-				//	return false;
-				//} else {
-				//	return false;
-				//}
 			}
+			Vec3 oldPos = this.position();
+			setPos(owner.getEyePosition());
+			Entity newTarget = findNewTarget();
+			setPos(oldPos); // lol, lmao
+			if (trySwappingTargetTo(newTarget)) {
+				doParticles();
+				return true;
+			}
+			return false;
+			//if (getTarget() != null && !getTarget().is(oldTarget)) {
+			//	// our new target is acceptable
+			//	changeAiState((byte)1);
+			//	System.out.println(hasTarget());
+			//	return true;
+			//} else if (getTarget() == null) {
+			//	if (oldTarget != null) changeTarget(oldTarget);
+			//	return false;
+			//} else {
+			//	return false;
+			//}
 		}
 		return false;
+	}
+	
+	/**
+	 * checks if new target isnt null or the same as current target, then changes
+	 * @return if the change was successful
+	 */
+	protected boolean trySwappingTargetTo(Entity newTarget) {
+		if (newTarget != null && !newTarget.is(getTarget())) {
+			changeTarget(newTarget);
+			changeAiState((byte) 1);
+			searchTime = 0;
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * draws line to target
+	 */
+	protected void doParticles() {
+		Entity target = getTarget();
+		for (ServerPlayer plr : ((ServerLevel)level).players()) {
+			BlockPos pos = plr.blockPosition();
+			if (pos.closerToCenterThan(target.position(), 64d) || pos.closerToCenterThan(this.position(), 64d)) {
+				NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), target.getBoundingBox().getCenter(), 2), plr);
+			}
+		}
 	}
 	
 	/** makes the smart arrow stop being smart */
 	public void becomeInert() {
 		if (level.isClientSide() || getAiState() == 2) return;
 		changeAiState((byte) 2);
+		resetTarget();
 		for (ServerPlayer plr : ((ServerLevel)level).players()) {
-			if (plr.blockPosition().closerToCenterThan(this.position(), 64d)) {
+			if (plr.is(getOwner()) || plr.blockPosition().closerToCenterThan(this.position(), 64d)) {
 				Vec3 min = new Vec3(getBoundingBox().minX, getBoundingBox().minY, getBoundingBox().minZ),
 						max = new Vec3(getBoundingBox().maxX, getBoundingBox().maxY, getBoundingBox().maxZ);
 				NetworkInit.toClient(new DrawParticleAABBPacket(min, max, 1), plr);

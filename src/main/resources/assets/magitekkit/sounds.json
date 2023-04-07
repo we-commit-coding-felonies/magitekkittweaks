@@ -62,6 +62,14 @@
         "subtitle": "subtitles.mgtk.item.archangels.sentient.hit",
         "sounds": [ "projecte:item/pedestruct" ]
     },
+    "item.archangels.sentient.yondu": {
+        "subtitle": "subtitles.mgtk.item.archangels.sentient.yondu",
+        "sounds": [
+            "magitekkit:item/archangels/sentient/yondu1",
+            "magitekkit:item/archangels/sentient/yondu2",
+            "magitekkit:item/archangels/sentient/yondu3"
+        ]
+    },
 
 
 

@@ -489,19 +489,24 @@ public class BandOfArcana extends MGTKItem
 						resetTrackedArrow(stack);
 					} else if (!player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
 						// try redirecting the arrow
-						if (arrow.manualRedirectByOwner(true)) {
+						didDo = arrow.manualRedirectByOwner(true);
+						if (didDo) {
 							// success
-							AllSoundEvents.WHISTLE_TRAIN_MANUAL.playFrom(player, 1, 3);
-							//player.level.playSound(null, player, AllSoundEvents.WHISTLE_HIGH, SoundSource.PLAYERS, 1, 1);
+							//AllSoundEvents.WHISTLE_TRAIN_MANUAL.playFrom(player, 1, 3);
+							player.level.playSound(null, player, EffectInit.ARCHANGELS_SENTIENT_YONDU.get(), SoundSource.PLAYERS, 1, player.getRandom().nextFloat(0.1f, 2f));
+							Entity target = arrow.getTarget();
 							for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
-								if (plr.blockPosition().closerToCenterThan(player.position(), 64)) {
+								BlockPos pos = plr.blockPosition();
+								boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 64);
+								if (nearOwner || pos.closerToCenterThan(target.getBoundingBox().getCenter(), 64)) {
+									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), target.getBoundingBox().getCenter(), 5), plr);
+								}
+								if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 64)) {
 									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), 4), plr);
-									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getTarget().getBoundingBox().getCenter(), 4), plr);
 								}
 							}
-							didDo = true;
 						}
-						player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 10);
+						player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 15);
 						break;
 					}
 				}
