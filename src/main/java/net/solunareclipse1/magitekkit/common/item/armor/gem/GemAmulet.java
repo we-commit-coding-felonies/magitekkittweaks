@@ -27,10 +27,14 @@ import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.WorldHelper;
 
+import net.solunareclipse1.magitekkit.api.capability.wrapper.HazmatCapabilityWrapper;
+import net.solunareclipse1.magitekkit.api.item.IHazmatItem;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.util.ColorsHelper;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
+
+import mekanism.api.radiation.capability.IRadiationShielding;
 
 /**
  * Chestplate

@@ -24,15 +24,23 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Explosion.BlockInteraction;
 
+import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.gameObjs.items.IFireProtector;
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.api.capability.wrapper.HazmatCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
+import net.solunareclipse1.magitekkit.api.item.IHazmatItem;
 import net.solunareclipse1.magitekkit.common.event.EntityLivingEventHandler;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
+
+import mekanism.api.radiation.capability.IRadiationShielding;
+import mekanism.common.registries.MekanismDamageSource;
+
 import net.solunareclipse1.magitekkit.util.EmcHelper;
+import net.solunareclipse1.magitekkit.util.EntityHelper;
 
 import morph.avaritia.util.InfinityDamageSource;
 import vazkii.botania.api.mana.IManaDiscountArmor;
@@ -42,18 +50,41 @@ import vazkii.botania.api.mana.IManaDiscountArmor;
  * 
  * @author solunareclipse1
  */
-public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireProtector, IManaDiscountArmor {
+public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireProtector, IManaDiscountArmor, IHazmatItem {
 	public GemJewelryBase(EquipmentSlot slot, Properties props, float baseDr) {
 		super(GemJewelryMaterial.MAT, slot, props, baseDr);
+		addItemCapability(HazmatCapabilityWrapper::new);
+		
+		DMG_SRC_MODS_ALCHSHIELD.put(DamageSource.LIGHTNING_BOLT, 13f);
+		DMG_SRC_MODS_ALCHSHIELD.put(DamageSource.ANVIL, 30f);
+		DMG_SRC_MODS_ALCHSHIELD.put(DamageSource.badRespawnPointExplosion(), 8f);
+		DMG_SRC_MODS_ALCHSHIELD.put(MekanismDamageSource.LASER, 1.2f);
 	}
+
+	/**
+	 * convert radiation into durability / emc
+	 * @param stack
+	 * @return
+	 */
+	@Override
+	public double protectionPercent(ItemStack stack) {
+		if (stack.isDamaged()) {
+			stack.setDamageValue(stack.getDamageValue() - 1);
+		} else if (stack.getItem() instanceof GemAmulet amulet) {
+			amulet.insertEmc(stack, 1, EmcAction.EXECUTE);
+		}
+		return 0.25 * ( 1 - (stack.getDamageValue() / stack.getMaxDamage()) );
+	}
+	
 	/** Damage sources with corresponging cost multipliers. 0.5 would mean 1/2 cost */
-	//public static final Map<DamageSource, Float> DMG_SRC_MODS = new HashMap<>();
+	public static final Map<DamageSource, Float> DMG_SRC_MODS_ALCHSHIELD = new HashMap<>();
 	/** Damage sources in here will *never* be blocked by the gem shield */
-	public static DamageSource[] dmgSrcBlacklist = {
+	public static DamageSource[] dmgSrcBlacklistAlchshield = {
 			DamageSource.DROWN,
 			DamageSource.FREEZE,
 			DamageSource.OUT_OF_WORLD,
-			DamageSource.STARVE
+			DamageSource.STARVE,
+			MekanismDamageSource.RADIATION
 	};
 
 	@Override
@@ -140,14 +171,15 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	 */
 	public static boolean sourceBlockedByGemShield(DamageSource source) {
 		// hardcoded checks for things that should absolutely never be blocked
-		if (source instanceof InfinityDamageSource
-				|| source.isCreativePlayer()
-				|| source.isBypassInvul())
+		if (source.isCreativePlayer()
+			|| source.isBypassInvul()
+			|| EntityHelper.isDamageSourceInfinite(source)) {
 			return false;
+		}
 		if (source instanceof MGTKDmgSrc src && src.isBypassAlchShield()) return false;
 		
-		for (int i = 0; i < dmgSrcBlacklist.length; i++) {
-			if (source == dmgSrcBlacklist[i]) return false;
+		for (int i = 0; i < dmgSrcBlacklistAlchshield.length; i++) {
+			if (source == dmgSrcBlacklistAlchshield[i]) return false;
 		}
 		return true;
 	}
@@ -159,7 +191,13 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	 * @return
 	 */
 	public static float getCostMultiplierForSource(DamageSource source) {
-		// overriders, we always use the biggest
+		// explicit overrides
+		if (DMG_SRC_MODS_ALCHSHIELD.containsKey(source)) {
+			return DMG_SRC_MODS_ALCHSHIELD.get(source);
+		}
+		
+		
+		// overriders, biggest goes last so it takes priority
 		float mult = 1f;
 		if (source.isBypassArmor()) mult = 1.1f;
 		if (source.isMagic() || source.isBypassMagic()) mult = 1.5f;

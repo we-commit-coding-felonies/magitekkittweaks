@@ -47,6 +47,8 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.arc_mode_7", "Rending Gale");
         add("tip.mgtk.arc_mode_8", "Zero");
         add("tip.mgtk.arc_mode_9", "Ignition");
+        add("tip.mgtk.dr", "Provides a %s% damage reduction");
+        add("tip.mgtk.dyndr", "Currently providing a %s% damage reduction");
         add("tip.mgtk.burnout", "Burnout: %1$s / %2$s");
         add("tip.mgtk.gem_circlet", "PLACEHOLDER");
         add("tip.mgtk.gem_amulet", "PLACEHOLDER: Perhaps wearing this around your neck isn't the best idea...");

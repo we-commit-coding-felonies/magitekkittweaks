@@ -1,6 +1,9 @@
 package net.solunareclipse1.magitekkit.api.item;
 
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+
+import vazkii.botania.common.helper.ItemNBTHelper;
 
 /**
  * IBurnoutItem provides an alternative durability system. <br>
@@ -16,32 +19,12 @@ public interface IBurnoutItem {
 	 * @return the amount
 	 */
 	default int getBurnout(ItemStack stack) {
-		return stack.getOrCreateTag().getInt("burnout");
+		return ItemNBTHelper.getInt(stack, "burnout", 0);
 	}
 	
-	/**
-	 * Sets the burnout of an item to a specific amount.
-	 * Value is clamped to 0 < amount < max.
-	 * 
-	 * @param stack the stack to change
-	 * @param amount amount of burnout
-	 */
 	default void setBurnout(ItemStack stack, int amount) {
-		stack.getOrCreateTag().putInt("burnout", Math.max(0, Math.min(getBurnoutMax(), amount)));
-	}
-	
-	/**
-	 * Gets the current amount of burnout, clamped.
-	 * Can optionally update the itemstack with the clamped amount.
-	 * 
-	 * @param stack The itemstack to check
-	 * @param write If true, will also modify the stack with the clamped value
-	 * @return burnout amount, clamped to (0 < amount < max)
-	 */
-	default int checkBurnout(ItemStack stack, boolean write) {
-		int amount = Math.max(0, Math.min(getBurnoutMax(), stack.getOrCreateTag().getInt("burnout")));
-		if (write) setBurnout(stack, amount);
-		return amount;
+		ItemNBTHelper.setInt(stack, "burnout", amount);
+		//return stack.getOrCreateTag().getInt("burnout");
 	}
 	
 	/**
@@ -59,6 +42,7 @@ public interface IBurnoutItem {
 	 * @return Percentage expressed as a number between 0 and 1
 	 */
 	default float getBurnoutPercent(ItemStack stack) {
-		return Math.max(0.0f, Math.min(1.0f, getBurnout(stack) / getBurnoutMax()));
+		return Mth.clamp( (float)getBurnout(stack)/(float)getBurnoutMax() , 0f, 1f);
+		//return Math.max(0.0f, Math.min(1.0f, getBurnout(stack) / getBurnoutMax()));
 	}
 }
