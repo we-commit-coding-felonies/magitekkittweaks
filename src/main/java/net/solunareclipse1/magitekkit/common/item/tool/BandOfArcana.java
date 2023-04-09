@@ -511,12 +511,8 @@ public class BandOfArcana extends MGTKItem
 					}
 				}
 				if (plrEmc >= EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-					System.out.println("======== CREATION ========");
 					SentientArrow arrow = new SentientArrow(player.level, player, 1);
-					System.out.println("NEW: " + arrow.getDeltaMovement());
-					System.out.println("PLAYER: " + player.getXRot() + " | " + player.getYRot());
 					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1.2f, 0);
-					System.out.println("SHOT: " + arrow.getDeltaMovement());
 					//if (!player.isOnGround()) {
 					//} else {
 					//	arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
@@ -524,7 +520,6 @@ public class BandOfArcana extends MGTKItem
 					//arrow.setCritArrow(true);
 					player.level.addFreshEntity(arrow);
 					changeTrackedArrow(stack, arrow);
-					System.out.println("ADDED: " + arrow.getDeltaMovement());
 					for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
 						NetworkInit.toClient(new CreateLoopingSoundPacket((byte)1, arrow.getId()), plr);
 					}
