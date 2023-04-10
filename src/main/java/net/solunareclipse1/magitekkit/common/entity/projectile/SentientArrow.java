@@ -352,48 +352,45 @@ public class SentientArrow extends Arrow {
 	protected void resetTarget() {
 		entityData.set(TARGET_ID, -1);
 	}
-
+	
+	protected boolean hasLineOfSight(Vec3 pos1, Vec3 pos2) {
+		BlockHitResult lineOfSight = level.clip(new ClipContext(pos1,
+				pos2, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+		return (lineOfSight.getType() != HitResult.Type.BLOCK);
+	}
+	
 	protected void seekTarget() {
 		LivingEntity target = getTarget();
 		if (target != null && shouldContinueHomingTowards(target)) {
 			// line of sight check between AABB centers
-			BlockHitResult lineOfSight = level.clip(new ClipContext(this.getBoundingBox().getCenter(),
-					target.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
-			if (lineOfSight.getType() != HitResult.Type.BLOCK) {
+			if (hasLineOfSight(this.getBoundingBox().getCenter(), target.getBoundingBox().getCenter())) {
 //				LoggerHelper.printDebug("SentientArrow","LineOfSight", target.getName().getContents());
 				this.targetPath = null;
 				shootAt(target, 5);
 			} else {
 //				LoggerHelper.printDebug("SentientArrow","NoLineOfSight", "No Line of Sight");
 				if (this.targetPath == null || this.targetPath.isDone()) {
-					this.targetPath = findPathToTarget(target);
+					this.targetPath = findPathToTarget(target);					
 					if (DEBUG) {
 						LoggerHelper.printDebug("SentientArrow", "Path", this.targetPath.toString());
-						Node lastNode = null;
-						Node thisNode = null;
-						for (int i = 0; i < this.targetPath.getNodeCount(); i++) {
-							Node node = this.targetPath.getNode(i);
-							lastNode = thisNode;
-							thisNode = node;
-							if (lastNode == null) {
-								NetworkInit.toClient(
-										new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
-												Vec3.atCenterOf(thisNode.asBlockPos()), 0),
-										(ServerPlayer) this.getOwner());
-							} else {
-								NetworkInit.toClient(
-										new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()),
-												Vec3.atCenterOf(thisNode.asBlockPos()), 0),
-										(ServerPlayer) this.getOwner());
-							}
-						}
-
+						drawDebugPath(true);
 					}
 				}
-				Node node = this.targetPath.getNextNode();
-				shootAt(Vec3.atCenterOf(node.asBlockPos()), 5);
+				if (DEBUG) {
+					drawDebugPath(false);
+				}
+				Node node = this.targetPath.getPreviousNode();
+				if (node == null) {
+					node = this.targetPath.getNode(0);
+				}
+				Node nextNode = this.targetPath.getNextNode();
+				while (hasLineOfSight(node.asVec3(),nextNode.asVec3()) && !this.targetPath.isDone()) {
+					nextNode = this.targetPath.getNextNode();
+					this.targetPath.advance();
+				}
+				shootAt(Vec3.atCenterOf(nextNode.asBlockPos()), 5);
 				// Remove true to make sure we're successfully following, but currently borked.
-				if (this.blockPosition() == node.asBlockPos() || true) {
+				if (node.asVec3().subtract(this.position()).length() < 1) {
 					this.targetPath.advance();
 				}
 			}
@@ -405,7 +402,36 @@ public class SentientArrow extends Arrow {
 				changeAiState((byte) 0);
 		}
 	}
-
+	
+	protected void drawDebugPath(Boolean whole) {
+		Node lastNode = null;
+		Node thisNode = null;
+		for (int i = 0; i < this.targetPath.getNodeCount() - 1; i++) {
+			Node node = this.targetPath.getNode(i);
+			lastNode = thisNode;
+			thisNode = node;
+			Node nextNode = this.targetPath.getNode(i+1);
+			if (!whole) {
+				int j = i + 1;
+				while (hasLineOfSight(thisNode.asVec3(),nextNode.asVec3()) && j < this.targetPath.getNodeCount()) {
+					nextNode = this.targetPath.getNode(j++);
+				}
+				i = j;
+				thisNode = nextNode;
+			}
+			if (lastNode == null) {
+				NetworkInit.toClient(
+						new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
+								Vec3.atCenterOf(thisNode.asBlockPos()), 0),
+						(ServerPlayer) this.getOwner());
+			} else {
+				NetworkInit.toClient(
+						new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()),
+								Vec3.atCenterOf(thisNode.asBlockPos()), 0),
+						(ServerPlayer) this.getOwner());
+			}
+		}
+	}
 	protected Path findPathToTarget(LivingEntity target) {
 		if (level.isClientSide()) {
 			return null;

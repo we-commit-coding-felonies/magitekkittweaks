@@ -197,10 +197,7 @@ public class ArrowSeekNodeEvaluator extends NodeEvaluator {
 	}
 
 	protected static BlockPathTypes getBlockPathTypeRaw(BlockGetter pLevel, BlockPos pPos) {
-		BlockState blockstate = pLevel.getBlockState(pPos);
-		BlockPathTypes type = blockstate.getBlockPathType(pLevel, pPos);
-		if (type != null)
-			return type;
+		BlockState blockstate = pLevel.getBlockState(pPos);		
 		if (blockstate.isAir()) {
 			return BlockPathTypes.OPEN;
 		} else {
