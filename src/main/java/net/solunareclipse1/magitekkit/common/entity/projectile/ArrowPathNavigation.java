@@ -26,7 +26,6 @@ import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
 
 public class ArrowPathNavigation {
-   private static final int MAX_TIME_RECOMPUTE = 20;
    protected final Arrow arrow;
    protected final Level level;
    @Nullable
@@ -51,7 +50,7 @@ public class ArrowPathNavigation {
    private BlockPos targetPos;
    /** Distance in which a path point counts as target-reaching */
    private int reachRange;
-   private float maxVisitedNodesMultiplier = 16.0F;
+   private float maxVisitedNodesMultiplier = 6.0F;
    private final ArrowSeekPathFinder pathFinder;
    private boolean isStuck;
    private static float FOLLOW_RANGE = 64;

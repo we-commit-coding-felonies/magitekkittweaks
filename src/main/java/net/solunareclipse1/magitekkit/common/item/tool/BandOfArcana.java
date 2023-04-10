@@ -518,6 +518,7 @@ public class BandOfArcana extends MGTKItem
 					//	arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
 					//}
 					//arrow.setCritArrow(true);
+					arrow.setGlowingTag(true);
 					player.level.addFreshEntity(arrow);
 					changeTrackedArrow(stack, arrow);
 					for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
@@ -964,7 +965,7 @@ public class BandOfArcana extends MGTKItem
 			case 2: // Watch (Time Acceleration)
 				if (plrEmc >= (getWoft(stack) ? 2048 : 128)) {
 					EmcHelper.consumeAvaliableEmc(player, getWoft(stack) ? 2048 : 128);
-					jojoReference(player, stack, 60, Integer.MAX_VALUE - timeBeingUsed, 1200, getWoft(stack) ? 24 : 0);
+					jojoReference(player, stack, 120, Integer.MAX_VALUE - timeBeingUsed, 120, getWoft(stack) ? 24 : 0);
 				}
 				break;
 				

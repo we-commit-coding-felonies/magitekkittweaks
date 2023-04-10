@@ -25,15 +25,23 @@ import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+
+import moze_intel.projecte.gameObjs.registries.PEItems;
+import moze_intel.projecte.gameObjs.registries.PESoundEvents;
+
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.data.MGTKBlockTags;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
@@ -48,7 +56,7 @@ import vazkii.botania.common.entity.EntityPixie;
 
 /** relentlessly seeks target & pathfinds */
 public class SentientArrow extends Arrow {
-	private static boolean DEBUG = false;
+	private static final boolean DEBUG = false;
 	/** 0 = searching, 1 = found & currently chasing, 2 = target lost */
 	private static final EntityDataAccessor<Byte> AI_STATE = SynchedEntityData.defineId(SentientArrow.class,
 			EntityDataSerializers.BYTE);
@@ -134,7 +142,7 @@ public class SentientArrow extends Arrow {
 						entity.invulnerableTime = 0;
 					} else if (entity instanceof Player plr && GemJewelryBase.isBarrierActive(plr)) {
 						// massive damage to alchshield
-						entity.hurt(MGTKDmgSrc.TRANSMUTATION, entity.getMaxHealth() * 10);
+						entity.hurt(MGTKDmgSrc.TRANSMUTATION, entity.getMaxHealth() * 3);
 						entity.invulnerableTime = 0;
 					} else if (entity instanceof EntityPixie pixie) {
 						// die
@@ -171,6 +179,13 @@ public class SentientArrow extends Arrow {
 			}
 			becomeInert();
 			super.onHitBlock(hitRes);
+		} else {
+			//BlockState block = level.getBlockState(hitRes.getBlockPos());
+			//if (level.getBlockState(hitRes.getBlockPos()).is(MGTKBlockTags.ARROW_ANNIHILATE)) {
+			//	System.out.println("i am COOL");
+			//	level.playSound(null, hitRes.getBlockPos(), PESoundEvents.DESTRUCT.get(), this.getSoundSource(), 1, 1);
+			//	level.destroyBlock(hitRes.getBlockPos(), false);
+			//}
 		}
 	}
 
@@ -221,22 +236,32 @@ public class SentientArrow extends Arrow {
 			if (hasTarget()) {
 				seekTarget();
 				Vec3 predictedPos = position().add(getDeltaMovement());
-				EntityHitResult hitresult = this.findHitEntity(position(), predictedPos);
+				BlockHitResult blockHitRes = this.level.clip(new ClipContext(position(), predictedPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+				EntityHitResult entityHitRes = this.findHitEntity(position(), predictedPos);
 
-				if (hitresult != null && hitresult.getType() == HitResult.Type.ENTITY) {
-					Entity entity = ((EntityHitResult) hitresult).getEntity();
+				if (entityHitRes != null && entityHitRes.getType() == HitResult.Type.ENTITY) {
+					Entity entity = ((EntityHitResult) entityHitRes).getEntity();
 					Entity entity1 = this.getOwner();
 					if (entity instanceof Player && entity1 instanceof Player
 							&& !((Player) entity1).canHarmPlayer((Player) entity)) {
-						hitresult = null;
+						entityHitRes = null;
 					}
 				}
 
-				if (hitresult != null && hitresult.getType() != HitResult.Type.MISS
-						&& !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, hitresult)) {
-					this.onHit(hitresult);
-					predictedPos = hitresult.getEntity().position();
+				if (entityHitRes != null && entityHitRes.getType() != HitResult.Type.MISS
+						&& !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, entityHitRes)) {
+					this.onHit(entityHitRes);
+					predictedPos = entityHitRes.getEntity().position();
 					this.hasImpulse = true;
+				}
+				
+				if (blockHitRes != null && blockHitRes.getType() != HitResult.Type.MISS) {
+					if (level.getBlockState(blockHitRes.getBlockPos()).is(MGTKBlockTags.ARROW_ANNIHILATE)) {
+						System.out.println("i am COOL");
+						level.playSound(null, blockHitRes.getBlockPos(), PESoundEvents.DESTRUCT.get(), this.getSoundSource(), 1, 1);
+						level.destroyBlock(blockHitRes.getBlockPos(), false);
+						this.spawnAtLocation(PEItems.LOW_COVALENCE_DUST);
+					}
 				}
 				this.setPos(predictedPos);
 				return;
@@ -362,13 +387,17 @@ public class SentientArrow extends Arrow {
 	protected void seekTarget() {
 		LivingEntity target = getTarget();
 		if (target != null && shouldContinueHomingTowards(target)) {
+			if (ArrowSeekNodeEvaluator.getBlockPathTypeRaw(level, this.blockPosition()) != BlockPathTypes.OPEN) {
+				shootAt(position().add(0,1,0), 1);
+				return;
+			}
 			// line of sight check between AABB centers
 			if (hasLineOfSight(this.getBoundingBox().getCenter(), target.getBoundingBox().getCenter())) {
-//				LoggerHelper.printDebug("SentientArrow","LineOfSight", target.getName().getContents());
+				//LoggerHelper.printDebug("SentientArrow","LineOfSight", target.getName().getContents());
 				this.targetPath = null;
-				shootAt(target, 5);
+				shootAt(target, 3);
 			} else {
-//				LoggerHelper.printDebug("SentientArrow","NoLineOfSight", "No Line of Sight");
+				//LoggerHelper.printDebug("SentientArrow","NoLineOfSight", "No Line of Sight");
 				if (this.targetPath == null || this.targetPath.isDone()) {
 					this.targetPath = findPathToTarget(target);					
 					if (DEBUG) {
@@ -388,7 +417,7 @@ public class SentientArrow extends Arrow {
 					nextNode = this.targetPath.getNextNode();
 					this.targetPath.advance();
 				}
-				shootAt(Vec3.atCenterOf(nextNode.asBlockPos()), 5);
+				shootAt(Vec3.atCenterOf(nextNode.asBlockPos()), 3);
 				// Remove true to make sure we're successfully following, but currently borked.
 				if (node.asVec3().subtract(this.position()).length() < 1) {
 					this.targetPath.advance();

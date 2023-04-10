@@ -9,11 +9,14 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.PathNavigationRegion;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.world.level.pathfinder.Target;
+
+import net.solunareclipse1.magitekkit.data.MGTKBlockTags;
 
 public class ArrowSeekNodeEvaluator extends NodeEvaluator {
 
@@ -89,6 +92,7 @@ public class ArrowSeekNodeEvaluator extends NodeEvaluator {
 		}
 		// This code below does checking for non-cardinals, but needs work to stop
 		// corner clipping
+		// i hate you shard
 //		Node node6 = this.getNode(thisNode.x, thisNode.y + 1, thisNode.z + 1);
 //		if (this.isOpen(node6)) {
 //			neighbours[i++] = node6;
@@ -196,9 +200,9 @@ public class ArrowSeekNodeEvaluator extends NodeEvaluator {
 		return pNode != null && !pNode.closed;
 	}
 
-	protected static BlockPathTypes getBlockPathTypeRaw(BlockGetter pLevel, BlockPos pPos) {
-		BlockState blockstate = pLevel.getBlockState(pPos);		
-		if (blockstate.isAir()) {
+	public static BlockPathTypes getBlockPathTypeRaw(BlockGetter pLevel, BlockPos pPos) {
+		BlockState blockstate = pLevel.getBlockState(pPos);
+		if (blockstate.isAir() || blockstate.is(MGTKBlockTags.ARROW_NOCLIP) || blockstate.is(MGTKBlockTags.ARROW_ANNIHILATE)) {
 			return BlockPathTypes.OPEN;
 		} else {
 			return BlockPathTypes.BLOCKED;
@@ -208,13 +212,11 @@ public class ArrowSeekNodeEvaluator extends NodeEvaluator {
 	@Override
 	public BlockPathTypes getBlockPathType(BlockGetter pBlockaccess, int pX, int pY, int pZ, Mob pEntityliving,
 			int pXSize, int pYSize, int pZSize, boolean pCanBreakDoors, boolean pCanEnterDoors) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public BlockPathTypes getBlockPathType(BlockGetter pLevel, int pX, int pY, int pZ) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }
