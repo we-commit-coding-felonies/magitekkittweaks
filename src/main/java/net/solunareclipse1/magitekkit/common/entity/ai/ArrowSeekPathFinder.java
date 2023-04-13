@@ -1,4 +1,4 @@
-package net.solunareclipse1.magitekkit.common.entity.projectile;
+package net.solunareclipse1.magitekkit.common.entity.ai;
 
 import java.util.Comparator;
 import java.util.List;
@@ -16,6 +16,7 @@ import com.google.common.collect.Sets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.util.profiling.metrics.MetricCategory;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.world.level.pathfinder.BinaryHeap;
@@ -41,7 +42,7 @@ public class ArrowSeekPathFinder {
 	 * returns null if no path could be found within given accuracy
 	 */
 	@Nullable
-	public Path findPath(PathNavigationRegion pRegion, Arrow arrow,Set<BlockPos> pTargetPositions, float pMaxRange, int pAccuracy,
+	public Path findPath(PathNavigationRegion pRegion, AbstractArrow arrow,Set<BlockPos> pTargetPositions, float pMaxRange, int pAccuracy,
 			float pSearchDepthMultiplier) {
 		this.openSet.clear();
 		this.ArrowSeekNodeEvaluator.prepare(pRegion, arrow);

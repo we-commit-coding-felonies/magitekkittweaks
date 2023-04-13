@@ -15,6 +15,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrowOld;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor;
@@ -95,6 +96,13 @@ public class ObjectInit {
 			.fireImmune()
 			.noSummon()
 			.build("smart_arrow"));
+    /*public static final RegistryObject<EntityType<SentientArrowOld>> OLD_SENTIENT_ARROW = ENTITIES.register("sentient_arrow", () -> EntityType.Builder.<SentientArrowOld>of(SentientArrowOld::new, MobCategory.MISC)
+			.sized(0.5F, 0.5F)
+			.clientTrackingRange(4)
+			.updateInterval(20)
+			.fireImmune()
+			.noSummon()
+			.build("sentient_arrow"));*/
     public static final RegistryObject<EntityType<SentientArrow>> SENTIENT_ARROW = ENTITIES.register("sentient_arrow", () -> EntityType.Builder.<SentientArrow>of(SentientArrow::new, MobCategory.MISC)
 			.sized(0.5F, 0.5F)
 			.clientTrackingRange(4)

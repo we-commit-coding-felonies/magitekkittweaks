@@ -1,4 +1,4 @@
-package net.solunareclipse1.magitekkit.common.entity.projectile;
+package net.solunareclipse1.magitekkit.common.entity.ai;
 
 import javax.annotation.Nullable;
 
@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.PathNavigationRegion;
@@ -20,13 +21,13 @@ import net.solunareclipse1.magitekkit.data.MGTKBlockTags;
 
 public class ArrowSeekNodeEvaluator extends NodeEvaluator {
 
-	public Arrow arrow;
+	public AbstractArrow arrow;
 	public LivingEntity target;
 
 	public ArrowSeekNodeEvaluator() {
 	}
 
-	public void prepare(PathNavigationRegion pLevel, Arrow arrow) {
+	public void prepare(PathNavigationRegion pLevel, AbstractArrow arrow) {
 		this.level = pLevel;
 		this.arrow = arrow;
 		this.nodes.clear();
@@ -202,7 +203,7 @@ public class ArrowSeekNodeEvaluator extends NodeEvaluator {
 
 	public static BlockPathTypes getBlockPathTypeRaw(BlockGetter pLevel, BlockPos pPos) {
 		BlockState blockstate = pLevel.getBlockState(pPos);
-		if (blockstate.isAir() || blockstate.is(MGTKBlockTags.ARROW_NOCLIP) || blockstate.is(MGTKBlockTags.ARROW_ANNIHILATE)) {
+		if (blockstate.isAir() || blockstate.is(MGTKBlockTags.ARROW_NOCLIP)) {
 			return BlockPathTypes.OPEN;
 		} else {
 			return BlockPathTypes.BLOCKED;

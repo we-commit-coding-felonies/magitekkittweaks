@@ -119,10 +119,12 @@ import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 import moze_intel.projecte.utils.text.PELang;
 
+import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.ChargeItemCapabilityWrapperButBetter;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.item.ISwingItem;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrowOld;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.item.MGTKItem;
@@ -485,24 +487,34 @@ public class BandOfArcana extends MGTKItem
 				if (hasTrackedArrow(stack)) {
 					SentientArrow arrow = getTrackedArrow(stack, player.level);
 					if (arrow == null) {
-						// arrow doesnt exist, stop trackingt
+						// arrow doesnt exist, stop tracking it
 						resetTrackedArrow(stack);
 					} else if (!player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
 						// try redirecting the arrow
-						didDo = arrow.manualRedirectByOwner(true);
-						if (didDo) {
-							// success
-							//AllSoundEvents.WHISTLE_TRAIN_MANUAL.playFrom(player, 1, 3);
-							player.level.playSound(null, player, EffectInit.ARCHANGELS_SENTIENT_YONDU.get(), SoundSource.PLAYERS, 1, player.getRandom().nextFloat(0.1f, 2f));
-							Entity target = arrow.getTarget();
+						boolean foundTarget = arrow.attemptManualRetarget();
+						player.level.playSound(null, player, EffectInit.ARCHANGELS_SENTIENT_YONDU.get(), SoundSource.PLAYERS, 1, player.getRandom().nextFloat(0.1f, 2f));
+						if (foundTarget) {
+							for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+								Entity target = arrow.getTarget();
+								BlockPos pos = plr.blockPosition();
+								boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 128);
+								// owner -> arrow communicate
+								if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 128)) {
+									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), 3), plr);
+								}
+								// owner -> target tracer
+								if (nearOwner || pos.closerToCenterThan(target.getBoundingBox().getCenter(), 128)) {
+									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), target.getBoundingBox().getCenter(), 2), plr);
+								}
+							}
+						} else {
+							// returning to owner
 							for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
 								BlockPos pos = plr.blockPosition();
-								boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 64);
-								if (nearOwner || pos.closerToCenterThan(target.getBoundingBox().getCenter(), 64)) {
-									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), target.getBoundingBox().getCenter(), 5), plr);
-								}
-								if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 64)) {
-									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), 4), plr);
+								boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 128);
+								// arrow -> owner tracer
+								if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 128)) {
+									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), 2), plr);
 								}
 							}
 						}
@@ -511,8 +523,9 @@ public class BandOfArcana extends MGTKItem
 					}
 				}
 				if (plrEmc >= EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-					SentientArrow arrow = new SentientArrow(player.level, player, 1);
-					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1.2f, 0);
+					SentientArrow arrow = new SentientArrow(player.level, player);
+					arrow.setBaseDamage(1);
+					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1f, 0);
 					//if (!player.isOnGround()) {
 					//} else {
 					//	arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
@@ -529,7 +542,7 @@ public class BandOfArcana extends MGTKItem
 					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW);
 					didDo = true;
 					//if (!player.getName().getString().contains("Dev")) {
-					//	player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 200);
+						player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 20);
 					//}
 				}
 				break;
@@ -1428,7 +1441,6 @@ public class BandOfArcana extends MGTKItem
 		Random rand = level.getRandom();
 		Vec3 cent = box.getCenter();
 		BlockPos bCent = new BlockPos(cent);
-		boolean debug = false; // TODO: MAKE SURE THIS IS OFF
 		
 		////////////////////
 		// DAMAGE & WORLD //
@@ -1463,7 +1475,7 @@ public class BandOfArcana extends MGTKItem
 		BlockPos.betweenClosedStream(box).forEach(bPos -> {
 			
 			// debug: marks all for paticles
-			if (debug) vaporized.push(bPos);
+			if (MagiTekkit.DEBUG) vaporized.push(bPos);
 			
 			// fire
 			if (level.isEmptyBlock(bPos)) {
@@ -1532,7 +1544,7 @@ public class BandOfArcana extends MGTKItem
 		// big fwoosh of fire!
 		level.playSound(null, bCent, EffectInit.IGNITION_BURN.get(), SoundSource.NEUTRAL, 3f, 1f);
 		//level.playSound(null, bCent, SoundEvents.GENERIC_EXPLODE, SoundSource.NEUTRAL, 2.5f, 0.1f);
-		if (debug) {
+		if (MagiTekkit.DEBUG) {
 			
 			//// drawing the hitbox
 			for (ServerPlayer plr : level.players()) {
@@ -1564,7 +1576,7 @@ public class BandOfArcana extends MGTKItem
 		}
 		
 		// steam from the steamed clams were having
-		while (!vaporized.empty() && !debug) {
+		while (!vaporized.empty() && !MagiTekkit.DEBUG) {
 			BlockPos bPos = vaporized.pop();
 			level.playSound(null, bPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.1F, 2.6F + (rand.nextFloat() - rand.nextFloat()) * 0.8F);
 			level.sendParticles(ParticleTypes.CLOUD, bPos.getX(), bPos.getY(), bPos.getZ(), 4, 0, 0, 0, 0.3);

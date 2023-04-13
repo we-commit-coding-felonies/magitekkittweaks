@@ -55,28 +55,36 @@ public record DrawParticleLinePacket(Vec3 start, Vec3 end, int preset) {
         	Map<ParticleOptions, Double> particles = new HashMap<>();
         	switch (preset) {
         	
+        	case -2: // debug
+        		particles.put(ParticleTypes.FALLING_SPORE_BLOSSOM, 0.1);
+        		break;
+        	
+        	case -1: // debug
+        		particles.put(ParticleTypes.DRIPPING_HONEY, 0.1);
+        		break;
+        	
         	case 0: // debug
         		particles.put(ParticleTypes.DRIPPING_OBSIDIAN_TEAR, 0.1);
         		break;
         		
-        	case 1: // projectile target-lock
+        	case 1: // smart arrow target-lock
         		particles.put(SparkleParticleData.noClip(1, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 1), 0.1);
         		break;
         		
-        	case 2: // sentient arrow tracer
-        		particles.put(SparkleParticleData.sparkle(2, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 20), 0.1);
+        	case 2: // sentient arrow retarget
+        		particles.put(SparkleParticleData.corrupt(2, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 20), 0.1);
         		break;
         		
-        	case 3: // ignition aoe
-        		particles.put(WispParticleData.wisp(0.1f, 1, 0.2f, 0), 0.08);
-        		break;
-        		
-        	case 4: // sentient arrow communicate
+        	case 3: // sentient arrow communicate
         		particles.put(ParticleTypes.ENCHANT, 0.1);
         		break;
         		
-        	case 5: // sentient arrow manual redirect
-        		particles.put(SparkleParticleData.noClip(2, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 20), 0.1);
+        	case 4: // sentient arrow tracer
+        		particles.put(WispParticleData.wisp(0.5f, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 1), 0.1);
+        		break;
+        		
+        	case 5: // ignition aoe
+        		particles.put(WispParticleData.wisp(0.1f, 1, 0.2f, 0), 0.08);
         		break;
         	
         	default: // invalid

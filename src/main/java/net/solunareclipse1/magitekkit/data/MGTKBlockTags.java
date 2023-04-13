@@ -34,17 +34,28 @@ public class MGTKBlockTags extends BlockTagsProvider {
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
         	.add(ObjectInit.GANTIUM_BLOCK.get());
         
-        tag(ARROW_NOCLIP)
-    		.add(Blocks.AIR)
-    		.add(Blocks.WATER)
-        	.add(Blocks.LAVA)
-        	.add(Blocks.IRON_BARS)
-        	.addTag(BlockTags.LEAVES);
-        
-        /** help */
         tag(ARROW_ANNIHILATE)
+    		.add(Blocks.ICE)
+    		.add(Blocks.SCAFFOLDING)
         	.addTag(net.minecraftforge.common.Tags.Blocks.GLASS)
         	.addTag(net.minecraftforge.common.Tags.Blocks.GLASS_PANES);
+        
+        tag(ARROW_NOCLIP)
+			.add(Blocks.ICE)
+			.add(Blocks.SCAFFOLDING)
+    		.addTag(net.minecraftforge.common.Tags.Blocks.GLASS)
+    		.addTag(net.minecraftforge.common.Tags.Blocks.GLASS_PANES)
+    		.add(Blocks.AIR)
+        	.add(Blocks.LAVA)
+        	.add(Blocks.IRON_BARS)
+        	.addTag(BlockTags.SIGNS)
+        	.addTag(BlockTags.LEAVES)
+        	.addTag(BlockTags.BANNERS)
+        	.addTag(BlockTags.BUTTONS)
+        	.addTag(BlockTags.CROPS)
+        	.addTag(BlockTags.REPLACEABLE_PLANTS)
+        	.addTag(BlockTags.FLOWERS)
+        	.addTag(BlockTags.CLIMBABLE);
     }
     
     private static TagKey<Block> makeTag(String name) {

@@ -1,4 +1,4 @@
-package net.solunareclipse1.magitekkit.common.entity.projectile;
+package net.solunareclipse1.magitekkit.common.entity.ai;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
@@ -13,6 +13,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.PathNavigationRegion;
@@ -26,7 +27,7 @@ import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
 
 public class ArrowPathNavigation {
-   protected final Arrow arrow;
+   protected final AbstractArrow arrow;
    protected final Level level;
    @Nullable
    protected Path path;
@@ -55,7 +56,7 @@ public class ArrowPathNavigation {
    private boolean isStuck;
    private static float FOLLOW_RANGE = 64;
 
-   public ArrowPathNavigation(Arrow pArrow, Level pLevel) {
+   public ArrowPathNavigation(AbstractArrow pArrow, Level pLevel) {
       this.arrow = pArrow;
       this.level = pLevel;
       int i = Mth.floor(FOLLOW_RANGE * 64.0D);
@@ -108,6 +109,10 @@ public class ArrowPathNavigation {
    @Nullable
    public final Path createPath(double pX, double pY, double pZ, int pAccuracy) {
       return this.createPath(new BlockPos(pX, pY, pZ), pAccuracy);
+   }
+   @Nullable
+   public final Path createPath(Vec3 pos, int pAccuracy) {
+      return this.createPath(new BlockPos(pos), pAccuracy);
    }
 
    /**
