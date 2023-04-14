@@ -98,6 +98,10 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     maven {
+    	name "Mekanism maven"
+    	url 'https://modmaven.dev/'
+    }
+    maven {
     	name "JEI maven"
         url "https://dvs1.progwml6.com/files/maven"
     }
@@ -145,6 +149,9 @@ dependencies {
     implementation fg.deobf("com.simibubi.create:create-${mc_version}:${create_version}:slim") { transitive = false }
     implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${mc_version}:${flywheel_version}")
     implementation fg.deobf("com.tterrag.registrate:Registrate:MC${mc_version}-${registrate_version}")
+    
+    implementation fg.deobf("mekanism:Mekanism:${mc_version}-${mekanism_version}")
+    implementation fg.deobf("mekanism:Mekanism:${mc_version}-${mekanism_version}:generators")
 }
 
 

@@ -3,8 +3,10 @@ package net.solunareclipse1.magitekkit.util;
 import java.util.List;
 import java.util.UUID;
 
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.entity.animal.Ocelot;
@@ -13,7 +15,10 @@ import net.minecraft.world.entity.player.Player;
 
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 
+import morph.avaritia.entity.InfinityArrowEntity;
 import morph.avaritia.handler.ArmorHandler;
+import morph.avaritia.init.AvaritiaModContent;
+import morph.avaritia.util.InfinityDamageSource;
 import vazkii.botania.common.entity.EntityDoppleganger;
 
 /**
@@ -89,5 +94,19 @@ public class EntityHelper {
 	
 	public static boolean isTamedByOrTrusts(Entity entity, Player player) {
 		return isTamedBy(entity, player) || isTrustingOf(entity, player);
+	}
+	
+	/**
+	 * checks if a damagesource is "infinite", like from avaritia items (sword of the cosmos)
+	 * @param src
+	 * @return
+	 */
+	public static boolean isDamageSourceInfinite(DamageSource src) {
+		//ItemInfinitySword
+		return src instanceof InfinityDamageSource
+				|| src.getDirectEntity() instanceof InfinityArrowEntity
+				|| (!src.isProjectile()
+						&& src.getEntity() instanceof LivingEntity lEnt
+						&& lEnt.getMainHandItem().getItem() == AvaritiaModContent.INFINITY_SWORD.get());
 	}
 }
