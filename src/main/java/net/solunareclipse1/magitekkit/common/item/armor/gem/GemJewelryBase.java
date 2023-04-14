@@ -89,7 +89,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 
 	@Override
 	public int getBarColor(ItemStack stack) {
-		return Mth.hsvToRgb(0, 1, 1);
+		return 0x8f0000;
 	}
 	
 	public float getDiscount(ItemStack stack, int slot, Player player, @Nullable ItemStack tool) {
