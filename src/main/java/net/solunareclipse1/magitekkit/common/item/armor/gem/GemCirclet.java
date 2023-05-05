@@ -22,6 +22,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.config.DebugCfg;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
@@ -87,7 +88,7 @@ public class GemCirclet extends GemJewelryBase {
 		double range = 64;
 		AABB box = //new AABB(player.getX(), player.getY(), player.getZ(), player.getX(), player.getY(), player.getZ()).inflate(range);
 			AABB.ofSize(player.getEyePosition(), range/4, range/4, range/4).expandTowards(player.getLookAngle().scale(range));
-		if (!player.level.isClientSide) {
+		if (DebugCfg.XRAY_HITBOX.get()) {
 			//NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(box.minX, box.minY, box.minZ), new Vec3(box.maxX, box.maxY, box.maxZ), ParticlePreset.DEBUG), (ServerPlayer)player);
 		}
 		List<LivingEntity> mobs = player.level.getEntitiesOfClass(LivingEntity.class, box, ent -> !ent.is(player));

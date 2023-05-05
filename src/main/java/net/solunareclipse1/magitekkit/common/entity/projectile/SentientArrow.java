@@ -51,6 +51,7 @@ import moze_intel.projecte.utils.WorldHelper;
 import net.solunareclipse1.magitekkit.common.entity.ai.ArrowPathNavigation;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.config.DebugCfg;
 import net.solunareclipse1.magitekkit.data.MGTKBlockTags;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
@@ -374,132 +375,6 @@ public class SentientArrow extends AbstractArrow {
 		}
 	}
 	
-	/* here for reference
-	private void abstractArrowTick() {
-		projectileTick();
-		boolean noPhys = this.isNoPhysics();
-		Vec3 vel = this.getDeltaMovement();
-		if (this.xRotO == 0.0F && this.yRotO == 0.0F) {
-			double horizVel = vel.horizontalDistance();
-			this.setYRot((float)(Mth.atan2(vel.x, vel.z) * (double)(180F / (float)Math.PI)));
-			this.setXRot((float)(Mth.atan2(vel.y, horizVel) * (double)(180F / (float)Math.PI)));
-			this.yRotO = this.getYRot();
-			this.xRotO = this.getXRot();
-		}
-
-		BlockPos curBlockPos = this.blockPosition();
-		BlockState blockInside = this.level.getBlockState(curBlockPos);
-		if (!blockInside.isAir() && !noPhys) {
-			VoxelShape blockShape = blockInside.getCollisionShape(this.level, curBlockPos);
-			if (!blockShape.isEmpty()) {
-				Vec3 curPos = this.position();
-
-				for(AABB aabb : blockShape.toAabbs()) {
-					if (aabb.move(curBlockPos).contains(curPos)) {
-						this.inGround = true;
-						break;
-					}
-				}
-			}
-		}
-
-		if (this.shakeTime > 0) {
-			--this.shakeTime;
-		}
-
-		if (this.isInWaterOrRain() || blockInside.is(Blocks.POWDER_SNOW)) {
-			this.clearFire();
-		}
-
-		if (this.inGround && !noPhys) {
-			if (this.lastState != blockInside && this.shouldFall()) {
-				this.startFalling();
-			} else if (!this.level.isClientSide) {
-				this.tickDespawn();
-			}
-
-			++this.inGroundTime;
-		} else {
-			this.inGroundTime = 0;
-			Vec3 curPos = this.position();
-			Vec3 nextPos = curPos.add(vel);
-			HitResult hitRes = this.level.clip(new ClipContext(curPos, nextPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
-			if (hitRes.getType() != HitResult.Type.MISS) {
-				nextPos = hitRes.getLocation();
-			}
-
-			while(!this.isRemoved()) {
-				EntityHitResult entityhitresult = this.findHitEntity(curPos, nextPos);
-				if (entityhitresult != null) {
-					hitRes = entityhitresult;
-				}
-
-				if (hitRes != null && hitRes.getType() == HitResult.Type.ENTITY) {
-					Entity entity = ((EntityHitResult)hitRes).getEntity();
-					Entity entity1 = this.getOwner();
-					if (entity instanceof Player && entity1 instanceof Player && !((Player)entity1).canHarmPlayer((Player)entity)) {
-						hitRes = null;
-						entityhitresult = null;
-					}
-				}
-
-				if (hitRes != null && hitRes.getType() != HitResult.Type.MISS && !noPhys && !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, hitRes)) {
-					this.onHit(hitRes);
-					this.hasImpulse = true;
-				}
-
-				if (entityhitresult == null || this.getPierceLevel() <= 0) {
-					break;
-				}
-
-				hitRes = null;
-			}
-
-			vel = this.getDeltaMovement();
-			double velX = vel.x;
-			double velY = vel.y;
-			double velZ = vel.z;
-			if (this.isCritArrow()) {
-				for(int i = 0; i < 4; ++i) {
-					this.level.addParticle(ParticleTypes.CRIT, this.getX() + velX * (double)i / 4.0D, this.getY() + velY * (double)i / 4.0D, this.getZ() + velZ * (double)i / 4.0D, -velX, -velY + 0.2D, -velZ);
-				}
-			}
-
-			double nextX = this.getX() + velX;
-			double nextY = this.getY() + velY;
-			double nextZ = this.getZ() + velZ;
-			double horizVel = vel.horizontalDistance();
-			if (noPhys) {
-				this.setYRot((float)(Mth.atan2(-velX, -velZ) * (double)(180F / (float)Math.PI)));
-			} else {
-				this.setYRot((float)(Mth.atan2(velX, velZ) * (double)(180F / (float)Math.PI)));
-			}
-
-			this.setXRot((float)(Mth.atan2(velY, horizVel) * (double)(180F / (float)Math.PI)));
-			this.setXRot(lerpRotation(this.xRotO, this.getXRot()));
-			this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
-			float f = 0.99F;
-			float f1 = 0.05F;
-			if (this.isInWater()) {
-				for(int j = 0; j < 4; ++j) {
-					float f2 = 0.25F;
-					this.level.addParticle(ParticleTypes.BUBBLE, nextX - velX * 0.25D, nextY - velY * 0.25D, nextZ - velZ * 0.25D, velX, velY, velZ);
-				}
-
-				f = this.getWaterInertia();
-			}
-
-			this.setDeltaMovement(vel.scale((double)f));
-			if (!this.isNoGravity() && !noPhys) {
-				Vec3 vec34 = this.getDeltaMovement();
-				this.setDeltaMovement(vec34.x, vec34.y - (double)0.05F, vec34.z);
-			}
-
-			this.setPos(nextX, nextY, nextZ);
-			this.checkInsideBlocks();
-		}
-	}*/
-	
 	/**
 	 * identical to Projectile.tick()
 	 */
@@ -693,7 +568,9 @@ public class SentientArrow extends AbstractArrow {
 					}
 				}
 			}
-			//drawDebugPath(newPath);
+			if (DebugCfg.ARROW_PATHFIND.get()) {
+				drawDebugPath(newPath);
+			}
 			currentPath = newPath;
 			break;
 		}

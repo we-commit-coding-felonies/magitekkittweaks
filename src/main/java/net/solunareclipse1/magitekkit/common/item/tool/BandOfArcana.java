@@ -130,6 +130,7 @@ import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.config.DebugCfg;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
@@ -544,7 +545,7 @@ public class BandOfArcana extends MGTKItem
 				}
 				break;
 				
-			case 7: // SWRG (Self-fling / Summon lightning)
+			case 7: // SWRG (Self-fling / Summon lightning storm)
 				if (!cooldown.isOnCooldown(PEItems.SWIFTWOLF_RENDING_GALE.get())) {
 					if (plrEmc >= 128 && !player.isShiftKeyDown() && !player.getAbilities().flying) {
 						player.moveRelative(2, player.getLookAngle());
@@ -1470,7 +1471,7 @@ public class BandOfArcana extends MGTKItem
 		BlockPos.betweenClosedStream(box).forEach(bPos -> {
 			
 			// debug: marks all for paticles
-			if (MagiTekkit.DEBUG) vaporized.push(bPos);
+			if (DebugCfg.MUSTANG_HITBOX.get()) vaporized.push(bPos);
 			
 			// fire
 			if (level.isEmptyBlock(bPos)) {
@@ -1538,8 +1539,7 @@ public class BandOfArcana extends MGTKItem
 
 		// big fwoosh of fire!
 		level.playSound(null, bCent, EffectInit.IGNITION_BURN.get(), SoundSource.NEUTRAL, 3f, 1f);
-		//level.playSound(null, bCent, SoundEvents.GENERIC_EXPLODE, SoundSource.NEUTRAL, 2.5f, 0.1f);
-		if (MagiTekkit.DEBUG) {
+		if (DebugCfg.MUSTANG_HITBOX.get()) {
 			
 			//// drawing the hitbox
 			for (ServerPlayer plr : level.players()) {
@@ -1549,7 +1549,6 @@ public class BandOfArcana extends MGTKItem
 					NetworkInit.toClient(new DrawParticleAABBPacket(minCorner, maxCorner, ParticlePreset.DEBUG), plr);
 				}
 			}
-			//MiscHelper.drawAABBWithParticlesServer(box, ParticleTypes.DRIPPING_LAVA, 0.1, level);
 			
 			// center and blockcenter
 			level.sendParticles(ParticleTypes.DRIPPING_HONEY, cent.x(), cent.y(), cent.z(), 1, 0, 0, 0, 0);
@@ -1571,7 +1570,7 @@ public class BandOfArcana extends MGTKItem
 		}
 		
 		// steam from the steamed clams were having
-		while (!vaporized.empty() && !MagiTekkit.DEBUG) {
+		while (!vaporized.empty() && !DebugCfg.MUSTANG_HITBOX.get()) {
 			BlockPos bPos = vaporized.pop();
 			level.playSound(null, bPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.1F, 2.6F + (rand.nextFloat() - rand.nextFloat()) * 0.8F);
 			level.sendParticles(ParticleTypes.CLOUD, bPos.getX(), bPos.getY(), bPos.getZ(), 4, 0, 0, 0, 0.3);

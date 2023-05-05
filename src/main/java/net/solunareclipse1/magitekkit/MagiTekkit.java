@@ -8,6 +8,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import net.solunareclipse1.magitekkit.init.ClientInit;
+import net.solunareclipse1.magitekkit.init.ConfigInit;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.ModInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
@@ -17,12 +18,12 @@ import net.solunareclipse1.magitekkit.util.LoggerHelper;
 public class MagiTekkit {
     public static final String MODID = "magitekkit";
     public static final String DISPLAYNAME = "MagiTekkit Tweaks";
-    public static final boolean DEBUG = true;
 
     public MagiTekkit() {
     	LoggerHelper.printInfo("Main", "IsLoading", "Hello from MagiTekkit Tweaks!");
         ObjectInit.init();
         EffectInit.init();
+        ConfigInit.init();
         IEventBus modbus = FMLJavaModLoadingContext.get().getModEventBus();
         modbus.addListener(ModInit::init);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> modbus.addListener(ClientInit::init));
