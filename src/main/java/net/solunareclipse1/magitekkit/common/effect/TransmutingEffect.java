@@ -97,7 +97,7 @@ public class TransmutingEffect extends MobEffect {
 				if (entity instanceof ServerPlayer player) {
 					ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
 					if (chestplate.getItem() instanceof GemAmulet amulet) {
-						amulet.leakEmc(chestplate, player.level, player, EmcHelper.getAvaliableEmc(player));
+						amulet.doLeak(chestplate, player.level, player, 4);
 					}
 					rangeOfEffects = EFFECTS_OF_DOOM.length; // if we are a player more effects are avaliable
 				}

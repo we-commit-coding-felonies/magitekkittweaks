@@ -150,7 +150,6 @@ public class ProjectileHelper {
 				level.playSound(null, player, SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, 2.5F / (rand.nextFloat() * 0.4F + 1.2F));
 			}
 		}
-		//System.out.println(summoned);
 		return summoned;
 	}
 }

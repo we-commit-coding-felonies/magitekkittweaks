@@ -51,6 +51,7 @@ import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.util.CalcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
@@ -192,19 +193,10 @@ public class SentientArrow extends Arrow {
 
 	@Override
 	public void tick() {
-		//System.out.println(position() + " | " + getDeltaMovement());
-		//if (hasTarget()) {
-		//	System.out.println(getTarget().position() + " | " + getTarget().getDeltaMovement());
-		//}
         float r = Color.PHILOSOPHERS.R / 255.0f;
         float g = Color.PHILOSOPHERS.G / 255.0f;
         float b = Color.PHILOSOPHERS.B / 255.0f;
-        //float o = isInert() ? 0.1f : 0.5f;
         ((ServerLevel)level).sendParticles(WispParticleData.wisp(0.1f, r, g, b), this.getX(), this.getY(), this.getZ(), (int) 10, 0.1, 0.1, 0.1, 0);
-		// updates 
-		//if (!level.isClientSide() && isNoGravity() && tickCount % 3 == 0) {
-		//	this.hasImpulse = true;
-		//}
 		if (tickCount > maxLife) {
 			expire();
 		} else if (tickCount > 4) {
@@ -412,17 +404,6 @@ public class SentientArrow extends Arrow {
 				return true;
 			}
 			return false;
-			//if (getTarget() != null && !getTarget().is(oldTarget)) {
-			//	// our new target is acceptable
-			//	changeAiState((byte)1);
-			//	System.out.println(hasTarget());
-			//	return true;
-			//} else if (getTarget() == null) {
-			//	if (oldTarget != null) changeTarget(oldTarget);
-			//	return false;
-			//} else {
-			//	return false;
-			//}
 		}
 		return false;
 	}
@@ -463,7 +444,7 @@ public class SentientArrow extends Arrow {
 			if (plr.is(getOwner()) || plr.blockPosition().closerToCenterThan(this.position(), 64d)) {
 				Vec3 min = new Vec3(getBoundingBox().minX, getBoundingBox().minY, getBoundingBox().minZ),
 						max = new Vec3(getBoundingBox().maxX, getBoundingBox().maxY, getBoundingBox().maxZ);
-				NetworkInit.toClient(new DrawParticleAABBPacket(min, max, 1), plr);
+				NetworkInit.toClient(new DrawParticleAABBPacket(min, max, ParticlePreset.SENTIENT_ARROW_TARGET_LOST), plr);
 			}
 		}
 	}

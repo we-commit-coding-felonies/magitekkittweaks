@@ -7,6 +7,7 @@ import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
 import net.solunareclipse1.magitekkit.util.CalcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
@@ -257,7 +258,7 @@ public class SmartArrow extends Arrow {
 			if (plr.blockPosition().closerToCenterThan(this.position(), 64d)) {
 				Vec3 min = new Vec3(getBoundingBox().minX, getBoundingBox().minY, getBoundingBox().minZ),
 						max = new Vec3(getBoundingBox().maxX, getBoundingBox().maxY, getBoundingBox().maxZ);
-				NetworkInit.toClient(new DrawParticleAABBPacket(min, max, 1), plr);
+				NetworkInit.toClient(new DrawParticleAABBPacket(min, max, ParticlePreset.SENTIENT_ARROW_TARGET_LOST), plr);
 			}
 		}
 	}

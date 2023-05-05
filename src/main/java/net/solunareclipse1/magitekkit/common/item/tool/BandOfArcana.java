@@ -134,6 +134,7 @@ import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
@@ -511,30 +512,16 @@ public class BandOfArcana extends MGTKItem
 					}
 				}
 				if (plrEmc >= EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-					System.out.println("======== CREATION ========");
 					SentientArrow arrow = new SentientArrow(player.level, player, 1);
-					System.out.println("NEW: " + arrow.getDeltaMovement());
-					System.out.println("PLAYER: " + player.getXRot() + " | " + player.getYRot());
 					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1.2f, 0);
-					System.out.println("SHOT: " + arrow.getDeltaMovement());
-					//if (!player.isOnGround()) {
-					//} else {
-					//	arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
-					//}
-					//arrow.setCritArrow(true);
 					player.level.addFreshEntity(arrow);
 					changeTrackedArrow(stack, arrow);
-					System.out.println("ADDED: " + arrow.getDeltaMovement());
 					for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
 						NetworkInit.toClient(new CreateLoopingSoundPacket((byte)1, arrow.getId()), plr);
 					}
-					//player.playSound(PESoundEvents.POWER.get(), 1, 0.1f);//
 					player.level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (player.level.random.nextFloat() * 0.4F + 1.2F) + (1 / 3) * 0.5F));
 					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW);
 					didDo = true;
-					//if (!player.getName().getString().contains("Dev")) {
-					//	player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 200);
-					//}
 				}
 				break;
 				
@@ -609,7 +596,6 @@ public class BandOfArcana extends MGTKItem
 				
 			case 2: // Watch (gravity attract / repel)
 				for ( LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(player.getBoundingBox().getCenter(), 24, 24, 24), ent -> !EntityHelper.isImmuneToGravityManipulation(ent)) ) {
-					//System.out.println(ent);
 					if (ent.is(player)) continue; // Heres a funny joke: NaN
 					
 					double dX = player.getX() - ent.getX();
@@ -623,7 +609,6 @@ public class BandOfArcana extends MGTKItem
 						Vec3 addVec = new Vec3(dX / dist * vel * 0.1, dY / dist * vel * 0.1, dZ / dist * vel * 0.1);
 						if (player.isShiftKeyDown()) addVec = addVec.reverse();
 						if (ent instanceof ServerPlayer plr) {
-							System.out.println("i like to move it move it");
 							NetworkInit.toClient(new ModifyPlayerVelocityPacket(addVec, (byte)1), plr);
 						} else {
 							ent.setDeltaMovement(ent.getDeltaMovement().add(addVec));
@@ -969,7 +954,7 @@ public class BandOfArcana extends MGTKItem
 			case 2: // Watch (Time Acceleration)
 				if (plrEmc >= (getWoft(stack) ? 2048 : 128)) {
 					EmcHelper.consumeAvaliableEmc(player, getWoft(stack) ? 2048 : 128);
-					jojoReference(player, stack, 60, Integer.MAX_VALUE - timeBeingUsed, 1200, getWoft(stack) ? 24 : 0);
+					jojoReference(player, stack, 60, Integer.MAX_VALUE - timeBeingUsed, 120, getWoft(stack) ? 24 : 0);
 				}
 				break;
 				
@@ -1543,7 +1528,7 @@ public class BandOfArcana extends MGTKItem
 				if (plr.blockPosition().closerToCenterThan(cent, 512d)) {
 					Vec3 minCorner = new Vec3(box.minX, box.minY, box.minZ);
 					Vec3 maxCorner = new Vec3(box.maxX, box.maxY, box.maxZ);
-					NetworkInit.toClient(new DrawParticleAABBPacket(minCorner, maxCorner, 0), plr);
+					NetworkInit.toClient(new DrawParticleAABBPacket(minCorner, maxCorner, ParticlePreset.DEBUG), plr);
 				}
 			}
 			//MiscHelper.drawAABBWithParticlesServer(box, ParticleTypes.DRIPPING_LAVA, 0.1, level);

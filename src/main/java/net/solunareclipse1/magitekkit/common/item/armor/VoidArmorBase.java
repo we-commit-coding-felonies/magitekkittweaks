@@ -125,7 +125,6 @@ public class VoidArmorBase extends MGTKArmorItem implements IDamageReducer {
 	@Override
 	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {
 		if (ench instanceof ProtectionEnchantment) return false;
-		System.out.println(PECapabilities.EMC_STORAGE_CAPABILITY);
 		return true;
 	}
 	
