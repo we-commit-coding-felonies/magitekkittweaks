@@ -9,7 +9,16 @@ package net.solunareclipse1.magitekkit.util;
 public class Constants {
 	public class EmcCosts {
 		public static final int
+				//// Gem Armor
+				// Shield
 				ALCHSHIELD_MIN = 64,
+				// Helmet / Circlet
+				JEWELRY_BREATH = 24,
+				JEWELRY_XRAY = 42,
+				// Chestplate / Amulet
+				JEWELRY_REJUVENATE = 72,
+				// Boots / Anklet
+				JEWELRY_JESUS = 3,
 				//// Band of Arcana
 				// Harvest
 				BOA_BONEMEAL = 64,

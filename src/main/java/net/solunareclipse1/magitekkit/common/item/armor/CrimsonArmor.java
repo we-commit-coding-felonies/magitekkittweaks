@@ -120,11 +120,8 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 				IItemHandler inv = itemHandlerCap.get();
 				for (int i = 0; i < inv.getSlots(); i++) {
 					ItemStack item = inv.getStackInSlot(i);
-					System.out.println(LivingEntity.getEquipmentSlotForItem(item));
-					//event.getEntityLiving().getEquipmentSlotForItem(item);
 					if (ItemNBTHelper.getBoolean(item, "burnout_overload", false)) {
 						EquipmentSlot slot = LivingEntity.getEquipmentSlotForItem(item);
-						System.out.println(DEGRADE_REPLACEMENTS[slot.getIndex()].copy());
 						inv.extractItem(slot.getIndex(), 1, false);
 						inv.insertItem(slot.getIndex(), DEGRADE_REPLACEMENTS[slot.getIndex()].copy(), false);
 					}

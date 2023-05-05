@@ -120,7 +120,6 @@ public class EntityLivingEventHandler {
 				for (Entry<ItemStack, Float> absorber : absorbList.entrySet()) {
 					ItemStack stack = absorber.getKey();
 					float absorbed = absorber.getValue()*event.getAmount();
-					System.out.println(absorbed);
 					absorber.getKey().hurtAndBreak((int)absorbed, entity, ent -> {
 						// TODO: gem explosion
 					});

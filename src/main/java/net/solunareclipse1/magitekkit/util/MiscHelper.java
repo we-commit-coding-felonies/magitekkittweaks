@@ -211,40 +211,40 @@ public class MiscHelper {
 	 * @param level the level to put particles in
 	 * @param fill if true, draws a solid box (filled with particles), instead of just an outline
 	 */
-	public static void drawAABBWithParticles(AABB box, ParticleOptions particle, double stepSize, ClientLevel level, boolean fill) {
+	public static void drawAABBWithParticles(AABB box, ParticleOptions particle, double stepSize, ClientLevel level, boolean fill, boolean infRange) {
 		if (fill) {
     		for (double i = box.minX; i < box.maxX; i += stepSize) {
         		for (double j = box.minY; j < box.maxY; j += stepSize) {
             		for (double k = box.minZ; k < box.maxZ; k += stepSize) {
-                		level.addAlwaysVisibleParticle(particle, i, j, k, 0, 0, 0);
+                		level.addParticle(particle, infRange, i, j, k, 0, 0, 0);
             		}
         		}
     		}
 		}
 		
 		for (double i = box.minX; i < box.maxX; i += stepSize) {
-			level.addParticle(particle, i, box.minY, box.minZ, 0, 0, 0);
-			level.addParticle(particle, i, box.minY, box.maxZ, 0, 0, 0);
+			level.addParticle(particle, infRange, i, box.minY, box.minZ, 0, 0, 0);
+			level.addParticle(particle, infRange, i, box.minY, box.maxZ, 0, 0, 0);
 		}
 		for (double i = box.minY; i < box.maxY; i += stepSize) {
-			level.addParticle(particle, box.minX, i, box.minZ, 0, 0, 0);
-			level.addParticle(particle, box.minX, i, box.maxZ, 0, 0, 0);
+			level.addParticle(particle, infRange, box.minX, i, box.minZ, 0, 0, 0);
+			level.addParticle(particle, infRange, box.minX, i, box.maxZ, 0, 0, 0);
 		}
 		for (double i = box.minZ; i < box.maxZ; i += stepSize) {
-			level.addParticle(particle, box.minX, box.minY, i, 0, 0, 0);
-			level.addParticle(particle, box.minX, box.maxY, i, 0, 0, 0);
+			level.addParticle(particle, infRange, box.minX, box.minY, i, 0, 0, 0);
+			level.addParticle(particle, infRange, box.minX, box.maxY, i, 0, 0, 0);
 		}
 		for (double i = box.maxX; i > box.minX; i -= stepSize) {
-			level.addParticle(particle, i, box.maxY, box.maxZ, 0, 0, 0);
-			level.addParticle(particle, i, box.maxY, box.minZ, 0, 0, 0);
+			level.addParticle(particle, infRange, i, box.maxY, box.maxZ, 0, 0, 0);
+			level.addParticle(particle, infRange, i, box.maxY, box.minZ, 0, 0, 0);
 		}
 		for (double i = box.maxY; i > box.minY; i -= stepSize) {
-			level.addParticle(particle, box.maxX, i, box.maxZ, 0, 0, 0);
-			level.addParticle(particle, box.maxX, i, box.minZ, 0, 0, 0);
+			level.addParticle(particle, infRange, box.maxX, i, box.maxZ, 0, 0, 0);
+			level.addParticle(particle, infRange, box.maxX, i, box.minZ, 0, 0, 0);
 		}
 		for (double i = box.maxZ; i > box.minZ; i -= stepSize) {
-			level.addParticle(particle, box.maxX, box.maxY, i, 0, 0, 0);
-			level.addParticle(particle, box.maxX, box.minY, i, 0, 0, 0);
+			level.addParticle(particle, infRange, box.maxX, box.maxY, i, 0, 0, 0);
+			level.addParticle(particle, infRange, box.maxX, box.minY, i, 0, 0, 0);
 		}
 	}
 	

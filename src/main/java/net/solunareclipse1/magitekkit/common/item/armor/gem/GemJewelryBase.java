@@ -41,6 +41,7 @@ import mekanism.common.registries.MekanismDamageSource;
 
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
 
 import morph.avaritia.util.InfinityDamageSource;
 import vazkii.botania.api.mana.IManaDiscountArmor;
@@ -114,19 +115,33 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	}
 	
 	/**
-	 * Common tick function for all 4 pieces
-	 * called in onArmorTick
-	 * <p>
-	 * we store the players avaliable emc in a variable so we dont have to call getAvaliableEmc whenever we want to change it
+	 * Common tick function for all 4 pieces <br>
+	 * gathers information about the wearer (such as pieces worn & inventory emc) for easy-access
 	 * 
 	 * @param stack The armor piece ItemStack
 	 * @param level The level
 	 * @param player The player with the armor
-	 * @return The avaliable EMC in the player's inventory
+	 * @return Info about the gem set's current state
 	 */
-	protected long jewelryTick(ItemStack stack, Level level, Player player) {
-		long plrEmc = EmcHelper.getAvaliableEmc(player);		
-		return plrEmc;
+	protected GemJewelrySetInfo jewelryTick(ItemStack stack, Level level, Player player) {
+		long plrEmc = EmcHelper.getAvaliableEmc(player);
+		GemInfo head = getInfo(player, EquipmentSlot.HEAD),
+				chest = getInfo(player, EquipmentSlot.CHEST),
+				legs = getInfo(player, EquipmentSlot.LEGS),
+				feet = getInfo(player, EquipmentSlot.FEET);
+		boolean setBonus = head.id > 1 && chest.id > 1 && legs.id > 1 && feet.id > 1;
+		return new GemJewelrySetInfo(head, chest, legs, feet, setBonus, plrEmc);
+	}
+	
+	protected GemInfo getInfo(Player player, EquipmentSlot slot) {
+		ItemStack stack = player.getItemBySlot(slot);
+		if ( stack.isEmpty() || !(stack.getItem() instanceof GemJewelryBase) ) {
+			return GemInfo.MISSING;
+		} else if (stack.isDamaged()) {
+			return GemInfo.BROKEN;
+		} else {
+			return GemInfo.PRISTINE;
+		}
 	}
 
 
@@ -252,5 +267,40 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		public float getToughness() {return 0;}
 		@Override
 		public float getKnockbackResistance() {return 0.0f;}
+	}
+	
+	record GemJewelrySetInfo(GemInfo head, GemInfo chest, GemInfo legs, GemInfo feet, boolean hasBonus, long plrEmc) {
+		public GemInfo get(EquipmentSlot slot) {
+			switch (slot) {
+			case HEAD:
+				return head;
+			case CHEST:
+				return chest;
+			case LEGS:
+				return legs;
+			case FEET:
+				return feet;
+			default:
+				LoggerHelper.printWarn("GemJewelrySetInfo.get()", "InvalidArmorSlot", slot.toString());
+				return GemInfo.MISSING;
+			}
+		}
+	}
+	
+	enum GemInfo {
+		ACTIVE((byte)3), PRISTINE((byte)2), BROKEN((byte)1), MISSING((byte)0);
+		
+		public final byte id;
+		private GemInfo(byte id) {
+			this.id = id;
+		}
+		
+		public boolean exists() {
+			return id >= 1;
+		}
+		
+		public boolean pristine() {
+			return id >= 2;
+		}
 	}
 }

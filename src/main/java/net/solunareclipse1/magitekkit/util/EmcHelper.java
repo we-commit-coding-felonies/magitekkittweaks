@@ -164,7 +164,6 @@ public class EmcHelper {
 				ItemStack stack = inv.getStackInSlot(i);
 				if (stack.isEmpty()) continue;
 				if ( stack.getItem() instanceof GemAmulet ) {
-					System.out.println(i);
 				}
 				
 				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
@@ -187,7 +186,10 @@ public class EmcHelper {
 	}
 	
 	/**
-	 * Same as consumeAvaliableEmc() but will ignore a specific itemstack
+	 * Same as consumeAvaliableEmc() but will ignore a specific itemstack <br>
+	 * also doesnt play the "wasted emc" sound
+	 * <p>
+	 * intended for use with auto-refilling klein stars
 	 * 
 	 * @param player
 	 * @param toConsume
@@ -202,7 +204,7 @@ public class EmcHelper {
 
 		ItemStack offhand = player.getOffhandItem();
 		if (!offhand.isEmpty() && offhand != excluded) {
-			consumed = consumeAvaliableEmcOfStack(offhand, toConsume - totalConsumed, player);
+			consumed = consumeAvaliableEmcOfStack(offhand, toConsume - totalConsumed);
 			if (consumed != 0) {
 				didConsume = true;
 				totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
@@ -219,7 +221,7 @@ public class EmcHelper {
 			for (int i = 0; i < curios.getSlots(); i++) {
 				ItemStack stack = curios.getStackInSlot(i);
 				if (stack.isEmpty() || stack == excluded) continue;
-				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
 				if (consumed != 0) {
 					didConsume = true;
 					totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
@@ -240,7 +242,7 @@ public class EmcHelper {
 				ItemStack stack = inv.getStackInSlot(i);
 				if (stack.isEmpty() || stack == excluded) continue;
 				
-				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
 				
 				
 				if (consumed != 0) {
@@ -300,7 +302,6 @@ public class EmcHelper {
 				stack.shrink(itemsToConsume);
 			}
 		}
-		if (consumed > toConsume) System.out.println(consumed +" and "+ toConsume);
 		if (consumed < 0) return Long.MAX_VALUE;
 		return consumed;
 	}
@@ -331,7 +332,7 @@ public class EmcHelper {
 				stack.shrink(itemsToConsume);
 			}
 		}
-		if (consumed > toConsume) player.getLevel().playSound(null, player, EffectInit.EMC_WASTE.get(), SoundSource.PLAYERS, 1, 1);
+		if (consumed > toConsume) player.getLevel().playSound(null, player.blockPosition(), EffectInit.EMC_WASTE.get(), SoundSource.PLAYERS, 1, 1);
 		if (consumed < 0) return Long.MAX_VALUE;
 		return consumed;
 	}
