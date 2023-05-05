@@ -2,9 +2,11 @@ package net.solunareclipse1.magitekkit.client.render;
 
 import net.minecraft.client.renderer.entity.ArrowRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.projectile.SpectralArrow;
 
+import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrowOld;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 
 public class SentientArrowRenderer extends ArrowRenderer<SentientArrow> {
@@ -17,10 +19,12 @@ public class SentientArrowRenderer extends ArrowRenderer<SentientArrow> {
 	
 	@Override
 	public ResourceLocation getTextureLocation(SentientArrow arrow) {
-		if (arrow.isInert()) {
-			return INERT_TEXTURE;
-		}
-		return ACTIVE_TEXTURE;
+		return !arrow.isInert() ? ACTIVE_TEXTURE : INERT_TEXTURE;
+	}
+	
+	@Override
+	protected int getBlockLightLevel(SentientArrow arrow, BlockPos pos) {
+		return !arrow.isInert() ? 15 : super.getBlockLightLevel(arrow, pos);
 	}
 
 }

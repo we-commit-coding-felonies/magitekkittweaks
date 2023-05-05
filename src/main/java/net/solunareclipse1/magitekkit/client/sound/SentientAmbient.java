@@ -8,6 +8,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrowOld;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 /**
