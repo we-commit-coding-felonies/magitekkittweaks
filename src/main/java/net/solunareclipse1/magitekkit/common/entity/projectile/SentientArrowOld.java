@@ -596,7 +596,7 @@ public class SentientArrowOld extends Arrow {
 			if (plr.is(getOwner()) || plr.blockPosition().closerToCenterThan(this.position(), 64d)) {
 				Vec3 min = new Vec3(getBoundingBox().minX, getBoundingBox().minY, getBoundingBox().minZ),
 						max = new Vec3(getBoundingBox().maxX, getBoundingBox().maxY, getBoundingBox().maxZ);
-				NetworkInit.toClient(new DrawParticleAABBPacket(min, max, 1), plr);
+				//NetworkInit.toClient(new DrawParticleAABBPacket(min, max, 1), plr); commented out to make ide shut up
 			}
 		}
 	}
