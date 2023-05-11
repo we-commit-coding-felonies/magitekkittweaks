@@ -45,7 +45,7 @@ public class EmcCfg {
 		public class WOFT {
 			public static LongValue
 				GRAVITY,
-				JOJO_WEAK,
+				JOJO,
 				JOJO_STRONG,
 				TICKACCEL,
 				TELEPORT;
@@ -67,6 +67,7 @@ public class EmcCfg {
 			public static LongValue
 				TRANSMUTE,
 				ITEMIZE,
+				DIVINING,
 				ORB;
 		}
 		public class Archangel {
@@ -99,13 +100,13 @@ public class EmcCfg {
 	public static void registerServerConfig(Builder cfg) {
 		cfg.comment("Here you can change the EMC values of various things");
 		
-		cfg.push("gem").comment("Gem Jewellery");
+		cfg.push("Gem Jewellery");
 		Gem.SHIELD_MIN = cfg
 				.comment("Minimum EMC cost per hit of the Alchemical Barrier")
 				.defineInRange("gemShieldMin", 64, 0, Long.MAX_VALUE);
 		Gem.SHIELD_EXP = cfg
-				.comment("The exponent used in EMC cost calculation. Heres a graph: https://www.desmos.com/calculator/isf4jzlo4d")
-				.comment("P corresponds to this config setting, and M is damage-type specific modifier (for most things its just 1)")
+				.comment("The exponent used in EMC cost calculation. Heres a graph: https://www.desmos.com/calculator/isf4jzlo4d",
+						"P corresponds to this config setting, and M is damage-type specific modifier (for most things its just 1)")
 				.defineInRange("gemShieldExp", 2.0, 0.1, 5.0);
 		Gem.Head.BREATH = cfg
 				.comment("EMC used by the Circlet to breathe underwater")
@@ -141,11 +142,12 @@ public class EmcCfg {
 		
 		
 		
-		cfg.push("arcana").comment("Band of Arcana");
+		cfg.push("Band of Arcana");
+		// WOFT
 		Arcana.WOFT.GRAVITY = cfg
 				.comment("EMC cost of the gravity manipulation")
 				.defineInRange("arcanaWoftGravity", 98, 0, Long.MAX_VALUE);
-		Arcana.WOFT.JOJO_WEAK = cfg
+		Arcana.WOFT.JOJO = cfg
 				.comment("Cost per tick of the self time acceleration (speed boost)")
 				.defineInRange("arcanaWoftJojo", 128, 0, Long.MAX_VALUE);
 		Arcana.WOFT.JOJO_STRONG = cfg
@@ -157,6 +159,8 @@ public class EmcCfg {
 		Arcana.WOFT.TELEPORT = cfg
 				.comment("EMC consumed when teleporting")
 				.defineInRange("arcanaWoftTeleport", 144, 0, Long.MAX_VALUE);
+		
+		// Harvest
 		Arcana.Harvest.WITHERVINE = cfg
 				.comment("EMC cost of the 'wither vine' attack")
 				.defineInRange("arcanaHarvestWithervine", 860, 0, Long.MAX_VALUE);
@@ -169,6 +173,8 @@ public class EmcCfg {
 		Arcana.Harvest.HARVEST = cfg
 				.comment("EMC used to harvest nearby fully-grown plants")
 				.defineInRange("arcanaHarvestHarvest", 384, 0, Long.MAX_VALUE);
+		
+		// Liquid
 		Arcana.Liquid.DESTROY = cfg
 				.comment("EMC used to annihilate a liquid")
 				.defineInRange("arcanaLiquidDestroy", 0, 0, Long.MAX_VALUE);
@@ -178,15 +184,22 @@ public class EmcCfg {
 		Arcana.Liquid.ORB = cfg
 				.comment("Cost to fire a liquid orb")
 				.defineInRange("arcanaLiquidOrb", 256, 0, Long.MAX_VALUE);
+		
+		// Philo
 		Arcana.Philo.TRANSMUTE = cfg
 				.comment("EMC used by the transmutation punch attack")
 				.defineInRange("arcanaPhiloTransmute", 1, 0, Long.MAX_VALUE);
 		Arcana.Philo.ITEMIZE = cfg
 				.comment("EMC cost of the 'itemizer' effect")
 				.defineInRange("arcanaPhiloItemize", 131072, 0, Long.MAX_VALUE);
+		Arcana.Philo.DIVINING = cfg
+				.comment("EMC per block scanned by the divining rod")
+				.defineInRange("arcanaPhiloItemize", 10, 0, Long.MAX_VALUE);
 		Arcana.Philo.ORB = cfg
 				.comment("Cost of the projectile")
 				.defineInRange("arcanaPhiloOrb", 1024, 0, Long.MAX_VALUE);
+		
+		// Archangel
 		Arcana.Archangel.ARROW = cfg
 				.comment("EMC used to shoot a basic arrow")
 				.defineInRange("arcanaArchangelArrow", 64, 0, Long.MAX_VALUE);
@@ -196,6 +209,8 @@ public class EmcCfg {
 		Arcana.Archangel.HOMING = cfg
 				.comment("Amount of EMC to summon a Sentient Arrow")
 				.defineInRange("arcanaArchangelHoming", 4096, 0, Long.MAX_VALUE);
+		
+		// SWRG
 		Arcana.SWRG.GUST = cfg
 				.comment("EMC used when manipulating wind")
 				.defineInRange("arcanaSwrgGust", 28, 0, Long.MAX_VALUE);
@@ -205,9 +220,13 @@ public class EmcCfg {
 		Arcana.SWRG.STORM = cfg
 				.comment("EMC used to start a thunderstorm")
 				.defineInRange("arcanaSwrgStorm", 65536, 0, Long.MAX_VALUE);
+		
+		// Zero
 		Arcana.Zero.FREEZE = cfg
 				.comment("EMC used to flash-freeze things")
 				.defineInRange("arcanaZeroFreeze", 273, 0, Long.MAX_VALUE);
+		
+		// Ignition
 		Arcana.Ignition.MUSTANG = cfg
 				.comment("Cost of the Alchemical Flameburst projectile")
 				.defineInRange("arcanaIgnitionMustang", 65536, 0, Long.MAX_VALUE);
@@ -216,7 +235,7 @@ public class EmcCfg {
 				.defineInRange("arcanaIgnitionBurn", 451, 0, Long.MAX_VALUE);
 		Arcana.Ignition.EXTINGUISH = cfg
 				.comment("EMC cost of smothering flames")
-				.defineInRange("placeHolder", 0, 0, Long.MAX_VALUE);
+				.defineInRange("arcanaIgnitionExtinguish", 0, 0, Long.MAX_VALUE);
 	}
 	
 	// Common

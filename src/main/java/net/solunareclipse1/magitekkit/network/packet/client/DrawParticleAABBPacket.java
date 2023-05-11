@@ -1,12 +1,10 @@
 package net.solunareclipse1.magitekkit.network.packet.client;
 
-import java.util.Random;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
@@ -18,8 +16,6 @@ import net.minecraftforge.network.NetworkEvent;
 
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
-
-import vazkii.botania.client.fx.WispParticleData;
 
 public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, ParticlePreset preset) {
 	
@@ -69,7 +65,8 @@ public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, ParticlePreset preset
 	public boolean handle(Supplier<NetworkEvent.Context> sup) {
         NetworkEvent.Context ctx = sup.get();
         ctx.enqueueWork(() -> {
-        	ClientLevel level = Minecraft.getInstance().level;
+        	@SuppressWarnings("resource")
+			ClientLevel level = Minecraft.getInstance().level;
         	AABB box = new AABB(cMin, cMax);
         	Vec3 cent = box.getCenter();
         	boolean infRange = false;

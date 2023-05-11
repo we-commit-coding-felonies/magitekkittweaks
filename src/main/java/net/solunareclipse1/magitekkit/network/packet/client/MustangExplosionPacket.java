@@ -35,7 +35,8 @@ public record MustangExplosionPacket(double x, double y, double z) {
         NetworkEvent.Context ctx = sup.get();
         ctx.enqueueWork(() -> {
         	// ide warns me about this but im pretty sure its fine?
-        	ClientLevel level = Minecraft.getInstance().level;
+        	@SuppressWarnings("resource")
+			ClientLevel level = Minecraft.getInstance().level;
         	Random rand = level.getRandom();
     		level.addParticle(ParticleTypes.FLASH, true, x, y, z, 0, 0, 0);
     		for (int i = 0; i < 24; i++) {
@@ -48,7 +49,7 @@ public record MustangExplosionPacket(double x, double y, double z) {
         		level.addParticle(ParticleTypes.SMALL_FLAME, true, rand.nextGaussian() * 2 + x, rand.nextGaussian() * 2 + y, rand.nextGaussian() * 2 + z, 0, Math.abs(rand.nextGaussian()/10), 0);
     		}
     		
-    		for (int i=0; i<128; i++) {
+    		for (int i = 0; i < 128; i++) {
         		level.addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, true, rand.nextGaussian() + x, rand.nextGaussian() + y, rand.nextGaussian() + z, 0, Math.abs(rand.nextGaussian()/10), 0);
     		}
     		// addParticle(pParticleData, pX, pY, pZ, pXSpeed, pYSpeed, pZSpeed);

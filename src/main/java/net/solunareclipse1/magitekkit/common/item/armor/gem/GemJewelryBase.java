@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,21 +29,19 @@ import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.HazmatCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 import net.solunareclipse1.magitekkit.api.item.IHazmatItem;
-import net.solunareclipse1.magitekkit.common.event.EntityLivingEventHandler;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.config.EmcCfg;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Gem;
 import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
 
-import mekanism.api.radiation.capability.IRadiationShielding;
 import mekanism.common.registries.MekanismDamageSource;
 
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
 
-import morph.avaritia.util.InfinityDamageSource;
 import vazkii.botania.api.mana.IManaDiscountArmor;
 
 /**
@@ -73,9 +70,9 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		if (stack.isDamaged()) {
 			stack.setDamageValue(stack.getDamageValue() - 1);
 		} else if (stack.getItem() instanceof GemAmulet amulet) {
-			amulet.insertEmc(stack, 1, EmcAction.EXECUTE);
+			amulet.insertEmc(stack, EmcCfg.Gem.Chest.TRICKLE.get(), EmcAction.EXECUTE);
 		}
-		return 0.25 * ( 1 - (stack.getDamageValue() / stack.getMaxDamage()) );
+		return 0.25d * ( 1d - (stack.getDamageValue() / stack.getMaxDamage()) );
 	}
 	
 	/** Damage sources with corresponging cost multipliers. 0.5 would mean 1/2 cost */
@@ -124,7 +121,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	 * @param player The player with the armor
 	 * @return Info about the gem set's current state
 	 */
-	protected GemJewelrySetInfo jewelryTick(ItemStack stack, Level level, Player player) {
+	protected static GemJewelrySetInfo jewelryTick(ItemStack stack, Level level, Player player) {
 		long plrEmc = EmcHelper.getAvaliableEmc(player);
 		GemInfo head = getInfo(player, EquipmentSlot.HEAD),
 				chest = getInfo(player, EquipmentSlot.CHEST),
@@ -134,7 +131,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		return new GemJewelrySetInfo(head, chest, legs, feet, setBonus, plrEmc);
 	}
 	
-	protected GemInfo getInfo(Player player, EquipmentSlot slot) {
+	public static GemInfo getInfo(Player player, EquipmentSlot slot) {
 		ItemStack stack = player.getItemBySlot(slot);
 		if ( stack.isEmpty() || !(stack.getItem() instanceof GemJewelryBase) ) {
 			return GemInfo.MISSING;
@@ -288,7 +285,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		}
 	}
 	
-	enum GemInfo {
+	public enum GemInfo {
 		ACTIVE((byte)3), PRISTINE((byte)2), BROKEN((byte)1), MISSING((byte)0);
 		
 		public final byte id;

@@ -15,5 +15,6 @@ public class MGTKBlockStates extends BlockStateProvider {
     @Override
     protected void registerStatesAndModels() {
         simpleBlock(ObjectInit.GANTIUM_BLOCK.get());
+        simpleBlock(ObjectInit.AIR_ICE.get());
     }
 }

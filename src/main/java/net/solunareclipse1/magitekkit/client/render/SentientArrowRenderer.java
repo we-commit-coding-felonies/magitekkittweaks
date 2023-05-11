@@ -4,9 +4,6 @@ import net.minecraft.client.renderer.entity.ArrowRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.projectile.SpectralArrow;
-
-import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrowOld;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 
 public class SentientArrowRenderer extends ArrowRenderer<SentientArrow> {

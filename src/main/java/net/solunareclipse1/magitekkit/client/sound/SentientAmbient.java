@@ -1,14 +1,10 @@
 package net.solunareclipse1.magitekkit.client.sound;
 
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
-import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrowOld;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 /**

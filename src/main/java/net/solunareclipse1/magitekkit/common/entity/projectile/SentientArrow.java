@@ -6,11 +6,7 @@ import java.util.Map.Entry;
 import java.util.Stack;
 
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
-
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -56,17 +52,11 @@ import net.solunareclipse1.magitekkit.data.MGTKBlockTags;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
-import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
-import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
-import net.solunareclipse1.magitekkit.util.MiscHelper;
-import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
-import vazkii.botania.client.fx.SparkleParticleData;
-import vazkii.botania.client.fx.WispParticleData;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityPixie;
 

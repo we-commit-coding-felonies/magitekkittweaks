@@ -6,6 +6,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -14,10 +15,11 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.common.block.AirIceBlock;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
-import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrowOld;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
+import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor.CrimsonArmorMaterial;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
@@ -43,6 +45,7 @@ public class ObjectInit {
 
     // Common properties
     public static final BlockBehaviour.Properties BLOCK_PROPERTIES = BlockBehaviour.Properties.of(Material.STONE).strength(2f).requiresCorrectToolForDrops();
+    public static final BlockBehaviour.Properties TEMP_BLOCK_PROPERTIES = BlockBehaviour.Properties.of(Material.ICE).noDrops().instabreak();
     public static final Item.Properties ITEM_PROPERTIES_GENERIC = new Item.Properties().tab(ModInit.ITEM_GROUP);
     public static final Item.Properties ITEM_PROPERTIES_UNBREAKABLE = new Item.Properties().tab(ModInit.ITEM_GROUP).durability(0);
     public static final Item.Properties ITEM_PROPERTIES_JEWELRY = new Item.Properties().tab(ModInit.ITEM_GROUP).defaultDurability(96).durability(96);
@@ -53,6 +56,7 @@ public class ObjectInit {
     //// Blocks
     // Simple
     public static final RegistryObject<Block> GANTIUM_BLOCK = BLOCKS.register("gantium_block", () -> new Block(BLOCK_PROPERTIES));
+    public static final RegistryObject<AirIceBlock> AIR_ICE = BLOCKS.register("air_ice", () -> new AirIceBlock(TEMP_BLOCK_PROPERTIES.friction(0.9f).randomTicks().sound(SoundType.GLASS).noOcclusion()));
     
     // BlockItems
     public static final RegistryObject<Item> GANTIUM_BLOCK_ITEM = fromBlock(GANTIUM_BLOCK);
@@ -110,6 +114,12 @@ public class ObjectInit {
 			.fireImmune()
 			.noSummon()
 			.build("sentient_arrow"));
+    public static final RegistryObject<EntityType<WitherVineProjectile>> WITHER_VINE = ENTITIES.register("wither_vine", () -> EntityType.Builder.<WitherVineProjectile>of(WitherVineProjectile::new, MobCategory.MISC)
+			.sized(0.3F, 0.3F)
+			.clientTrackingRange(4)
+			.updateInterval(20)
+			.fireImmune()
+			.build("wither_vine"));
 
     
     

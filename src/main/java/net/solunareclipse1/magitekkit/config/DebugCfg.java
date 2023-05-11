@@ -7,9 +7,11 @@ public class DebugCfg {
 	// Client
 	
 	// Server
-	public static BooleanValue ARROW_PATHFIND;
-	public static BooleanValue MUSTANG_HITBOX;
-	public static BooleanValue XRAY_HITBOX;
+	public static BooleanValue
+					ARROW_PATHFIND,
+					MUSTANG_HITBOX,
+					XRAY_HITBOX,
+					GUST_HITBOX;
 	public static void registerServerConfig(Builder cfg) {
 		cfg.comment("Settings used for debugging. Enable these at your own risk.").push("debug");
 		ARROW_PATHFIND = cfg
@@ -21,6 +23,9 @@ public class DebugCfg {
 		XRAY_HITBOX = cfg
 				.comment("Outlines the 'mob xray' effect of the circlet")
 				.define("debugXrayHitbox", false);
+		GUST_HITBOX = cfg
+				.comment("swrg gust effect")
+				.define("debugGustHitbox", false);
 		cfg.pop();
 	}
 	

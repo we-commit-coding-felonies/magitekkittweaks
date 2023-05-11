@@ -2,14 +2,11 @@ package net.solunareclipse1.magitekkit.network.packet.client;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Random;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
@@ -50,7 +47,8 @@ public record DrawParticleLinePacket(Vec3 start, Vec3 end, int preset) {
 	public boolean handle(Supplier<NetworkEvent.Context> sup) {
         NetworkEvent.Context ctx = sup.get();
         ctx.enqueueWork(() -> {
-        	ClientLevel level = Minecraft.getInstance().level;
+        	@SuppressWarnings("resource")
+			ClientLevel level = Minecraft.getInstance().level;
         	/** particle, stepSize */
         	Map<ParticleOptions, Double> particles = new HashMap<>();
         	switch (preset) {
@@ -85,6 +83,10 @@ public record DrawParticleLinePacket(Vec3 start, Vec3 end, int preset) {
         		
         	case 5: // ignition aoe
         		particles.put(WispParticleData.wisp(0.1f, 1, 0.2f, 0), 0.08);
+        		break;
+        		
+        	case 6: // vine
+        		particles.put(WispParticleData.wisp(0.5f, 0.35f, 0.5f, 0, 1.5f), 0.1);
         		break;
         	
         	default: // invalid

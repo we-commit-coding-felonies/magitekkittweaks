@@ -1,10 +1,9 @@
 package net.solunareclipse1.magitekkit.init;
 
+import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -17,9 +16,9 @@ import moze_intel.projecte.rendering.EntitySpriteRenderer;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.client.render.LayerHalo;
 import net.solunareclipse1.magitekkit.client.render.SentientArrowRenderer;
+import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
 import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
 
-import morph.avaritia.init.AvaritiaModContent;
 import vazkii.botania.common.helper.ItemNBTHelper;
 
 @Mod.EventBusSubscriber(modid = MagiTekkit.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -46,6 +45,7 @@ public class ClientInit {
 		//Entities
 		event.registerEntityRenderer(ObjectInit.FREE_LAVA_PROJECTILE.get(), context -> new EntitySpriteRenderer<>(context, PECore.rl("textures/entity/lava_orb.png")));
 		event.registerEntityRenderer(ObjectInit.SENTIENT_ARROW.get(), context -> new SentientArrowRenderer(context));
+		event.registerEntityRenderer(ObjectInit.WITHER_VINE.get(), context -> new NoopRenderer<WitherVineProjectile>(context));
 	}
     
 
