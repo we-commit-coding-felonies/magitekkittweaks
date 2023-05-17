@@ -31,6 +31,7 @@ import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.GustParticlePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket.LineParticlePreset;
 import net.solunareclipse1.magitekkit.util.CalcHelper;
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
@@ -102,7 +103,7 @@ public class WitherVineProjectile extends Projectile {
 					// handle this on the server since it doesnt always seem to work properly clientside
 					for (ServerPlayer plr : ((ServerLevel)level).players()) {
 						if (plr.blockPosition().closerToCenterThan(ent.getBoundingBox().getCenter(), 256d)) {
-							NetworkInit.toClient(new DrawParticleLinePacket(this.position(), ent.getBoundingBox().getCenter(), 6), plr);
+							NetworkInit.toClient(new DrawParticleLinePacket(this.position(), ent.getBoundingBox().getCenter(), LineParticlePreset.VINE), plr);
 						}
 					}
 					//((ServerLevel)level);

@@ -449,17 +449,17 @@ public class SentientArrowOld extends Arrow {
 				i = j;
 				thisNode = nextNode;
 			}
-			if (lastNode == null) {
-				NetworkInit.toClient(
-						new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
-								Vec3.atCenterOf(thisNode.asBlockPos()), 0),
-						(ServerPlayer) this.getOwner());
-			} else {
-				NetworkInit.toClient(
-						new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()),
-								Vec3.atCenterOf(thisNode.asBlockPos()), 0),
-						(ServerPlayer) this.getOwner());
-			}
+			//if (lastNode == null) {
+			//	NetworkInit.toClient(
+			//			new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
+			//					Vec3.atCenterOf(thisNode.asBlockPos()), 0),
+			//			(ServerPlayer) this.getOwner());
+			//} else {
+			//	NetworkInit.toClient(
+			//			new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()),
+			//					Vec3.atCenterOf(thisNode.asBlockPos()), 0),
+			//			(ServerPlayer) this.getOwner());
+			//}
 		}
 	}
 	protected Path findPathToTarget(LivingEntity target) {
@@ -576,8 +576,8 @@ public class SentientArrowOld extends Arrow {
 		for (ServerPlayer plr : ((ServerLevel) level).players()) {
 			BlockPos pos = plr.blockPosition();
 			if (pos.closerToCenterThan(target.position(), 64d) || pos.closerToCenterThan(this.position(), 64d)) {
-				NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
-						target.getBoundingBox().getCenter(), 2), plr);
+				//NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
+				//		target.getBoundingBox().getCenter(), 2), plr);
 			}
 		}
 	}

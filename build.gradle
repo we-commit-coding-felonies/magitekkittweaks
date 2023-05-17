@@ -152,6 +152,8 @@ dependencies {
     
     implementation fg.deobf("mekanism:Mekanism:${mc_version}-${mekanism_version}")
     implementation fg.deobf("mekanism:Mekanism:${mc_version}-${mekanism_version}:generators")
+    
+	implementation fg.deobf("curse.maven:bloodmagic-224791:${bloodmagic_version}")
 }
 
 

@@ -35,8 +35,7 @@ public class EmcCfg {
 		public class Feet {
 			public static LongValue
 				FLIGHT,
-				JESUS,
-				SPEED;
+				JESUS;
 		}
 	}
 	public class Arcana {
@@ -84,16 +83,16 @@ public class EmcCfg {
 		}
 		public class Zero {
 			public static LongValue
-				ICESHIELD,
-				ANGELBLOCK,
-				FREEZE;
+				EXTINGUISH,
+				FREEZE,
+				ICESHIELD;
 		}
 		public class Ignition {
 			public static LongValue
-				EXTINGUISH,
-				IGNITE,
-				MUSTANG,
-				BURN;
+				FIREBALL,
+				TNT,
+				BURN,
+				MUSTANG;
 		}
 	}
 	
@@ -222,20 +221,29 @@ public class EmcCfg {
 				.defineInRange("arcanaSwrgStorm", 65536, 0, Long.MAX_VALUE);
 		
 		// Zero
+		Arcana.Zero.EXTINGUISH = cfg
+				.comment("EMC to extinguish fire / defuse tnt")
+				.defineInRange("arcanaZeroExtinguish", 1, 1, Long.MAX_VALUE);
 		Arcana.Zero.FREEZE = cfg
 				.comment("EMC used to flash-freeze things")
 				.defineInRange("arcanaZeroFreeze", 273, 0, Long.MAX_VALUE);
+		Arcana.Zero.ICESHIELD = cfg
+				.comment("ice shield cost")
+				.defineInRange("arcanaZeroIceshield", 460, 0, Long.MAX_VALUE);
 		
 		// Ignition
-		Arcana.Ignition.MUSTANG = cfg
-				.comment("Cost of the Alchemical Flameburst projectile")
-				.defineInRange("arcanaIgnitionMustang", 65536, 0, Long.MAX_VALUE);
+		Arcana.Ignition.FIREBALL = cfg
+				.comment("fireball cost")
+				.defineInRange("arcanaIgnitionFireball", 768, 0, Long.MAX_VALUE);
+		Arcana.Ignition.TNT = cfg
+				.comment("tnt throw cost")
+				.defineInRange("arcanaIgnitionTnt", 1536, 0, Long.MAX_VALUE);
 		Arcana.Ignition.BURN = cfg
 				.comment("EMC used to flash-burn things")
 				.defineInRange("arcanaIgnitionBurn", 451, 0, Long.MAX_VALUE);
-		Arcana.Ignition.EXTINGUISH = cfg
-				.comment("EMC cost of smothering flames")
-				.defineInRange("arcanaIgnitionExtinguish", 0, 0, Long.MAX_VALUE);
+		Arcana.Ignition.MUSTANG = cfg
+				.comment("Cost of the Alchemical Flameburst projectile")
+				.defineInRange("arcanaIgnitionMustang", 20340, 0, Long.MAX_VALUE);
 	}
 	
 	// Common

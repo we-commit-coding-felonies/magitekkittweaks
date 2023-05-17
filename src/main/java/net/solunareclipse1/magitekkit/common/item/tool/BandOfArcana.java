@@ -13,6 +13,7 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.item.CustomArmPoseItem;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.shaders.Effect;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -20,6 +21,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.model.HumanoidModel.ArmPose;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -31,12 +33,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.InteractionHand;
@@ -49,6 +53,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -57,7 +62,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.SnowGolem;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Blaze;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Drowned;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.monster.MagmaCube;
@@ -68,8 +75,17 @@ import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.MinecartTNT;
+import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.EnchantmentMenu;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
+import net.minecraft.world.entity.projectile.Fireball;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
@@ -104,6 +120,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -138,12 +155,14 @@ import moze_intel.projecte.utils.WorldHelper;
 import moze_intel.projecte.utils.text.PELang;
 
 import net.solunareclipse1.magitekkit.api.capability.wrapper.ChargeItemCapabilityWrapperButBetter;
+import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.item.ISwingItem;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
+import net.solunareclipse1.magitekkit.common.item.MGTKCovalenceItem;
 import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemTimepiece;
@@ -158,6 +177,7 @@ import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket.LineParticlePreset;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.GustParticlePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
@@ -187,24 +207,26 @@ import vazkii.botania.client.fx.WispParticleData;
 import vazkii.botania.common.block.ModBlocks;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityManaBurst;
+import vazkii.botania.common.entity.EntityManaStorm;
 import vazkii.botania.common.helper.ItemNBTHelper;
 import vazkii.botania.common.item.ModItems;
 import vazkii.botania.common.item.relic.ItemDice;
 import vazkii.botania.xplat.IXplatAbstractions;
+import wayoftime.bloodmagic.api.compat.EnumDemonWillType;
+import wayoftime.bloodmagic.api.compat.IDemonWill;
+import wayoftime.bloodmagic.api.compat.IMultiWillTool;
 
-public class BandOfArcana extends MGTKItem
-	implements IModeChanger, IItemCharge, IProjectileShooter, IExtraFunction, ISwingItem, ILensEffect, CustomArmPoseItem {
+public class BandOfArcana extends MGTKCovalenceItem
+	implements IModeChanger, IItemCharge, IProjectileShooter, IExtraFunction, ISwingItem, ILensEffect, CustomArmPoseItem, IMultiWillTool {
 
 	//////////////////////////////////////////////
 	// CONSTANTS, GLOBAL VARS, AND CONSTRUCTORS //
 	//////////////////////////////////////////////
-	public static final Vec3 FORWARD_RELATIVE = new Vec3(0,0,1);
 	public static final String TAG_MODE = "boa_mode";
 	public static final String TAG_EXP = "boa_experience";
-	public static final String TAG_LVL = "boa_levels";
 	public static final String TAG_LIQUID = "boa_liquid";
 	public static final String TAG_WOFT = "boa_woft";
-	public static final String TAG_OFFENSIVE = "boa_offensive";
+	public static final String TAG_COVALENCE = CovalentCapabilityWrapper.TAG_STATE;
 	public static final String TAG_ARROWTRACKER = "boa_arrowtracker";
 	private static final String[] KEY_MODES = {
 			"tip.mgtk.arcana.mode.0", // Disabled
@@ -324,7 +346,7 @@ public class BandOfArcana extends MGTKItem
 				o.keyShift.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.AQUA)						// 6
 		};
 		// Style(color, bold, italic, underline, strikethrough, obfuscated, clickevent, hoverevent, insertion, font)
-		Style modeStyle = getModeTextStyle(stack, false);
+		Style modeStyle = getModeTextStyle(mode, getLiquid(stack));
 		tips.add(new TranslatableComponent("tip.mgtk.arcana.1").withStyle(ChatFormatting.UNDERLINE)); // Flavor
 		tips.add(new TranslatableComponent("tip.mgtk.arcana.2", bind[4], bind[5])); // Keys
 		tips.add(new TranslatableComponent("tip.mgtk.arcana.3", bind[6])); // Sneak
@@ -360,9 +382,29 @@ public class BandOfArcana extends MGTKItem
 	//////////////////////////////////////////////////////////////
 	@Override
 	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
-		if (!selected) {
-			if ( entity instanceof Player player && !(player.isUsingItem() && player.getUseItem().equals(stack)) ) {
-				resetTimeAccelSpeed(player);
+		if (entity instanceof Player plr) {
+			while (!selected) {
+				// if player is currently accelerating with a different band, dont reset
+				if (plr.isUsingItem()) {
+					ItemStack using = plr.getUseItem();
+					if (using.getItem() instanceof BandOfArcana && getMode(using) == 2) {
+						break;
+					}
+				}
+				resetTimeAccelSpeed(plr);
+				break;
+			}
+			if (covalenceActive(stack)) {
+				long need = CovalentCapabilityWrapper.getPoolNeeded(stack);
+				if (need > 0) {
+					long consumed = EmcHelper.consumeAvaliableEmc(plr, need);
+					long newAmount = Math.min(CovalentCapabilityWrapper.getPoolMax(stack), CovalentCapabilityWrapper.getPool(stack) + Mth.clamp(consumed, 0, need));
+					CovalentCapabilityWrapper.setPool(stack, newAmount);
+					if (consumed < need) {
+						// shut off covalence when player runs out of EMC so that we dont search inventory every tick
+						changeCharge(plr, stack, null);
+					}
+				}
 			}
 		}
 	}
@@ -371,7 +413,6 @@ public class BandOfArcana extends MGTKItem
 	public boolean onSwingAir(Context ctx) {
 		ServerPlayer player = ctx.getSender();
 		ItemStack stack = player.getMainHandItem();
-		if (getCharge(stack) != 1) return false;
 		if (isValidRingUser(player, stack)) {
 			boolean didDo = false;
 			ServerLevel level = player.getLevel();
@@ -385,7 +426,7 @@ public class BandOfArcana extends MGTKItem
 			
 			switch (mode) {
 			case 1: // Mind (withdraw 1 / 10 levels)
-				tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
+				didDo = tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
 				break;
 			case 2: // Watch (gravity attract / repel)
 				if (plrEmc >= WOFT.GRAVITY.get()) {
@@ -398,16 +439,16 @@ public class BandOfArcana extends MGTKItem
 					}
 				}
 				break;
-			case 3: // Harvest
+			case 3: // Harvest (wither vine)
 				if (plrEmc >= Harvest.WITHERVINE.get() && ready) {
 					WitherVineProjectile vine = new WitherVineProjectile(level, player);
 					vine.setDeltaMovement(player.getLookAngle().scale(2));
 					vine.setPos(player.getEyePosition());
-					//vine.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1, 0);
 					level.addFreshEntity(vine);
 					EmcHelper.consumeAvaliableEmc(player, Harvest.WITHERVINE.get());
 					level.playSound(null, player.blockPosition(), SoundEvents.BONE_MEAL_USE, SoundSource.PLAYERS, 100, 1);
 					cd.addCooldown(cdItem, 30);
+					didDo = true;
 				}
 				break;
 			case 4: // Liquid (destroy liquid)
@@ -424,7 +465,7 @@ public class BandOfArcana extends MGTKItem
 					EmcHelper.consumeAvaliableEmc(player,
 							ProjectileHelper.shootArrow((int)Math.min(16, plrEmc/Archangel.ARROW.get()), ArrowType.STRAIGHT,
 									new ShootContext(level, player),
-									new ArrowOptions(1, 3, 8, Byte.MAX_VALUE, false, Pickup.DISALLOWED))
+									new ArrowOptions(3, 3, 8, (byte)0, false, Pickup.DISALLOWED))
 							.size());
 					cd.addCooldown(cdItem, 5);
 					didDo = true;
@@ -438,16 +479,37 @@ public class BandOfArcana extends MGTKItem
 					didDo = true;
 				}
 				break;
-			case 8: // Zero
-				if (plrEmc >= Zero.FREEZE.get() && ready) {
-					BlockPos pos = new BlockPos(player.getEyePosition().add(player.getLookAngle().scale(player.getReachDistance())));
-					level.setBlockAndUpdate(pos, ObjectInit.AIR_ICE.get().defaultBlockState());
-					EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get());
-					level.playSound(null, pos, EffectInit.ZERO_FREEZE.get(), SoundSource.BLOCKS, 0.5f, level.random.nextFloat(0.75f, 1.25f));
+			case 8: // Zero (extinguish AOE)
+				if (plrEmc >= Zero.EXTINGUISH.get()) {
+					EmcHelper.consumeAvaliableEmc(player,
+							extinguishAoe(player,
+									AABB.ofSize(player.getBoundingBox().getCenter(), 16, 16, 16),
+									plrEmc/Zero.EXTINGUISH.get())
+							* Zero.EXTINGUISH.get()
+					);
 					cd.addCooldown(cdItem, 5);
+					didDo = true;
 				}
 				break;
-			case 9: // Ignition (none)
+			case 9: // Ignition (fireball / tnt)
+				if (plrEmc >= Ignition.FIREBALL.get() && ready) {
+					int cdTime = 2;
+					if (player.isShiftKeyDown() && plrEmc >= Ignition.TNT.get()) {
+						cdTime = 5;
+						PrimedTnt tnt = tnt(level, player.getEyePosition(), player.getLookAngle().scale(2), player);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.TNT.get());
+						level.playSound(null, tnt.blockPosition(), SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 1, 1);
+					} else {
+						for (int i = 0; i < 5; i++) {
+							fireball(level, player.getEyePosition(), player.getEyePosition().add(player.getLookAngle().scale(2)), player);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Ignition.FIREBALL.get());
+						level.playSound(null, player.blockPosition(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1, 1);
+					}
+					level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, level.random.nextFloat(0.7f, 1.4f));
+					cd.addCooldown(cdItem, cdTime);
+					didDo = true;
+				}
 				break;
 
 			default:
@@ -465,7 +527,6 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public boolean onLeftClickEntity(ItemStack stack, Player player, Entity victim) {
-		if (getCharge(stack) != 1) return false;
 		if (isValidRingUser(player, stack)) {
 			boolean didDo = false;
 			Level level = player.getLevel();
@@ -479,7 +540,7 @@ public class BandOfArcana extends MGTKItem
 			
 			switch (mode) {
 			case 1: // Mind (withdraw 1 / 10 levels)
-				tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
+				didDo = tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
 				break;
 			case 2: // Watch (gravity attract / repel)
 				if (plrEmc >= WOFT.GRAVITY.get() && ready) {
@@ -492,27 +553,33 @@ public class BandOfArcana extends MGTKItem
 					}
 				}
 				break;
-			case 3: // Harvest
-				WitherVineProjectile vine = new WitherVineProjectile(level, player);
-				vine.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1, 0);
-				level.addFreshEntity(vine);
+			case 3: // Harvest (wither vine)
+				if (plrEmc >= Harvest.WITHERVINE.get() && ready) {
+					WitherVineProjectile vine = new WitherVineProjectile(level, player);
+					vine.setDeltaMovement(player.getLookAngle().scale(2));
+					vine.setPos(player.getEyePosition());
+					level.addFreshEntity(vine);
+					EmcHelper.consumeAvaliableEmc(player, Harvest.WITHERVINE.get());
+					level.playSound(null, player.blockPosition(), SoundEvents.BONE_MEAL_USE, SoundSource.PLAYERS, 100, 1);
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
 				break;
 			case 4: // Liquid (nothing)
 				break;
-			case 5: // Philo
-				if (plrEmc >= Philo.TRANSMUTE.get() && !client
-						&& cd.getCooldownPercent(cdItem, 0) < 0.5
+			case 5: // Philo (transmute)
+				if (plrEmc >= Philo.TRANSMUTE.get() && !client && ready
 						&& victim instanceof LivingEntity lEnt
 						&& !lEnt.isDeadOrDying()
 						&& !lEnt.isInvulnerableTo(MGTKDmgSrc.TRANSMUTATION_POTION)
 						&& !EntityHelper.isInvincible(lEnt)
 				) {
-					if (plrEmc >= Philo.ITEMIZE.get() && ready) {
+					if (plrEmc >= Philo.ITEMIZE.get() && !cd.isOnCooldown(stack.getItem())) {	
 						int cdTime = (int) lEnt.getHealth()*7;
 						if (entityItemizer(lEnt, player, null)) {
 							didDo = true;
 							level.playSound(null, lEnt.blockPosition(), EffectInit.PHILO_ITEMIZE.get(), SoundSource.PLAYERS, 1, 2);
-							cd.addCooldown(cdItem, cdTime);
+							cd.addCooldown(stack.getItem(), cdTime);
 							EmcHelper.consumeAvaliableEmc(player, Philo.ITEMIZE.get());
 							break;
 						}
@@ -525,7 +592,7 @@ public class BandOfArcana extends MGTKItem
 					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 3, 2), player);
 					EmcHelper.consumeAvaliableEmc(player, Philo.TRANSMUTE.get());
 					level.playSound(null, player, EffectInit.PHILO_ATTACK.get(), SoundSource.PLAYERS, 1, 2);
-					cd.addCooldown(cdItem, 60);
+					cd.addCooldown(cdItem, 30);
 					didDo = true;
 				}
 				break;
@@ -534,7 +601,7 @@ public class BandOfArcana extends MGTKItem
 					EmcHelper.consumeAvaliableEmc(player,
 							ProjectileHelper.shootArrow((int)Math.min(16, plrEmc/Archangel.ARROW.get()), ArrowType.STRAIGHT,
 									new ShootContext(level, player),
-									new ArrowOptions(1, 3, 8, Byte.MAX_VALUE, false, Pickup.DISALLOWED))
+									new ArrowOptions(3, 3, 8, (byte)0, false, Pickup.DISALLOWED))
 							.size());
 					cd.addCooldown(cdItem, 5);
 					didDo = true;
@@ -548,24 +615,36 @@ public class BandOfArcana extends MGTKItem
 					didDo = true;
 				}
 				break;
-			case 8: // Zero
-				if (plrEmc >= Zero.FREEZE.get() && ready) {
-					if (victim instanceof LivingEntity ent) {
-						freezeEntity(ent, player);
-						level.playSound(null, victim.blockPosition(), EffectInit.ZERO_FREEZE.get(), SoundSource.PLAYERS, 1, 1);
-						EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get());
-						cd.addCooldown(cdItem, 5);
-					}
+			case 8: // Zero (extinguish AOE)
+				if (plrEmc >= Zero.EXTINGUISH.get()) {
+					EmcHelper.consumeAvaliableEmc(player,
+							extinguishAoe(player,
+									AABB.ofSize(player.getBoundingBox().getCenter(), 16, 16, 16),
+									plrEmc/Zero.EXTINGUISH.get())
+							* Zero.EXTINGUISH.get()
+					);
+					cd.addCooldown(cdItem, 5);
+					didDo = true;
 				}
 				break;
-			case 9: // Ignition
-				if (plrEmc >= Ignition.BURN.get() && ready) {
-					if (victim instanceof LivingEntity ent) {
-						burnEntity(ent, player);
-						level.playSound(null, victim.blockPosition(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1, 1);
-						EmcHelper.consumeAvaliableEmc(player, Ignition.BURN.get());
-						cd.addCooldown(cdItem, 5);
+			case 9: // Ignition (fireball / tnt)
+				if (plrEmc >= Ignition.FIREBALL.get() && ready) {
+					int cdTime = 2;
+					if (player.isShiftKeyDown() && plrEmc >= Ignition.TNT.get()) {
+						cdTime = 5;
+						PrimedTnt tnt = tnt(level, player.getEyePosition(), player.getLookAngle().scale(2), player);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.TNT.get());
+						level.playSound(null, tnt.blockPosition(), SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 1, 1);
+					} else {
+						for (int i = 0; i < 5; i++) {
+							fireball(level, player.getEyePosition(), player.getEyePosition().add(player.getLookAngle().scale(2)), player);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Ignition.FIREBALL.get());
+						level.playSound(null, player.blockPosition(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1, 1);
 					}
+					level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, level.random.nextFloat(0.7f, 1.4f));
+					cd.addCooldown(cdItem, cdTime);
+					didDo = true;
 				}
 				break;
 			
@@ -585,7 +664,7 @@ public class BandOfArcana extends MGTKItem
 	@Override
 	public boolean onSwingBlock(PlayerInteractEvent.LeftClickBlock evt) {
 		ItemStack stack = evt.getItemStack();
-		if (stack.isEmpty() || !(stack.getItem() instanceof BandOfArcana) || getCharge(stack) != 1) return false;
+		if (stack.isEmpty() || !(stack.getItem() instanceof BandOfArcana)) return false;
 		Player player = evt.getPlayer();
 		if (isValidRingUser(player, stack)) {
 			boolean didDo = false;
@@ -600,7 +679,7 @@ public class BandOfArcana extends MGTKItem
 			
 			switch (mode) {
 			case 1: // Mind (withdraw 1 / 10 levels)
-				tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
+				didDo = tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
 				break;
 			case 2: // Watch (gravity attract / repel)
 				if (plrEmc >= WOFT.GRAVITY.get()) {
@@ -613,10 +692,17 @@ public class BandOfArcana extends MGTKItem
 					}
 				}
 				break;
-			case 3: // Harvest
-				WitherVineProjectile vine = new WitherVineProjectile(level, player);
-				vine.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1, 0);
-				level.addFreshEntity(vine);
+			case 3: // Harvest (wither vine)
+				if (plrEmc >= Harvest.WITHERVINE.get() && ready) {
+					WitherVineProjectile vine = new WitherVineProjectile(level, player);
+					vine.setDeltaMovement(player.getLookAngle().scale(2));
+					vine.setPos(player.getEyePosition());
+					level.addFreshEntity(vine);
+					EmcHelper.consumeAvaliableEmc(player, Harvest.WITHERVINE.get());
+					level.playSound(null, player.blockPosition(), SoundEvents.BONE_MEAL_USE, SoundSource.PLAYERS, 100, 1);
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
 				break;
 			case 4: // Liquid (destroy liquid)
 				if (plrEmc >= Liquid.DESTROY.get() && ModItems.openBucket.use(level, player, InteractionHand.MAIN_HAND).getResult().equals(InteractionResult.CONSUME)) {
@@ -638,7 +724,7 @@ public class BandOfArcana extends MGTKItem
 					EmcHelper.consumeAvaliableEmc(player,
 							ProjectileHelper.shootArrow((int)Math.min(16, plrEmc/Archangel.ARROW.get()), ArrowType.STRAIGHT,
 									new ShootContext(level, player),
-									new ArrowOptions(1, 3, 8, Byte.MAX_VALUE, false, Pickup.DISALLOWED))
+									new ArrowOptions(3, 3, 8, (byte)0, false, Pickup.DISALLOWED))
 							.size() * Archangel.ARROW.get());
 					cd.addCooldown(cdItem, 5);
 					didDo = true;
@@ -652,25 +738,35 @@ public class BandOfArcana extends MGTKItem
 					didDo = true;
 				}
 				break;
-			case 8: // Zero
-				if (plrEmc >= Zero.FREEZE.get() && ready) {
-					BlockPos pos = evt.getPos().relative(evt.getFace());
-							//new BlockPos(player.getEyePosition().add(player.getLookAngle().scale(player.getReachDistance())));
-					level.setBlockAndUpdate(pos, ObjectInit.AIR_ICE.get().defaultBlockState());
-					EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get());
-					level.playSound(null, pos, EffectInit.ZERO_FREEZE.get(), SoundSource.BLOCKS, 0.5f, level.random.nextFloat(0.75f, 1.25f));
+			case 8: // Zero (extinguish AOE)
+				if (plrEmc >= Zero.EXTINGUISH.get()) {
+					EmcHelper.consumeAvaliableEmc(player,
+							extinguishAoe(player,
+									AABB.ofSize(player.getBoundingBox().getCenter(), 16, 16, 16),
+									plrEmc/Zero.EXTINGUISH.get())
+							* Zero.EXTINGUISH.get()
+					);
 					cd.addCooldown(cdItem, 5);
 					didDo = true;
 				}
 				break;
-			case 9: // Ignition
-				if (plrEmc >= Ignition.BURN.get() && ready) {
-					BlockPos pos = evt.getPos().relative(evt.getFace());
-							//new BlockPos(player.getEyePosition().add(player.getLookAngle().scale(player.getReachDistance())));
-					level.setBlockAndUpdate(pos, Blocks.FIRE.defaultBlockState());
-					EmcHelper.consumeAvaliableEmc(player, Ignition.BURN.get());
-					level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1, 1);
-					cd.addCooldown(cdItem, 5);
+			case 9: // Ignition (fireball / tnt)
+				if (plrEmc >= Ignition.FIREBALL.get() && ready) {
+					int cdTime = 2;
+					if (player.isShiftKeyDown() && plrEmc >= Ignition.TNT.get()) {
+						cdTime = 5;
+						PrimedTnt tnt = tnt(level, player.getEyePosition(), player.getLookAngle().scale(2), player);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.TNT.get());
+						level.playSound(null, tnt.blockPosition(), SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 1, 1);
+					} else {
+						for (int i = 0; i < 5; i++) {
+							fireball(level, player.getEyePosition(), player.getEyePosition().add(player.getLookAngle().scale(2)), player);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Ignition.FIREBALL.get());
+						level.playSound(null, player.blockPosition(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1, 1);
+					}
+					level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, level.random.nextFloat(0.7f, 1.4f));
+					cd.addCooldown(cdItem, cdTime);
 					didDo = true;
 				}
 				break;
@@ -692,9 +788,9 @@ public class BandOfArcana extends MGTKItem
 	@Override
 	public InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
-		if (getCharge(stack) != 1) return InteractionResultHolder.pass(stack);
 		if (isValidRingUser(player, stack)) {
 			boolean didDo = false;
+			boolean client = level.isClientSide;
 			byte mode = getMode(stack);
 			boolean liquid = getLiquid(stack);
 			ItemCooldowns cd = player.getCooldowns();
@@ -704,37 +800,80 @@ public class BandOfArcana extends MGTKItem
 			
 			switch (mode) {
 			case 1: // Mind (deposit 1 / 10 levels)
-				tryDepositXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
+				didDo = tryDepositXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
 				break;
-			case 2: // Watch (Time acceleration start)
+			case 2: // Watch (Time acceleration start / toggle)
 				if (player.isShiftKeyDown()) {
 					changeWoft(stack);
+					level.playSound(null, player, EffectInit.WOFT_MODE.get(), SoundSource.PLAYERS, 1, 1.4f);
 				} else {
 					ItemNBTHelper.setBoolean(stack, "boa_tickhighpitch", false);
 					player.startUsingItem(hand);
 				}
 				didDo = true;
 				break;
-			case 3: // Harvest
-				System.out.println("NYI: " + getMode(stack));
+			case 3: // Harvest (none)
 				break;
-			case 4: // Liquid
-				System.out.println("NYI: " + getMode(stack));
+			case 4: // Liquid (none)
 				break;
-			case 5: // Philo
-				System.out.println("NYI: " + getMode(stack));
+			case 5: // Philo (none)
 				break;
-			case 6: // Archangel
-				System.out.println("NYI: " + getMode(stack));
+			case 6: // Archangel (arrow machine gun)
+				player.startUsingItem(hand);
+				didDo = true;
 				break;
-			case 7: // SWRG
-				System.out.println("NYI: " + getMode(stack));
+			case 7: // SWRG (smite target)
+				if (plrEmc >= SWRG.SMITE.get() && ready && !client) {
+					HitResult hitRes = swrgSuperSmite(player, level);
+					if (hitRes.getType() != HitResult.Type.MISS) {
+						level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, 0.5f);
+						EmcHelper.consumeAvaliableEmc(player, SWRG.SMITE.get());
+						NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), hitRes.getLocation(), LineParticlePreset.SMITE), (ServerPlayer)player);
+						cd.addCooldown(cdItem, level.isThundering() ? 3 : 9);
+						didDo = true;
+					}
+				}
 				break;
-			case 8: // Zero
-				System.out.println("NYI: " + getMode(stack));
+			case 8: // Zero (freeze air / entity)
+				if (plrEmc >= Zero.FREEZE.get() && ready) {
+					Vec3 pos = player.getEyePosition();
+					Vec3 ray = player.getLookAngle().scale(player.getReachDistance()-0.5);
+					EntityHitResult hitRes = ProjectileUtil.getEntityHitResult(player, pos, pos.add(ray), AABB.ofSize(pos, 0.05, 0.05, 0.05).expandTowards(ray), this::canBeFrozen, 0);
+					BlockPos bPos = new BlockPos(pos.add(ray));
+					if (hitRes != null && hitRes.getType() == HitResult.Type.ENTITY) {
+						LivingEntity ent = (LivingEntity) hitRes.getEntity();
+						bPos = ent.blockPosition();
+						if (!client) freezeEntity(ent, (ServerPlayer)player);
+						didDo = true;
+					} else if (level.getBlockState(bPos).isAir()) {
+						level.setBlockAndUpdate(bPos, ObjectInit.AIR_ICE.get().defaultBlockState());
+						didDo = true;
+					} else if (level.getBlockState(bPos).is(Blocks.WATER)) {
+						level.setBlockAndUpdate(bPos, Blocks.FROSTED_ICE.defaultBlockState());
+						didDo = true;
+					}
+					if (didDo) {
+						level.playSound(null, bPos, EffectInit.ZERO_FREEZE.get(), SoundSource.BLOCKS, 1, 1);
+						EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get());
+						cd.addCooldown(cdItem, 3);
+					}
+				}
 				break;
-			case 9: // Ignition
-				System.out.println("NYI: " + getMode(stack));
+			case 9: // Ignition (burn entity)
+				if (plrEmc >= Ignition.BURN.get() && ready) {
+					Vec3 pos1 = player.getEyePosition();
+					Vec3 pos2 = pos1.add(player.getLookAngle().scale(player.getReachDistance()-0.5));
+					EntityHitResult hitRes = ProjectileUtil.getEntityHitResult(player, pos1, pos2, AABB.ofSize(pos1, 0.05, 0.05, 0.05), this::canBeBurnt, 0);
+					if (hitRes != null && hitRes.getType() == HitResult.Type.ENTITY) {
+						LivingEntity ent = (LivingEntity) hitRes.getEntity();
+						BlockPos bPos = ent.blockPosition();
+						if (!client) burnEntity(ent, (ServerPlayer)player);
+						level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.BLOCKS, 1, 1);
+						level.playSound(null, bPos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1, 1);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.BURN.get());
+						didDo = true;
+					}
+				}
 				break;
 			
 			default:
@@ -752,11 +891,11 @@ public class BandOfArcana extends MGTKItem
 	
 	public InteractionResult useOn(UseOnContext ctx) {
 		ItemStack stack = ctx.getItemInHand();
-		if (getCharge(stack) != 1) return InteractionResult.PASS;
 		Player player = ctx.getPlayer();
 		if (isValidRingUser(player, stack)) {
 			boolean didDo = false;
 			Level level = player.getLevel();
+			boolean client = level.isClientSide;
 			byte mode = getMode(stack);
 			boolean liquid = getLiquid(stack);
 			ItemCooldowns cd = player.getCooldowns();
@@ -765,13 +904,35 @@ public class BandOfArcana extends MGTKItem
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			
 			switch (mode) {
-			case 1: // Mind
+			case 1: // Mind (none)
 				break;
-			case 2: // Watch
+			case 2: // Watch (none)
 				break;
-			case 3: // Harvest
+			case 3: // Harvest (bonemeal)
+				if (plrEmc >= Harvest.INSTAGROW.get() && !client) {
+					ItemStack meal = new ItemStack(Items.BONE_MEAL);
+					meal.setCount(12);
+					UseOnContext mealCtx = new UseOnContext(level, player, ctx.getHand(), meal,
+							new BlockHitResult(ctx.getClickLocation(), ctx.getClickedFace(), ctx.getClickedPos(), ctx.isInside()));
+					if (Items.BONE_MEAL.useOn(mealCtx) != InteractionResult.PASS) {
+						for (int i = 0; i < 11; i++) {
+							// it worked once, do it 11 more times
+							Items.BONE_MEAL.useOn(mealCtx);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Harvest.INSTAGROW.get());
+						didDo = true;
+					}
+				}
 				break;
 			case 4: // Liquid
+				if (plrEmc >= Liquid.CREATE.get() && liquid) {
+					// lava
+					Items.LAVA_BUCKET.use(level, player, ctx.getHand());
+					EmcHelper.consumeAvaliableEmc(player, Liquid.CREATE.get());
+				} else {
+					// water
+					Items.WATER_BUCKET.use(level, player, ctx.getHand());
+				}
 				break;
 			case 5: // Philo (divining rod)
 				if (plrEmc >= Philo.DIVINING.get() && ready) {
@@ -781,16 +942,41 @@ public class BandOfArcana extends MGTKItem
 					cd.addCooldown(cdItem, 40);
 				}
 				break;
-			case 6: // Archangel
+			case 6: // Archangel (none)
 				break;
-			case 7: // SWRG
+			case 7: // SWRG (none)
 				break;
-			case 8: // Zero
+			case 8: // Zero (freeze air)
+				if (plrEmc >= Zero.FREEZE.get() && ready) {
+					BlockPos bPos = ctx.getClickedPos().relative(ctx.getClickedFace());
+					if (level.getBlockState(bPos).isAir()) {
+						level.setBlockAndUpdate(bPos, ObjectInit.AIR_ICE.get().defaultBlockState());
+						didDo = true;
+					} else if (level.getBlockState(bPos).is(Blocks.WATER)) {
+						level.setBlockAndUpdate(bPos, Blocks.FROSTED_ICE.defaultBlockState());
+						didDo = true;
+					}
+					if (didDo) {
+						level.playSound(null, bPos, EffectInit.ZERO_FREEZE.get(), SoundSource.BLOCKS, 1, 1);
+						EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get());
+						cd.addCooldown(cdItem, 3);
+					}
+				}
 				break;
-			case 9: // Ignition
+			case 9: // Ignition (flint and steel)
+				if (plrEmc >= Ignition.BURN.get() && ready) {
+					InteractionResult res = Items.FLINT_AND_STEEL.useOn(ctx);
+					if (res == InteractionResult.SUCCESS) {
+						level.playSound(null, ctx.getClickedPos().relative(ctx.getClickedFace()), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, 1);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.BURN.get());
+						didDo = true;
+					}
+				}
 				break;
 			
 			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+			case 0:
 				break;
 			}
 			
@@ -803,7 +989,6 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public void onUsingTick(ItemStack stack, LivingEntity user, int time) {
-		if (getCharge(stack) != 1) return;
 		if (user instanceof Player player) {
 			if (isValidRingUser(player, stack)) {
 				boolean didDo = false;
@@ -815,8 +1000,7 @@ public class BandOfArcana extends MGTKItem
 				long plrEmc = EmcHelper.getAvaliableEmc(player);
 				
 				switch (mode) {
-				case 1: // Mind
-					System.out.println("NYI: " + getMode(stack));
+				case 1: // Mind (none)
 					break;
 				case 2: // Watch (time acceleration tick)
 					if (!client && plrEmc >= (getWoft(stack) ? WOFT.JOJO_STRONG.get() : WOFT.JOJO.get())) {
@@ -824,26 +1008,22 @@ public class BandOfArcana extends MGTKItem
 						jojoReference(player, stack, 60, Integer.MAX_VALUE - time, 1200, getWoft(stack) ? 24 : 0, plrEmc);
 					}
 					break;
-				case 3: // Harvest
-					System.out.println("NYI: " + getMode(stack));
+				case 3: // Harvest (none)
 					break;
-				case 4: // Liquid
-					System.out.println("NYI: " + getMode(stack));
+				case 4: // Liquid (none)
 					break;
-				case 5: // Philo
-					System.out.println("NYI: " + getMode(stack));
+				case 5: // Philo (none)
 					break;
-				case 6: // Archangel
-					System.out.println("NYI: " + getMode(stack));
+				case 6: // Archangel (arrow machine gun)
+					if (plrEmc >= Archangel.ARROW.get()) {
+						List<AbstractArrow> arrows = ProjectileHelper.shootArrow(1, ArrowType.STRAIGHT, new ShootContext(level, player), new ArrowOptions(1, 5, 0, Byte.MAX_VALUE, true, Pickup.DISALLOWED));
+					}
 					break;
-				case 7: // SWRG
-					System.out.println("NYI: " + getMode(stack));
+				case 7: // SWRG (none)
 					break;
-				case 8: // Zero
-					System.out.println("NYI: " + getMode(stack));
+				case 8: // Zero (none)
 					break;
-				case 9: // Ignition
-					System.out.println("NYI: " + getMode(stack));
+				case 9: // Ignition (none)
 					break;
 				
 				default:
@@ -862,42 +1042,139 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public boolean shootProjectile(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
-		if (getCharge(stack) != 1) return false;
 		if (isValidRingUser(player, stack)) {
 			boolean didDo = false;
 			Level level = player.getLevel();
+			boolean client = level.isClientSide;
 			byte mode = getMode(stack);
 			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
 			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			
 			switch (mode) {
-			case 1: // Mind
-				System.out.println("NYI: " + getMode(stack));
+			case 1: // Mind (deposit all)
+				if (PlrHelper.getXp(player) > 0) {
+					insertXp(stack, PlrHelper.extractAll(player));
+					player.level.playSound(null, player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1, 2f);
+					didDo = true;
+				}
 				break;
-			case 2: // Watch
-				System.out.println("NYI: " + getMode(stack));
+			case 2: // Watch (blink)
+				if (plrEmc >= WOFT.TELEPORT.get()) {
+					didDo = PEItems.VOID_RING.get().doExtraFunction(stack, player, hand);
+					if (didDo) EmcHelper.consumeAvaliableEmc(player, WOFT.TELEPORT.get());
+				}
 				break;
 			case 3: // Harvest
-				System.out.println("NYI: " + getMode(stack));
+				if (ready) {
+					player.curePotionEffects(new ItemStack(Items.MILK_BUCKET));
+					int cdTime = 60;
+					if (player.hasEffect(EffectInit.TRANSMUTING.get())) {
+						player.curePotionEffects(new ItemStack(PEItems.PHILOSOPHERS_STONE.get()));
+						level.playSound(null, player, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 0.5f, 1);
+						cdTime *= 10;
+					}
+					level.playSound(null, player, SoundEvents.HONEY_DRINK, SoundSource.PLAYERS, 1, level.random.nextFloat(1, 2));
+					cd.addCooldown(cdItem, cdTime);
+				}
 				break;
-			case 4: // Liquid
-				System.out.println("NYI: " + getMode(stack));
+			case 4: // Liquid (orb)
+				if (plrEmc >= Liquid.ORB.get() && ready) {
+					didDo = liquid ? shootLavaProjectile(player) : PEItems.EVERTIDE_AMULET.get().shootProjectile(player, stack, hand);
+				}
+				if (didDo) {
+					cd.addCooldown(cdItem, 3);
+					EmcHelper.consumeAvaliableEmc(player, Liquid.ORB.get());
+				}
 				break;
-			case 5: // Philo
-				System.out.println("NYI: " + getMode(stack));
+			case 5: // Philo (mob transmute orb)
+				if (plrEmc >= Philo.ORB.get() && ready) {
+					didDo = PEItems.PHILOSOPHERS_STONE.get().shootProjectile(player, stack, hand);
+					if (didDo) EmcHelper.consumeAvaliableEmc(player, Philo.ORB.get());
+					cd.addCooldown(cdItem, 5);
+				}
 				break;
-			case 6: // Archangel
-				System.out.println("NYI: " + getMode(stack));
+			case 6: // Archangel (sentient arrow)
+				if (ready) {
+					
+					if (hasTrackedArrow(stack)) {
+						SentientArrow arrow = getTrackedArrow(stack, player.level);
+						if (arrow == null) resetTrackedArrow(stack);
+						else {
+							sentientArrowControl(getTrackedArrow(stack, level), player);
+							cd.addCooldown(cdItem, 15);
+							break;
+						}
+					}
+					
+					if (plrEmc >= Archangel.HOMING.get()) {
+						SentientArrow arrow = (SentientArrow) ProjectileHelper.shootArrow(1, ArrowType.SENTIENT,
+								new ShootContext(player.level, player),
+								new ArrowOptions(1, 1, 0, (byte)0, false, Pickup.DISALLOWED)).get(0);
+						changeTrackedArrow(stack, arrow);
+						for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+							NetworkInit.toClient(new CreateLoopingSoundPacket((byte)1, arrow.getId()), plr);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Archangel.HOMING.get());
+						cd.addCooldown(cdItem, 15);
+						didDo = true;
+					}
+				}
 				break;
-			case 7: // SWRG
-				System.out.println("NYI: " + getMode(stack));
+			case 7: // SWRG (aoe smite)
+				if (plrEmc >= SWRG.SMITE.get() && ready && !client) {
+					long costPer = SWRG.SMITE.get();
+					int smitten = 0;
+					AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), 32, 32, 32);
+					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
+						if (ent.is(player)) continue;
+						if (plrEmc <= costPer*smitten) break;
+						swrgSuperSmiteEnt(player, level, ent);
+						smitten++;
+					}
+					long totalCost = costPer*smitten;
+					EmcHelper.consumeAvaliableEmc(player, totalCost);
+					int cdTime = (int) Math.max(13, smitten * (level.isThundering() ? 1.3 : 13));
+					cd.addCooldown(cdItem, cdTime);
+					didDo = true;
+				}
 				break;
-			case 8: // Zero
-				System.out.println("NYI: " + getMode(stack));
+			case 8: // Zero (ice shield)
+				if (plrEmc >= Zero.ICESHIELD.get() && ready) {
+					EmcHelper.consumeAvaliableEmc(player, Zero.ICESHIELD.get());
+					AABB box = AABB.ofSize(player.getBoundingBox().getCenter(), 4, 4, 4);
+					BlockPos.betweenClosedStream(box).forEach(pos -> {
+						if (level.getBlockState(pos).is(Blocks.AIR)) {
+							level.setBlockAndUpdate(pos, ObjectInit.AIR_ICE.get().defaultBlockState());
+						} else if (level.getBlockState(pos).is(Blocks.WATER)) {
+							level.setBlockAndUpdate(pos, Blocks.FROSTED_ICE.defaultBlockState());
+						}
+					});
+					box = AABB.ofSize(player.getBoundingBox().getCenter(), 2, 2, 2);
+					BlockPos.betweenClosedStream(box).forEach(pos -> {
+						if (level.getBlockState(pos).is(ObjectInit.AIR_ICE.get())
+								|| level.getBlockState(pos).is(Blocks.FROSTED_ICE)) {
+							level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+						}
+					});
+					EmcHelper.consumeAvaliableEmc(player, Zero.ICESHIELD.get());
+					level.playSound(null, new BlockPos(box.getCenter()), EffectInit.ZERO_FREEZE.get(), SoundSource.PLAYERS, 1, 0.7f);
+					player.hurt(DamageSource.FREEZE, 5);
+					player.addEffect(new MobEffectInstance(EffectInit.ICESHIELD.get(), 100));
+					cd.addCooldown(cdItem, 150);
+					didDo = true;
+				}
 				break;
-			case 9: // Ignition
-				System.out.println("NYI: " + getMode(stack));
+			case 9: // Ignition (flame nuke)
+				if (plrEmc >= Ignition.MUSTANG.get() && ready) {
+					if (shootMustang(player, stack)) {
+						EmcHelper.consumeAvaliableEmc(player, Ignition.MUSTANG.get());
+						cd.addCooldown(cdItem, 30);
+						didDo = true;
+					}
+				}
 				break;
 			
 			default:
@@ -915,30 +1192,78 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public boolean doExtraFunction(@NotNull ItemStack stack, @NotNull Player player, @Nullable InteractionHand hand) {
-		if (getCharge(stack) != 1) return false;
 		if (isValidRingUser(player, stack)) {
 			boolean didDo = false;
 			Level level = player.getLevel();
+			boolean client = level.isClientSide;
 			byte mode = getMode(stack);
 			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
 			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
 			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			
 			switch (mode) {
-			case 1: // Mind
-				System.out.println("NYI: " + getMode(stack));
+			case 1: // Mind (withdraw all)
+				long stackXp = getXp(stack);
+				long plrExp = PlrHelper.getXp(player);
+				if (stackXp > 0) {
+					long toWithdraw = Math.min(stackXp, Xp.VANILLA_MAX_POINTS - plrExp);
+					if (toWithdraw > 0) {
+						PlrHelper.insertXp(player, extractXp(stack, toWithdraw));
+						player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 2f);
+						didDo = true;
+					}
+				}
 				break;
-			case 2: // Watch
-				System.out.println("NYI: " + getMode(stack));
+			case 2: // Watch (ender chest / anvil)
+				player.level.playSound(null, player, SoundEvents.ENDER_CHEST_OPEN, SoundSource.PLAYERS, 1F, 1f);
+				if (player.isShiftKeyDown()) {
+					// anvil
+					player.openMenu(new SimpleMenuProvider((window, inv, plr) -> {
+				         return new AnvilMenu(window, inv, ContainerLevelAccess.create(level, plr.blockPosition()));
+				      }, stack.getHoverName()));
+					player.level.playSound(null, player, SoundEvents.ANVIL_PLACE, SoundSource.PLAYERS, 0.5F, 1f);
+				} else {
+					// echest
+					player.openMenu(new SimpleMenuProvider((window, inv, plr) -> {
+						return ChestMenu.threeRows(window, inv, plr.getEnderChestInventory());
+					}, stack.getHoverName()));
+					player.level.playSound(null, player, SoundEvents.ENDER_CHEST_CLOSE, SoundSource.PLAYERS, 1F, 1f);
+				}
+				didDo = true;
 				break;
-			case 3: // Harvest
-				System.out.println("NYI: " + getMode(stack));
+			case 3: // Harvest (grow / harvest nearby)
+				AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), 8, 5, 8);
+				if (plrEmc >= Harvest.AOEGROW.get() && ready && !client) {
+					boolean harv = player.isShiftKeyDown() && plrEmc >= Harvest.HARVEST.get();
+					if (harv) {
+						MiscHelper.harvestNearby((ServerPlayer)player, (ServerLevel)level, area, 1);
+					} else MiscHelper.growNearby((ServerLevel)level, area, 3);
+					EmcHelper.consumeAvaliableEmc(player, harv ? Harvest.HARVEST.get() : Harvest.AOEGROW.get());
+					//NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(area.minX, area.minY, area.minZ), new Vec3(area.maxX, area.maxY, area.maxZ), ParticlePreset.DEBUG), (ServerPlayer)player);
+					didDo = true;
+				}
+				if (client) {
+					MiscHelper.drawAABBWithParticles(area, ParticleTypes.DRIPPING_LAVA, 0.1, (ClientLevel)level, false, true);
+				}
 				break;
-			case 4: // Liquid
-				System.out.println("NYI: " + getMode(stack));
+			case 4: // Liquid (change liquid)
+				changeLiquid(stack);
+				player.level.playSound(null, player, getLiquid(stack) ? EffectInit.LIQUID_LAVA_SWITCH.get() : EffectInit.LIQUID_WATER_SWITCH.get(), SoundSource.PLAYERS, 1, 0.7f);
+				didDo = true;
 				break;
-			case 5: // Philo
-				System.out.println("NYI: " + getMode(stack));
+			case 5: // Philo (crafting / enchant)
+				player.level.playSound(null, player, EffectInit.PHILO_3X3GUI.get(), SoundSource.PLAYERS, 1, 2f);
+				if (player.isShiftKeyDown()) {
+					// enchant
+					player.openMenu( new SimpleMenuProvider((window, inv, plr) -> {
+						return new EnchantmentMenu(window, inv, ContainerLevelAccess.create(level, player.blockPosition()));
+					}, stack.getHoverName()));
+				} else {
+					// crafting
+					didDo = PEItems.PHILOSOPHERS_STONE.get().doExtraFunction(stack, player, hand);
+				}
 				break;
 			case 6: // Archangel
 				System.out.println("NYI: " + getMode(stack));
@@ -1008,7 +1333,7 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public boolean canContinueUsing(ItemStack before, ItemStack after) {
-		return ItemStack.isSameIgnoreDurability(before, after) && getCharge(after) == 1 && getMode(after) != 0 && (getMode(before) == getMode(after));
+		return ItemStack.isSameIgnoreDurability(before, after) && getMode(after) != 0 && (getMode(before) == getMode(after));
 	}
 	
 	/** returns the item corresponding to mode */
@@ -1112,26 +1437,25 @@ public class BandOfArcana extends MGTKItem
 				}
 				
 				// Displays a message over the hotbar on mode switch, corresponding to newMode
-				player.displayClientMessage(new TranslatableComponent(KEY_MODES[newMode]).withStyle(getModeTextStyle(stack, true).withUnderlined(true)), true);
 				setMode(stack, newMode);
+				player.displayClientMessage(new TranslatableComponent(KEY_MODES[newMode]).withStyle(getModeTextStyle(newMode, getLiquid(stack)).withUnderlined(true)), true);
 				player.level.playSound(null, player, EffectInit.BOA_MODE.get(), SoundSource.PLAYERS, 1, 0.7f);
 				return true;
 			}
 		}
-		player.displayClientMessage(new TranslatableComponent(KEY_MODES[0]).withStyle(getModeTextStyle(stack, true).withUnderlined(true)), true);
 		setMode(stack, (byte)0);
+		player.displayClientMessage(new TranslatableComponent(KEY_MODES[0]).withStyle(getModeTextStyle((byte)0, getLiquid(stack)).withUnderlined(true)), true);
 		player.level.playSound(null, player, EffectInit.BOA_MODE.get(), SoundSource.PLAYERS, 1, 0.7f);
 		return false;
 	}
 	
 	private void setMode(ItemStack stack, byte mode) {
-		ItemNBTHelper.setBoolean(stack, ManaCovalentCapabilityWrapper.TAG_STATE, mode != 0);
 		ItemNBTHelper.setByte(stack, TAG_MODE, mode);
 	}
 	
-	public Style getModeTextStyle(ItemStack stack, boolean offset) {
+	public Style getModeTextStyle(byte mode, boolean liquid) {
 		Style modeStyle = Style.EMPTY.withBold(true);
-		switch (getMode(stack)+(offset?1:0)) {
+		switch (mode) {
 		case 1:
 			modeStyle = modeStyle.withColor(0x7db700);
 			break;
@@ -1142,7 +1466,7 @@ public class BandOfArcana extends MGTKItem
 			modeStyle = modeStyle.withColor(0x1ba200);
 			break;
 		case 4:
-			modeStyle = modeStyle.withColor(getLiquid(stack) ? 0xca4528 : 0x234eca);
+			modeStyle = modeStyle.withColor(liquid ? 0xca4528 : 0x234eca);
 			break;
 		case 5:
 			modeStyle = modeStyle.withColor(0xb32f67);
@@ -1169,24 +1493,101 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public int getCharge(@NotNull ItemStack stack) {
-		return ItemNBTHelper.getBoolean(stack, TAG_OFFENSIVE, false) ? 1 : 0;
+		return ItemNBTHelper.getBoolean(stack, TAG_COVALENCE, false) ? 1 : 0;
 	}
 	
 	@Override
 	public float getChargePercent(@NotNull ItemStack stack) {
-		return ItemNBTHelper.getBoolean(stack, TAG_OFFENSIVE, false) ? 1 : 0;
+		return getCharge(stack);
 	}
 	
 	@Override
 	public boolean changeCharge(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
-		if (player.isUsingItem()) return false;
-		boolean isOffensive = getCharge(stack) == 1;
+		boolean on = getCharge(stack) == 1;
+		
+		// dont turn on covalence if player has no emc
+		if (!on && !EmcHelper.hasEmc(player)) {
+			player.level.playSound(null, player, PESounds.UNCHARGE, SoundSource.PLAYERS, 1, 0.5f);
+			return false;
+		}
 
-		if (isOffensive) player.level.playSound(null, player, PESounds.UNCHARGE, SoundSource.PLAYERS, 1, 1);
-		else player.level.playSound(null, player, PESounds.CHARGE, SoundSource.PLAYERS, 1, 1);
-		ItemNBTHelper.setBoolean(stack, TAG_OFFENSIVE, !isOffensive);
+		player.level.playSound(null, player, on ? PESounds.UNCHARGE : PESounds.CHARGE, SoundSource.PLAYERS, 1, 1);
+		ItemNBTHelper.setBoolean(stack, TAG_COVALENCE, !on);
 		
 		return true;
+	}
+
+	// blood magic will stuff
+	@Override
+	public EnumDemonWillType getCurrentType(ItemStack stack) {
+		EnumDemonWillType type = EnumDemonWillType.DEFAULT;
+		if (covalenceActive(stack)) {
+			switch (getMode(stack)) {
+			
+			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "Band of Arcana '"+stack+"' may have corrupt NBT!");
+			case 0:
+			case 1:
+				break;
+
+			case 2:
+			case 3:
+				type = EnumDemonWillType.CORROSIVE;
+				break;
+
+			case 4:
+			case 5:
+				type = EnumDemonWillType.STEADFAST;
+				break;
+
+			case 6:
+			case 7:
+				type = EnumDemonWillType.VENGEFUL;
+				break;
+
+			case 8:
+			case 9:
+				type = EnumDemonWillType.DESTRUCTIVE;
+				break;
+			}
+		}
+		return type;
+	}
+
+	@Override
+	public ItemStack fillDemonWillGem(ItemStack gemStack, ItemStack soulStack) {
+		if (soulStack.getItem() instanceof IDemonWill will && will.getType(soulStack) == getCurrentType(gemStack))
+			return super.fillDemonWillGem(gemStack, soulStack);
+		return soulStack;
+	}
+
+	@Override
+	public double getWill(EnumDemonWillType type, ItemStack stack) {
+		if (type == getCurrentType(stack)) return super.getWill(type, stack);
+		return 0;
+	}
+	
+	@Override
+	public void setWill(EnumDemonWillType type, ItemStack stack, double amount) {
+		if (type == getCurrentType(stack)) super.setWill(type, stack, amount);
+	}
+
+	@Override
+	public int getMaxWill(EnumDemonWillType type, ItemStack stack) {
+		if (type == getCurrentType(stack)) return super.getMaxWill(type, stack);
+		return 0;
+	}
+
+	@Override
+	public double drainWill(EnumDemonWillType type, ItemStack stack, double requested, boolean exec) {
+		if (type == getCurrentType(stack)) return super.drainWill(type, stack, requested, exec);
+		return 0;
+	}
+
+	@Override
+	public double fillWill(EnumDemonWillType type, ItemStack stack, double requested, boolean exec) {
+		if (type == getCurrentType(stack)) return super.fillWill(type, stack, requested, exec);
+		return 0;
 	}
 	
 	/**
@@ -1423,6 +1824,38 @@ public class BandOfArcana extends MGTKItem
 		return count;
 	}
 	
+	public boolean sentientArrowControl(SentientArrow arrow, Player player) {
+		// try redirecting the arrow
+		boolean foundTarget = arrow.attemptManualRetarget();
+		player.level.playSound(null, player, EffectInit.ARCHANGELS_SENTIENT_YONDU.get(), SoundSource.PLAYERS, 1, player.getRandom().nextFloat(0.1f, 2f));
+		if (foundTarget) {
+			for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+				Entity target = arrow.getTarget();
+				BlockPos pos = plr.blockPosition();
+				boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 128);
+				// owner -> arrow communicate
+				if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 128)) {
+					NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), LineParticlePreset.SENTIENT_COMMUNICATE), plr);
+				}
+				// owner -> target tracer
+				if (nearOwner || pos.closerToCenterThan(target.getBoundingBox().getCenter(), 128)) {
+					NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), target.getBoundingBox().getCenter(), LineParticlePreset.SENTIENT_RETARGET), plr);
+				}
+			}
+		} else {
+			// returning to owner
+			for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+				BlockPos pos = plr.blockPosition();
+				boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 128);
+				// arrow -> owner tracer
+				if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 128)) {
+					NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), LineParticlePreset.SENTIENT_RETARGET), plr);
+				}
+			}
+		}
+		return foundTarget;
+	}
+	
 	
 	
 	
@@ -1500,18 +1933,15 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public UseAnim getUseAnimation(ItemStack stack) {
-		if (getCharge(stack) == 1) {
-			switch (getMode(stack)) {
-			
-			case 2: // watch
-			case 6: // archangels
-				return UseAnim.BOW;
-			
-			default:
-				break;
-			}
+		switch (getMode(stack)) {
+		
+		case 2: // watch
+		case 6: // archangels
+			return UseAnim.BOW;
+		
+		default:
+			return UseAnim.NONE;
 		}
-		return UseAnim.NONE;
 	}
 	
 	@Override
@@ -1540,7 +1970,8 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public boolean shouldCauseReequipAnimation(ItemStack before, ItemStack after, boolean slotChanged) {
-		if (ItemNBTHelper.getBoolean(before, "boa_tickhighpitch", false) != ItemNBTHelper.getBoolean(after, "boa_tickhighpitch", false)) {
+		if (ItemNBTHelper.getBoolean(before, "boa_tickhighpitch", false) != ItemNBTHelper.getBoolean(after, "boa_tickhighpitch", false)
+				|| CovalentCapabilityWrapper.getPool(before) != CovalentCapabilityWrapper.getPool(after)) {
 			return false;
 		}
 		return super.shouldCauseReequipAnimation(before, after, slotChanged);
@@ -1571,7 +2002,7 @@ public class BandOfArcana extends MGTKItem
 		Vec3 gust = player.getLookAngle().scale(factor);
 		//NetworkInit.toClient(new ModifyPlayerVelocityPacket(gust, (byte)1), (ServerPlayer)player);
 		AABB area = AABB.ofSize(player.getBoundingBox().getCenter().subtract(gust), factor/2, factor/2, factor/2).expandTowards(gust.scale(factor)); //player.getBoundingBox().inflate(2).expandTowards(gust);
-		if (true || DebugCfg.GUST_HITBOX.get()) NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(area.minX, area.minY, area.minZ), new Vec3(area.maxX, area.maxY, area.maxZ), ParticlePreset.DEBUG), player);
+		if (DebugCfg.GUST_HITBOX.get()) NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(area.minX, area.minY, area.minZ), new Vec3(area.maxX, area.maxY, area.maxZ), ParticlePreset.DEBUG), player);
 		for (LivingEntity ent : player.level.getEntitiesOfClass(LivingEntity.class, area, ent -> canBeGusted(ent, player))) {
 			if (ent instanceof ServerPlayer plr) {
 				NetworkInit.toClient(new ModifyPlayerVelocityPacket(gust, (byte)1), plr);
@@ -1591,7 +2022,7 @@ public class BandOfArcana extends MGTKItem
 		return ent.is(guster) || !EntityHelper.isImmuneToGravityManipulation(ent);
 	}
 	
-	private void freezeEntity(LivingEntity ent, Player culprit) {
+	private void freezeEntity(LivingEntity ent, ServerPlayer culprit) {
 		if (ent instanceof Stray) return;
 		if (ent instanceof Skeleton skel) {
 			skel.convertTo(EntityType.STRAY, true);
@@ -1608,13 +2039,11 @@ public class BandOfArcana extends MGTKItem
 		}
 		ent.clearFire();
 		ent.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 100));
-		if (culprit instanceof ServerPlayer plr) {
-			WorldHelper.freezeInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
-		}
+		WorldHelper.freezeInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
 		ent.hurt(DamageSource.FREEZE, ent instanceof Blaze || ent instanceof MagmaCube ? Float.MAX_VALUE : 1);
 	}
 	
-	private void burnEntity(LivingEntity ent, Player culprit) {
+	private void burnEntity(LivingEntity ent, ServerPlayer culprit) {
 		if (ent instanceof Blaze || ent instanceof MagmaCube) return;
 		if (ent instanceof Stray stray) {
 			stray.convertTo(EntityType.SKELETON, true);
@@ -1638,10 +2067,181 @@ public class BandOfArcana extends MGTKItem
 			}
 		};
 		ent.setRemainingFireTicks(1200);
-		if (culprit instanceof ServerPlayer plr) {
-			MiscHelper.burnInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
-		}
+		MiscHelper.burnInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
 		ent.hurt(MGTKDmgSrc.MUSTANG, ent instanceof SnowGolem ? Float.MAX_VALUE : 8);
+	}
+	
+	private SmallFireball fireball(Level level, Vec3 pos, Vec3 target, @Nullable LivingEntity owner) {
+        double dist = pos.distanceToSqr(target);//owner.distanceToSqr(target);
+        Vec3 shootVec = new Vec3(
+        	target.x - pos.x,
+        	target.y - pos.y,
+        	target.z - pos.z
+        );
+        double acc = Math.sqrt(Math.sqrt(dist)) * 0.25;
+		SmallFireball fb = new SmallFireball(level, owner,
+				shootVec.x + owner.getRandom().nextGaussian() * acc,
+				shootVec.y + owner.getRandom().nextGaussian() * acc,
+				shootVec.z + owner.getRandom().nextGaussian() * acc);
+		fb.setPos(pos);
+		level.addFreshEntity(fb);
+		return fb;
+	}
+	
+	private PrimedTnt tnt(Level level, Vec3 pos, Vec3 vel, @Nullable LivingEntity owner) {
+		PrimedTnt tnt = new PrimedTnt(level, pos.x, pos.y, pos.z, owner);
+		tnt.setDeltaMovement(tnt.getDeltaMovement().add(vel));
+		level.addFreshEntity(tnt);
+		return tnt;
+	}
+	
+	@Nullable
+	private LightningBolt smite(Level level, Vec3 pos, @Nullable ServerPlayer culprit, boolean harmless) {
+		LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+		if (bolt != null) {
+			bolt.moveTo(pos);
+			bolt.setCause(culprit);
+			bolt.setVisualOnly(harmless);
+			level.addFreshEntity(bolt);
+		}
+		return bolt;
+	}
+	
+	private int extinguishAoe(Player player, AABB area, long limit) {
+		Vec3 min = new Vec3(area.minX, area.minY, area.minZ),
+			max = new Vec3(area.maxX, area.maxY, area.maxZ);
+		
+		int amount = 0;
+		if (!player.level.isClientSide) {
+			for (BlockPos pos : BlockPos.betweenClosed(new BlockPos(min), new BlockPos(max))) {
+				if (amount >= limit) break;
+				pos = pos.immutable();
+				if (player.level.getBlockState(pos).getBlock() == Blocks.FIRE && PlayerHelper.hasBreakPermission((ServerPlayer)player, pos)) {
+					player.level.removeBlock(pos, false);
+		            player.level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5f, 2.6f + (player.level.random.nextFloat() - player.level.random.nextFloat()) * 0.8f);
+					amount++;
+				}
+			}
+			if (amount < limit) {
+				for (Entity ent : player.level.getEntitiesOfClass(Entity.class, area, ent -> canBeExtinguished(ent))) {
+					if (amount >= limit) break;
+					if (ent instanceof PrimedTnt || ent instanceof Fireball) {
+						ItemStack drop;
+						if (ent instanceof Fireball fb) {
+							drop = fb.getItem();
+						} else {
+							drop = ent.getPickedResult(null);
+							if (drop == ItemStack.EMPTY) {
+								drop = new ItemStack(Items.TNT);
+							}
+						}
+						ent.spawnAtLocation(drop);
+						ent.discard();
+					} else if (ent instanceof MinecartTNT cart) {
+						// bad!!!!
+						MinecartTNT newCart = new MinecartTNT(cart.level, cart.getX(), cart.getY(), cart.getZ());
+						newCart.setDeltaMovement(cart.getDeltaMovement());
+						newCart.setXRot(cart.getXRot());
+						newCart.setYRot(cart.getYRot());
+						newCart.setDamage(cart.getDamage());
+						newCart.setCanUseRail(cart.canUseRail());
+						if (cart.hasCustomDisplay()) {
+							newCart.setCustomDisplay(true);
+							newCart.setDisplayBlockState(cart.getDisplayBlockState());
+							newCart.setDisplayOffset(cart.getDisplayOffset());
+						}
+						if (cart.hasCustomName()) {
+							newCart.setCustomName(cart.getCustomName());
+							newCart.setCustomNameVisible(cart.isCustomNameVisible());
+						}
+						newCart.setSilent(cart.isSilent());
+						newCart.setHurtTime(cart.getHurtTime());
+						newCart.setHurtDir(cart.getHurtDir());
+						cart.discard();
+						ent.level.addFreshEntity(newCart);
+					} else if (ent instanceof EntityManaStorm storm) {
+						storm.discard();
+					} else if (ent instanceof Creeper creeper) {
+						// this seems dumb but it works?
+						CompoundTag tag = creeper.getPersistentData();
+						tag.putByte("ExplosionRadius", (byte) 0);
+						tag.putShort("Fuse", Short.MAX_VALUE);
+						creeper.readAdditionalSaveData(tag);
+					} else {
+						ent.clearFire();
+					}
+					amount++;
+				}
+			}
+		}
+		return amount;
+	}
+	
+	private boolean canBeExtinguished(Entity ent) {
+		return !ent.isRemoved()
+				&& (ent instanceof PrimedTnt
+					|| ent instanceof EntityManaStorm
+					|| (ent instanceof MinecartTNT cart && cart.isPrimed())
+					|| ent instanceof Fireball
+					|| ent instanceof Creeper
+					|| (ent.getRemainingFireTicks() > 0 && !(ent.fireImmune() || ent.isInLava()))
+		);
+	}
+	
+	private boolean canBeSmitten(Entity ent) {
+		return ent instanceof LivingEntity
+				&& !EntityHelper.isInvincible(ent);
+	}
+	
+	private boolean canBeFrozen(Entity ent) {
+		return ent instanceof LivingEntity
+				&& !EntityHelper.isInvincible(ent)
+				&& !ent.getType().is(EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES);
+	}
+	
+	private boolean canBeBurnt(Entity ent) {
+		return ent instanceof LivingEntity
+				&& !EntityHelper.isInvincible(ent)
+				&& !ent.fireImmune();
+	}
+	
+	private HitResult swrgSuperSmite(Player player, Level level) {
+		Vec3 pos1 = player.getEyePosition();
+		Vec3 ray = player.getLookAngle().scale(120);
+		Vec3 pos2 = pos1.add(ray);
+		HitResult hitRes = ProjectileUtil.getEntityHitResult(player, pos1, pos2, AABB.ofSize(pos1, 0.05, 0.05, 0.05).expandTowards(ray).inflate(2), this::canBeSmitten, 0);
+		if (hitRes != null && hitRes.getType() == HitResult.Type.ENTITY) {
+			Entity ent = ((EntityHitResult)hitRes).getEntity();
+			for (int i = 0; i < (level.isThundering() ? 9 : 3) ; i++) {
+				level.playSound(null, smite(level, ent.position(), (ServerPlayer)player, false).blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1, 1);
+			}
+			// ding sound effect because cool
+			((ServerPlayer)player).connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.ARROW_HIT_PLAYER, 0.0F));
+			ent.invulnerableTime = 0;
+			ent.hurt(DamageSource.LIGHTNING_BOLT, level.isThundering() ? 81 : 9);
+		} else {
+			hitRes = PlayerHelper.getBlockLookingAt(player, 120);
+			if (hitRes != null && hitRes.getType() == HitResult.Type.BLOCK) {
+				for (int i = 0; i < (level.isThundering() ? 9 : 3) ; i++) {
+					level.playSound(null, smite(level, hitRes.getLocation(), (ServerPlayer)player, false).blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1, 1);
+				}
+			}
+		}
+		return hitRes;
+	}
+	
+	private void swrgSuperSmitePos(Player player, Level level, Vec3 pos) {
+		for (int i = 0; i < (level.isThundering() ? 9 : 3) ; i++) {
+			level.playSound(null, smite(level, pos, (ServerPlayer)player, false).blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1, 1);
+		}
+	}
+	
+	private void swrgSuperSmiteEnt(Player player, Level level, Entity victim) {
+		for (int i = 0; i < (level.isThundering() ? 9 : 3) ; i++) {
+			level.playSound(null, smite(level, victim.position(), (ServerPlayer)player, false).blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1, 1);
+		}
+		victim.invulnerableTime = 0;
+		victim.hurt(DamageSource.LIGHTNING_BOLT, level.isThundering() ? 81 : 9);
 	}
 	
 
@@ -1653,8 +2253,8 @@ public class BandOfArcana extends MGTKItem
 	 */
 	public static boolean shootMustang(Player player, ItemStack stack) {
 		if (player.level.isRainingAt(player.blockPosition())) {
-			player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1F, 1.7F);
-			player.level.playSound(null, player, SoundEvents.LAVA_EXTINGUISH, SoundSource.PLAYERS, 0.5F, 2f);
+			player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1f, 1.7f);
+			player.level.playSound(null, player, SoundEvents.LAVA_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 2f);
 			return false;
 		}
 		EntityManaBurst burst = new EntityManaBurst(player);
@@ -1677,7 +2277,7 @@ public class BandOfArcana extends MGTKItem
 		}
 		
 		player.level.addFreshEntity(burst);
-		player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1F, 1.7F);
+		player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1f, 1.7f);
 		return true;
 	}
 	
@@ -1779,7 +2379,7 @@ public class BandOfArcana extends MGTKItem
 			
 			// ice & snow
 			else if (level.getBlockState(bPos).is(BlockTags.ICE) || level.getBlockState(bPos).is(BlockTags.SNOW)) {
-				if (rand.nextInt(3) != 0 && level.getBlockState(bPos).is(BlockTags.ICE)) return;
+				if ((rand.nextInt(3) != 0  && !level.getBlockState(bPos).is(ObjectInit.AIR_ICE.get())) && level.getBlockState(bPos).is(BlockTags.ICE)) return;
 				if (culprit instanceof ServerPlayer plr && PlayerHelper.checkedPlaceBlock(plr, bPos, Blocks.AIR.defaultBlockState())) {
 					vaporized.push(bPos.immutable());
 				} else if (level.setBlockAndUpdate(bPos, Blocks.AIR.defaultBlockState())) {

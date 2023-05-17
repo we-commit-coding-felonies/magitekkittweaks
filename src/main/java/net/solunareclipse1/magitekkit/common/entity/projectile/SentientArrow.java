@@ -54,6 +54,7 @@ import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket.LineParticlePreset;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
@@ -299,6 +300,7 @@ public class SentientArrow extends AbstractArrow {
 				}
 
 				// game hangs without the pierce level check
+				// NOTE TO SELF: do not ever give this a pierce value
 				if (entHitRes == null || this.getPierceLevel() <= 0) {
 					break;
 				}
@@ -320,7 +322,7 @@ public class SentientArrow extends AbstractArrow {
 				for (ServerPlayer plr : lvl.players()) {
 					BlockPos pos = plr.blockPosition();
 					if (pos.closerToCenterThan(this.position(), 64d)) {
-						NetworkInit.toClient(new DrawParticleLinePacket(position().add(getDeltaMovement()), position(), 4), plr);
+						NetworkInit.toClient(new DrawParticleLinePacket(position().add(getDeltaMovement()), position(), LineParticlePreset.SENTIENT_RETARGET), plr);
 					}
 				}
 				//MiscHelper.drawVectorWithParticles(position().subtract(getDeltaMovement()), position(), particle, 0.1, (ClientLevel)level);
@@ -526,7 +528,7 @@ public class SentientArrow extends AbstractArrow {
 			for (ServerPlayer plr : lvl.players()) {
 				BlockPos pos = plr.blockPosition();
 				if (pos.closerToCenterThan(newPos, 64d) || pos.closerToCenterThan(this.position(), 64d)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), newPos, 2), plr);
+					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), newPos, LineParticlePreset.ARROW_TARGET_LOCK), plr);
 				}
 			}
 		}
@@ -604,7 +606,7 @@ public class SentientArrow extends AbstractArrow {
 			for (ServerPlayer plr : ((ServerLevel) level).players()) {
 				BlockPos pos = plr.blockPosition();
 				if (pos.closerToCenterThan(this.getBoundingBox().getCenter(), 64) || pos.closerToCenterThan(targetPos, 64)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), targetPos, 2), plr);
+					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), targetPos, LineParticlePreset.SENTIENT_RETARGET), plr);
 				}
 			}
 			break;
@@ -614,7 +616,7 @@ public class SentientArrow extends AbstractArrow {
 				Vec3 pos = plr.position();
 				Entity target = getTarget();
 				if (pos.closerThan(this.getBoundingBox().getCenter(), 128) || pos.closerThan(target.getBoundingBox().getCenter(), 128)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), target.getBoundingBox().getCenter(), 2), plr);
+					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), target.getBoundingBox().getCenter(), LineParticlePreset.SENTIENT_RETARGET), plr);
 				}
 			}
 			break;
@@ -707,9 +709,9 @@ public class SentientArrow extends AbstractArrow {
 				thisNode = nextNode;
 			}*/
 			if (lastNode == null) {
-				NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), Vec3.atCenterOf(thisNode.asBlockPos()), 0), (ServerPlayer) this.getOwner());
+				NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), Vec3.atCenterOf(thisNode.asBlockPos()), LineParticlePreset.DEBUG), (ServerPlayer) this.getOwner());
 			} else {
-				NetworkInit.toClient(new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()), Vec3.atCenterOf(thisNode.asBlockPos()), 0), (ServerPlayer) this.getOwner());
+				NetworkInit.toClient(new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()), Vec3.atCenterOf(thisNode.asBlockPos()), LineParticlePreset.DEBUG_2), (ServerPlayer) this.getOwner());
 			}
 		}
 	}

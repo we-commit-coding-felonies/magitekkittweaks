@@ -97,6 +97,7 @@ public class ProjectileHelper {
 				arrow = ctx.shooter == null ?
 						new SentientArrow(ctx.level, ctx.pos.x, ctx.pos.y, ctx.pos.z) :
 						new SentientArrow(ctx.level, ctx.shooter);
+				arrow.setGlowingTag(true);
 				arrow.setBaseDamage(opts.damage);
 				break;
 				

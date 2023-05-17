@@ -3,12 +3,15 @@ package net.solunareclipse1.magitekkit.init;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
+
+import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -20,6 +23,7 @@ import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectil
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
+import net.solunareclipse1.magitekkit.common.inventory.container.PhiloEnchantmentMenu;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor.CrimsonArmorMaterial;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
@@ -35,12 +39,14 @@ public class ObjectInit {
 	private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MagiTekkit.MODID);
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MagiTekkit.MODID);
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, MagiTekkit.MODID);
+    private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.CONTAINERS, MagiTekkit.MODID);
 
     public static void init() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         BLOCKS.register(bus);
         ITEMS.register(bus);
         ENTITIES.register(bus);
+        MENUS.register(bus);
     }
 
     // Common properties
@@ -121,6 +127,10 @@ public class ObjectInit {
 			.fireImmune()
 			.build("wither_vine"));
 
+    
+    // Menus / Containers
+    public static final RegistryObject<MenuType<PhiloEnchantmentMenu>> PHILO_ENCHANTER = MENUS.register("philo_enchanter", () -> IForgeMenuType.create((window, inv, data) -> new PhiloEnchantmentMenu(window, inv)));
+    
     
     
     // mcjty my beloved

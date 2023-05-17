@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "magitekkit:item/tool/band_of_arcana/mode4_cov1_liquid1_woft0"
+  }
+}

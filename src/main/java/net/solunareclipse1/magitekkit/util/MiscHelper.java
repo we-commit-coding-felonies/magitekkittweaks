@@ -3,6 +3,17 @@ package net.solunareclipse1.magitekkit.util;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.jetbrains.annotations.Nullable;
+
+import com.simibubi.create.AllBlocks;
+import com.simibubi.create.AllMovementBehaviours;
+import com.simibubi.create.content.contraptions.components.actors.HarvesterMovementBehaviour;
+import com.simibubi.create.content.contraptions.components.actors.SawMovementBehaviour;
+import com.simibubi.create.content.contraptions.components.saw.SawTileEntity;
+import com.simibubi.create.foundation.config.AllConfigs;
+import com.simibubi.create.foundation.utility.BlockHelper;
+
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,6 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -19,6 +31,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.Husk;
@@ -28,13 +41,48 @@ import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BambooBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BonemealableBlock;
+import net.minecraft.world.level.block.CactusBlock;
+import net.minecraft.world.level.block.ChorusFlowerBlock;
+import net.minecraft.world.level.block.ChorusPlantBlock;
+import net.minecraft.world.level.block.CocoaBlock;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.DoublePlantBlock;
+import net.minecraft.world.level.block.FlowerBlock;
+import net.minecraft.world.level.block.GrassBlock;
+import net.minecraft.world.level.block.GrowingPlantBlock;
+import net.minecraft.world.level.block.HangingRootsBlock;
+import net.minecraft.world.level.block.KelpBlock;
+import net.minecraft.world.level.block.KelpPlantBlock;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.LevelEvent;
+import net.minecraft.world.level.block.MossBlock;
+import net.minecraft.world.level.block.NetherSproutsBlock;
+import net.minecraft.world.level.block.NetherWartBlock;
+import net.minecraft.world.level.block.NetherrackBlock;
+import net.minecraft.world.level.block.NyliumBlock;
+import net.minecraft.world.level.block.RootsBlock;
+import net.minecraft.world.level.block.StemGrownBlock;
+import net.minecraft.world.level.block.SugarCaneBlock;
+import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import net.minecraftforge.common.IForgeShearable;
+import net.minecraftforge.common.IPlantable;
+import net.minecraftforge.items.ItemHandlerHelper;
+
+import moze_intel.projecte.gameObjs.PETags;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
@@ -48,6 +96,12 @@ import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePack
  * Some common functions that don't really fit in anywhere else
  */
 public class MiscHelper {
+	private static final ItemStack HARVEST_HOE = getHarvestHoe();
+	private static ItemStack getHarvestHoe() {
+		ItemStack hoe = new ItemStack(Items.GOLDEN_HOE);
+		hoe.enchant(Enchantments.BLOCK_FORTUNE, 5);
+		return hoe;
+	}
 	private static final SoundEvent[] soundsList = {SoundEvents.ZOMBIFIED_PIGLIN_ANGRY, SoundEvents.CREEPER_PRIMED, SoundEvents.ENDERMAN_STARE, SoundEvents.AMBIENT_CAVE, SoundEvents.DROWNED_SHOOT, SoundEvents.ELDER_GUARDIAN_CURSE, SoundEvents.END_PORTAL_SPAWN, SoundEvents.ENDER_DRAGON_DEATH, SoundEvents.ENDER_DRAGON_FLAP, SoundEvents.ENDER_DRAGON_GROWL, SoundEvents.GHAST_AMBIENT, SoundEvents.GHAST_HURT, SoundEvents.PHANTOM_SWOOP, SoundEvents.PORTAL_AMBIENT, SoundEvents.PORTAL_TRIGGER, SoundEvents.WANDERING_TRADER_AMBIENT,
 			PESoundEvents.CHARGE.get(), PESoundEvents.DESTRUCT.get(), PESoundEvents.HEAL.get(), PESoundEvents.POWER.get(), PESoundEvents.TRANSMUTE.get(), PESoundEvents.UNCHARGE.get(), PESoundEvents.WATER_MAGIC.get(), PESoundEvents.WIND_MAGIC.get(), EffectInit.EMC_WASTE.get(), EffectInit.ARMOR_BREAK.get(), EffectInit.SHIELD_FAIL.get()};
 	
@@ -131,11 +185,11 @@ public class MiscHelper {
 					level.playSound(null, zombie, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
 				}
 			};
-			for (ServerPlayer plr : ((ServerLevel)level).players()) {
-				if (plr.blockPosition().closerToCenterThan(culprit.position(), 64)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(culprit.getBoundingBox().getCenter(), ent.getBoundingBox().getCenter(), 3), plr);
-				}
-			}
+			//for (ServerPlayer plr : ((ServerLevel)level).players()) {
+			//	if (plr.blockPosition().closerToCenterThan(culprit.position(), 64)) {
+			//		NetworkInit.toClient(new DrawParticleLinePacket(culprit.getBoundingBox().getCenter(), ent.getBoundingBox().getCenter(), 3), plr);
+			//	}
+			//}
 			ent.setRemainingFireTicks(costPer);
 			burnInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
 			level.playSound(null, ent.blockPosition(), EffectInit.IGNITION_BURN.get(), SoundSource.PLAYERS, 1, 1);
@@ -259,5 +313,202 @@ public class MiscHelper {
 			level.addParticle(particle, true, curPos.x, curPos.y, curPos.z, 0, 0, 0);
 			curPos = curPos.add(step);
 		}
+	}
+	
+	
+	
+	
+	/**
+	 * grows crops in specified area
+	 * @param level
+	 * @param area
+	 * @param chance 1/x chance to succeed
+	 * @return amount of things grown
+	 */
+	public static int growNearby(ServerLevel level, AABB area, int chance) {
+		int grown = 0;
+		boolean doRand = chance > 1,
+				grewWater = false;
+		Random rand = level.random;
+		for (BlockPos pos : WorldHelper.getPositionsFromBox(area)) {
+			if (doRand && rand.nextInt(chance) != 0) {
+				continue;
+			}
+			pos = pos.immutable();
+			BlockState state = level.getBlockState(pos);
+			Block block = state.getBlock();
+			
+			if (block instanceof BonemealableBlock growable) {
+				growable.performBonemeal(level, rand, pos, state);
+				level.levelEvent(LevelEvent.PARTICLES_AND_SOUND_PLANT_GROWTH, pos, 0);
+				grown++;
+			} else if (block instanceof IPlantable) {
+				state.randomTick(level, pos, rand);
+				grown++;
+			} else if (!grewWater && rand.nextInt(512) == 0 && WorldHelper.growWaterPlant(level, pos, state, null)) {
+				level.levelEvent(LevelEvent.PARTICLES_AND_SOUND_PLANT_GROWTH, pos, 0);
+				grewWater = true;
+				grown++;
+			}
+		}
+		return grown;
+	}
+	
+	/**
+	 * harvest and attempts to replant crops in area
+	 * @param level
+	 * @param area
+	 * @param chance 1/x chance to succeed
+	 * @return amount of things harvested
+	 */
+	public static int harvestNearby(ServerPlayer player, ServerLevel level, AABB area, int chance) {
+		int harvested = 0;
+		boolean doRand = chance > 1;
+		for (BlockPos pos : WorldHelper.getPositionsFromBox(area)) {
+			if (doRand && level.random.nextInt(chance) != 0) continue;
+			
+			pos = pos.immutable();
+			BlockState state = level.getBlockState(pos);
+			
+			// try using Creates method since it replants things
+			// falls back on projecte if that doesnt work
+			if (tryCreateHarv(player, level, pos, state) || tryPeHarv(player, level, pos, state)) {
+				harvested++;
+			}
+			
+		}
+		return harvested;
+	}
+	
+	/**
+	 * HarvesterMovementBehaviour.visitNewPosition()
+	 * @return if successful
+	 */
+	private static boolean tryCreateHarv(ServerPlayer player, ServerLevel world, BlockPos pos, BlockState stateVisited) {
+		HarvesterMovementBehaviour harv = (HarvesterMovementBehaviour) AllMovementBehaviours.getBehaviour(AllBlocks.MECHANICAL_HARVESTER.getDefaultState());
+		boolean notCropButCuttable = false;
+
+		if (!harv.isValidCrop(world, pos, stateVisited)) {
+			if (harv.isValidOther(world, pos, stateVisited)) notCropButCuttable = true;
+			else return false;
+		}
+
+		ItemStack item = new ItemStack(Items.GOLDEN_HOE);
+		item.enchant(Enchantments.BLOCK_FORTUNE, 5);
+		float effectChance = 1;
+
+		if (stateVisited.is(BlockTags.LEAVES)) {
+			item = new ItemStack(Items.SHEARS);
+			effectChance = .45f;
+		}
+
+		MutableBoolean seedSubtracted = new MutableBoolean(notCropButCuttable);
+		BlockState state = stateVisited;
+		BlockHelper.destroyBlockAs(world, pos, player, item.copy(), effectChance, stack -> {
+			if (!seedSubtracted.getValue() && stack.sameItem(new ItemStack(state.getBlock()))) {
+				stack.shrink(1);
+				seedSubtracted.setTrue();
+			}
+			makeDrop(stack, world, Vec3.atCenterOf(pos));
+		});
+
+		BlockState cutCrop = cut(world, pos, stateVisited);
+		world.setBlockAndUpdate(pos, cutCrop.canSurvive(world, pos) ? cutCrop : Blocks.AIR.defaultBlockState());
+		return true;
+	}
+	
+	private static boolean tryPeHarv(ServerPlayer player, ServerLevel level, BlockPos currentPos, BlockState state) {
+		Block crop = state.getBlock();
+		
+		// Vines, leaves, tallgrass, deadbush, doubleplants
+		if (crop instanceof IForgeShearable
+				|| crop instanceof FlowerBlock
+				|| crop instanceof DoublePlantBlock
+				|| crop instanceof RootsBlock
+				|| crop instanceof NetherSproutsBlock
+				|| crop instanceof HangingRootsBlock) {
+			harvestBlock(level, currentPos, player);
+			return true;
+		}
+		// Carrot, cocoa, wheat, grass (creates flowers and tall grass in vicinity),
+		// Mushroom, potato, sapling, stems, tallgrass
+		else if (crop instanceof BonemealableBlock growable) {
+			if (!growable.isValidBonemealTarget(level, currentPos, state, false)) {
+				if (!state.is(PETags.Blocks.BLACKLIST_HARVEST)) {
+					if (!(crop == Blocks.KELP_PLANT || crop == Blocks.BAMBOO) || level.getBlockState(currentPos.below()).is(crop)) {
+						// Don't harvest the bottom of kelp but otherwise allow harvesting them
+						harvestBlock(level, currentPos, (ServerPlayer) player);
+						return true;
+					}
+				}
+			}
+		}
+		// All modded
+		// Cactus, Reeds, Netherwart, Flower
+		else if (crop instanceof IPlantable) {
+			if (crop == Blocks.SUGAR_CANE || crop == Blocks.CACTUS) {
+				if (level.getBlockState(currentPos.above()).is(crop) && level.getBlockState(currentPos.above(2)).is(crop)) {
+					for (int i = crop == Blocks.SUGAR_CANE ? 1 : 0; i < 3; i++) {
+						harvestBlock(level, currentPos.above(i), (ServerPlayer) player);
+						return true;
+					}
+				}
+			} else if (crop == Blocks.NETHER_WART) {
+				if (state.getValue(NetherWartBlock.AGE) == 3) {
+					harvestBlock(level, currentPos, (ServerPlayer) player);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private static void harvestBlock(Level level, BlockPos pos, @Nullable ServerPlayer player) {
+		if (player == null || PlayerHelper.hasBreakPermission(player, pos)) {
+			level.destroyBlock(pos, true, player);
+		}
+	}
+	
+	private static void makeDrop(ItemStack stack, Level world, Vec3 vec) {
+		ItemStack remainder = stack;
+		if (remainder.isEmpty()) return;
+		
+		ItemEntity itemEntity = new ItemEntity(world, vec.x, vec.y, vec.z, remainder);
+		world.addFreshEntity(itemEntity);
+	}
+	
+	private static BlockState cut(Level world, BlockPos pos, BlockState state) {
+		Block block = state.getBlock();
+		if (block instanceof CropBlock) {
+			CropBlock crop = (CropBlock) block;
+			return crop.getStateForAge(0);
+		}
+		if (block == Blocks.SWEET_BERRY_BUSH) {
+			return state.setValue(BlockStateProperties.AGE_3, Integer.valueOf(1));
+		}
+		if (block == Blocks.SUGAR_CANE || block instanceof GrowingPlantBlock) {
+			if (state.getFluidState()
+				.isEmpty())
+				return Blocks.AIR.defaultBlockState();
+			return state.getFluidState()
+				.createLegacyBlock();
+		}
+		if (state.getCollisionShape(world, pos)
+			.isEmpty() || block instanceof CocoaBlock) {
+			for (Property<?> property : state.getProperties()) {
+				if (!(property instanceof IntegerProperty))
+					continue;
+				if (!property.getName()
+					.equals(BlockStateProperties.AGE_1.getName()))
+					continue;
+				return state.setValue((IntegerProperty) property, Integer.valueOf(0));
+			}
+		}
+
+		if (state.getFluidState()
+			.isEmpty())
+			return Blocks.AIR.defaultBlockState();
+		return state.getFluidState()
+			.createLegacyBlock();
 	}
 }

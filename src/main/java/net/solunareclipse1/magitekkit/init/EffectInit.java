@@ -10,6 +10,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.common.effect.IceShieldEffect;
 import net.solunareclipse1.magitekkit.common.effect.TransmutingEffect;
 
 public class EffectInit {
@@ -85,6 +86,7 @@ public class EffectInit {
     
     //// MobEffects
     public static final RegistryObject<MobEffect> TRANSMUTING = MOB_EFFECTS.register("transmuting", () -> new TransmutingEffect());
+    public static final RegistryObject<MobEffect> ICESHIELD = MOB_EFFECTS.register("ice_shield", () -> new IceShieldEffect());
     
     
     private static RegistryObject<SoundEvent> registerSound(String name) {

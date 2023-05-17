@@ -59,6 +59,11 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		DMG_SRC_MODS_ALCHSHIELD.put(DamageSource.badRespawnPointExplosion(), 8f);
 		DMG_SRC_MODS_ALCHSHIELD.put(MekanismDamageSource.LASER, 1.2f);
 	}
+	
+	@Override
+	public boolean makesPiglinsNeutral(ItemStack stack, LivingEntity entity) {
+		return true;
+	}
 
 	/**
 	 * convert radiation into durability / emc

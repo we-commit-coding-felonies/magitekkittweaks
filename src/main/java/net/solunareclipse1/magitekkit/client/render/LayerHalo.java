@@ -56,9 +56,7 @@ public class LayerHalo extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
 		poseStack.scale(1.5f, 1.5f, 1.5f); // bigger!
 		poseStack.mulPose(Vector3f.YP.rotationDegrees(ageInTicks*0.6f % 360)); // spinny
 		poseStack.translate(-0.5, -0.25, -0.5); // positioning behind the head
-		ResourceLocation texture = HALO_TEXTURE;
-		// nerd
-		if (NERD_UUID.equals(player.getUUID())) texture = NERD_TEXTURE;
+		ResourceLocation texture = player.getUUID().equals(NERD_UUID) ? NERD_TEXTURE : HALO_TEXTURE; // nerd
 		VertexConsumer poly = renderBuffer.getBuffer(MGTKRenderType.HALO_RENDERER.apply(texture));
 		Matrix4f matrix4f = poseStack.last().pose();
 		Color c1 = Color.COVALENCE_GREEN_TRUE;

@@ -11,6 +11,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -28,6 +29,11 @@ import net.solunareclipse1.magitekkit.util.EmcHelper;
 public class GemCirclet extends GemJewelryBase {
 	public GemCirclet(Properties props, float baseDr) {
 		super(EquipmentSlot.HEAD, props, baseDr);
+	}
+	
+	@Override
+	public boolean isEnderMask(ItemStack stack, Player player, EnderMan enderman) {
+		return !isDamaged(stack);
 	}
 	
 	@Override

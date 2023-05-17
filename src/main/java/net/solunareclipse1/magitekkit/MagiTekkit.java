@@ -1,6 +1,7 @@
 package net.solunareclipse1.magitekkit;
 
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
@@ -25,6 +26,12 @@ public class MagiTekkit {
         ConfigInit.init();
         IEventBus modbus = FMLJavaModLoadingContext.get().getModEventBus();
         modbus.addListener(ModInit::init);
+        //modbus.addListener(this::registerCaps);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> modbus.addListener(ClientInit::init));
+    }
+    
+    
+    private void registerCaps(RegisterCapabilitiesEvent evt) {
+    	// TODO: possibly migrate some stuff over to this (such as emc shield)
     }
 }

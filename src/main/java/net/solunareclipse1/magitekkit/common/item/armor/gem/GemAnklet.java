@@ -1,6 +1,7 @@
 package net.solunareclipse1.magitekkit.common.item.armor.gem;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -11,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -24,7 +26,6 @@ import net.minecraftforge.fml.DistExecutor;
 
 import moze_intel.projecte.gameObjs.items.IFlightProvider;
 import moze_intel.projecte.gameObjs.items.IStepAssister;
-import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
 import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Gem.Feet;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
@@ -39,12 +40,17 @@ public class GemAnklet extends GemJewelryBase implements IFlightProvider, IStepA
 		super(EquipmentSlot.FEET, props, baseDr);
 	}
 
-	private static final AttributeModifier JESUS_SPEED = new AttributeModifier("Walking on liquid", 0.3, AttributeModifier.Operation.ADDITION);
+	private AttributeModifier JESUS_SPEED = new AttributeModifier(UUID.fromString("4a109872-83ae-4781-9117-08fd2b8ce00b"), "Walking on liquid", 0.1, AttributeModifier.Operation.ADDITION);
 	
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
 		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.4").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+	}
+	
+	@Override
+	public boolean canWalkOnPowderedSnow(ItemStack stack, LivingEntity entity) {
+		return !stack.isDamaged();
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket.LineParticlePreset;
 import net.solunareclipse1.magitekkit.util.CalcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import morph.avaritia.handler.ArmorHandler;
@@ -174,7 +175,7 @@ public class SmartArrow extends Arrow {
 			Vec3 targetPos = target.getBoundingBox().getCenter();
 			for (ServerPlayer plr : ((ServerLevel)level).players()) {
 				if (plr.blockPosition().closerToCenterThan(this.position(), 64d)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(this.position(), targetPos, 1), plr);
+					NetworkInit.toClient(new DrawParticleLinePacket(this.position(), targetPos, LineParticlePreset.ARROW_TARGET_LOCK), plr);
 				}
 			}
 			level.playSound(null, this.blockPosition(), EffectInit.ARCHANGELS_REDIRECT.get(), this.getSoundSource(), 0.1f, 1);

@@ -1,6 +1,8 @@
 package net.solunareclipse1.magitekkit.api.capability.wrapper;
 
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+
 import moze_intel.projecte.capability.BasicItemCapability;
 import vazkii.botania.common.helper.ItemNBTHelper;
 
@@ -14,7 +16,7 @@ import vazkii.botania.common.helper.ItemNBTHelper;
  * @author solunareclipse1
  */
 public abstract class CovalentCapabilityWrapper<T> extends BasicItemCapability<T> {
-	private static final long CAPACITY_EMC = 40000;
+	public static final long CAPACITY_EMC = 40000;
 	public static final String TAG_POOL = "cov_bridge_pool";
 	public static final String TAG_STATE = "cov_bridge_state";
 	
@@ -77,5 +79,72 @@ public abstract class CovalentCapabilityWrapper<T> extends BasicItemCapability<T
 	 */
 	protected void setPool(long amount) {
 		ItemNBTHelper.setLong(getStack(), TAG_POOL, Mth.clamp(amount, 0, CAPACITY_EMC));
+	}
+	
+	
+	
+	
+	
+	
+	
+
+
+	/**
+	 * Gets the amount of EMC in the pool
+	 * @return Pool EMC
+	 */
+	public static long getPool(ItemStack stack) {
+		return ItemNBTHelper.getLong(stack, TAG_POOL, 0);
+	}
+
+	/**
+	 * Gets the maximum capacity of the internal pool, in EMC <br>
+	 * @return Pool capacity in emc
+	 */
+	public static long getPoolMax(ItemStack stack) {
+		return CAPACITY_EMC;
+	}
+	
+	/**
+	 * How full the pool is, as a percentage (0.0 - 1.0)
+	 * @return percent full
+	 */
+	public static float getPoolPercent(ItemStack stack) {
+		return ItemNBTHelper.getLong(stack, TAG_POOL, 0)/getPoolMax(stack);
+	}
+
+	/**
+	 * Gets how much more EMC is needed to fill the pool
+	 * @return emc needed
+	 */
+	public static long getPoolNeeded(ItemStack stack) {
+		return getPoolMax(stack) - ItemNBTHelper.getLong(stack, TAG_POOL, 0);
+	}
+
+	/**
+	 * Sets the internal EMC pool to a specific amount <br>
+	 * This will clamp the value before actually setting it, so dont worry about that
+	 * @param amount
+	 */
+	public static void setPool(ItemStack stack, long amount) {
+		ItemNBTHelper.setLong(stack, TAG_POOL, Mth.clamp(amount, 0, getPoolMax(stack)));
+	}
+	
+	/**
+	 * Gets the current state of the given item (true or false) <br>
+	 * False means the item is disabled, and it should do nothing
+	 * @return State of the item
+	 */
+	public static boolean getState(ItemStack stack) {
+		return ItemNBTHelper.getBoolean(stack, TAG_STATE, false);
+	}
+	
+	/**
+	 * Use this to enable/disable the item <br>
+	 * For example, this can be used to track whether the item is equipped or not
+	 * @param state
+	 */
+	public static void setState(ItemStack stack, boolean state) {
+		ItemNBTHelper.setBoolean(stack, TAG_STATE, state);
 	}
 }
