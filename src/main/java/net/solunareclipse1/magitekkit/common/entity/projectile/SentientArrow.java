@@ -6,6 +6,9 @@ import java.util.Map.Entry;
 import java.util.Stack;
 
 import org.jetbrains.annotations.Nullable;
+
+import com.google.common.collect.Lists;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -72,15 +75,13 @@ public class SentientArrow extends AbstractArrow {
 	/** when tickCount > this, arrow dies */
 	private final int maxLife;
 	
-	/**
-	 * current "state" of the arrow <br>
-	 * 0 = searching for target <br>
-	 * 1 = chasing target directly <br>
-	 * 2 = pathfinding to obstructed target <br>
-	 * 3 = no target / inert
-	 */
-	private byte state = 0;
-	
+	private enum ArrowState {
+		SEARCHING, // Looking for a target
+		DIRECT,    // Has direct line of sight to target
+		PATHING,   // Following path to to target
+		INERT
+	}
+	private ArrowState state = ArrowState.SEARCHING;
 	/** the integer entity id of our current tracked target */
 	private int victimId = -1;
 	
@@ -149,13 +150,13 @@ public class SentientArrow extends AbstractArrow {
 						// BEELINE
 						forgetPaths();
 						targetPos = target.getBoundingBox().getCenter();
-						if (state != 1) {
+						if (state != ArrowState.DIRECT) {
 							//particles(0);
-							state = 1; // target visible
+							state = ArrowState.DIRECT; // target visible
 						}
 					} else {
 						// PATHFIND
-						state = 2; // target obstructed
+						state = ArrowState.PATHING; // target obstructed
 						pathTo(target);
 					}
 					if (!isInert() && targetPos != null) {
@@ -163,7 +164,7 @@ public class SentientArrow extends AbstractArrow {
 					}
 				} else {
 					resetTarget();
-					state = 0; // searching for target
+					state = ArrowState.SEARCHING; // searching for target
 				}
 			}
 			// MOVEMENT & COLLISION
@@ -458,7 +459,7 @@ public class SentientArrow extends AbstractArrow {
 	// FUNCTIONS //
 	///////////////
 	public void becomeInert() {
-		state = 3;
+		state = ArrowState.INERT;
 		resetTarget();
 	}
 	@Override
@@ -486,13 +487,15 @@ public class SentientArrow extends AbstractArrow {
 		}
 		return true;
 	}
-
+	
+	@SuppressWarnings("unused")
 	private void shootAt(Entity ent) {
 		shootAt(ent, 1);
 	}
 	private void shootAt(Entity ent, float vel) {
 		shootAt(ent.getBoundingBox().getCenter(), vel);
 	}
+	@SuppressWarnings("unused")
 	private void shootAt(Vec3 pos) {
 		shootAt(pos, 1);
 	}
@@ -511,6 +514,19 @@ public class SentientArrow extends AbstractArrow {
 	private Path findPathTo(Vec3 pos) {
 		return nav.createPath(pos, 0);
 	}
+	
+	private Path trimNodes(Path path) {
+		List<Node> nodes = Lists.newArrayList();
+		nodes.add(path.getNode(0));
+		for (int i = 1; i < path.getNodeCount() - 1; i++) {
+			if (!isUnobstructed(nodes.get(nodes.size() - 1).asVec3(), path.getNode(i+1).asVec3())) {
+				nodes.add(path.getNode(i));
+			}
+		}
+		nodes.add(path.getEndNode());
+		return new Path(nodes, path.getTarget(), path.canReach());
+	}
+	
 	private boolean isPathInsane(Path path) {
 		boolean isInsane = path == null || path.sameAs(currentPath) || path.getNode(0) == path.getEndNode();
 		if (!isInsane) {
@@ -560,9 +576,12 @@ public class SentientArrow extends AbstractArrow {
 					}
 				}
 			}
+			newPath = trimNodes(newPath);
 			if (DebugCfg.ARROW_PATHFIND.get()) {
-				drawDebugPath(newPath);
+					drawDebugPath(newPath);
 			}
+			
+			
 			currentPath = newPath;
 			break;
 		}
@@ -573,13 +592,6 @@ public class SentientArrow extends AbstractArrow {
 				node = currentPath.getNode(0);
 			}
 			Node nextNode = currentPath.getNextNode();
-			/*while (isUnobstructed(node.asVec3(), nextNode.asVec3()) && !currentPath.isDone()) {
-				if (!level.isClientSide) {
-					NetworkInit.toClient(new DrawParticleLinePacket(node.asVec3(), nextNode.asVec3(), 7), (ServerPlayer)owner());
-				}
-				nextNode = currentPath.getNextNode();
-				currentPath.advance();
-			}*/
 			Vec3 nextTargetPos = Vec3.atCenterOf(nextNode.asBlockPos());
 			if (nextTargetPos != null) {
 				if (targetPos == null || !nextTargetPos.closerThan(targetPos, 0.5)) {
@@ -592,10 +604,6 @@ public class SentientArrow extends AbstractArrow {
 			if (targetPos != null && this.position().closerThan(targetPos, 0.5)) {
 				currentPath.advance();
 			}
-			// Remove true to make sure we're successfully following, but currently borked.
-			//if (node.asVec3().subtract(this.position()).length() < 1) {
-			//	currentPath.advance();
-			//}
 		}
 	}
 	private void particles(int type) {
@@ -693,21 +701,13 @@ public class SentientArrow extends AbstractArrow {
 	}
 	
 	protected void drawDebugPath(Path path) {
+		if (this.level.isClientSide) return;
 		Node lastNode = null;
 		Node thisNode = null;
 		for (int i = 0; i < path.getNodeCount() - 1; i++) {
 			Node node = path.getNode(i);
 			lastNode = thisNode;
 			thisNode = node;
-			Node nextNode = path.getNode(i+1);
-			/*if (!whole) {
-				int j = i + 1;
-				while (hasLineOfSight(thisNode.asVec3(),nextNode.asVec3()) && j < this.targetPath.getNodeCount()) {
-					nextNode = this.targetPath.getNode(j++);
-				}
-				i = j;
-				thisNode = nextNode;
-			}*/
 			if (lastNode == null) {
 				NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), Vec3.atCenterOf(thisNode.asBlockPos()), LineParticlePreset.DEBUG), (ServerPlayer) this.getOwner());
 			} else {
@@ -746,7 +746,7 @@ public class SentientArrow extends AbstractArrow {
 		LivingEntity newTarget = findTargetNear(this.getBoundingBox().getCenter());
 		if (newTarget != null && !newTarget.is(getTarget())) {
 			victimId = newTarget.getId();
-			state = 1; // target visible
+			state = ArrowState.DIRECT; // target visible
 			searchTime = 0;
 			particles(1);
 			return true;
@@ -754,7 +754,7 @@ public class SentientArrow extends AbstractArrow {
 		return false;
 	}
 	public boolean attemptManualRetarget() {
-		if (isInert()) state = 1;
+		if (isInert()) state = ArrowState.DIRECT;
 		Entity owner = getOwner();
 		if (owner == null) return false;
 		if (this.inGround) {
@@ -796,7 +796,7 @@ public class SentientArrow extends AbstractArrow {
 	private boolean trySwappingTargetTo(Entity newTarget) {
 		if (newTarget != null && !newTarget.is(getTarget())) {
 			victimId = newTarget.getId();
-			state = 1;
+			state = ArrowState.DIRECT;
 			searchTime = 0;
 			return true;
 		}
@@ -865,16 +865,16 @@ public class SentientArrow extends AbstractArrow {
 	// DATA / STATE STUFF //
 	////////////////////////
 	public boolean isLookingForTarget() {
-		return state == 0;
+		return state == ArrowState.SEARCHING;
 	}
 	public boolean isHoming() {
 		return isReturningToOwner || hasTarget();
 	}
 	public boolean hasTarget() {
-		return (state == 1 || state == 2) && victimId != -1;
+		return (state == ArrowState.DIRECT || state == ArrowState.PATHING) && victimId != -1;
 	}
 	public boolean isInert() {
-		return state == 3;
+		return state == ArrowState.INERT;
 	}
 	
 	public Player owner() {
