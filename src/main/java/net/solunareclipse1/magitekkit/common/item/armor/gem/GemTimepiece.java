@@ -9,14 +9,19 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
+import moze_intel.projecte.gameObjs.PETags;
 import moze_intel.projecte.utils.ItemHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
@@ -41,32 +46,38 @@ public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmo
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
-		tips.add(new TranslatableComponent("tip.mgtk.gem_timepiece").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.3").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	
 	
-	// Modified Gem Leggings repulsion & descend
-	// Repulsion has a cost
 	@Override
 	public void onArmorTick(ItemStack stack, Level level, Player player) {
-		long plrEmc = jewelryTick(stack, level, player);
-		
-		// Set bonus
-		if (fullPristineSet(player)) {
-			if (player.isShiftKeyDown()) {
-				plrEmc = repelEntities(player, level, plrEmc);
-			} else {
-				plrEmc = vacuumItems(player, level, plrEmc);
-			}
-		}
-		
-		// Standalone
-		if (!stack.isDamaged()) {
-			if (player.isShiftKeyDown() && !player.getAbilities().flying) {
-				//player.setDeltaMovement(player.getDeltaMovement().add(player.getViewVector(0)));
+		boolean sneaking = player.isShiftKeyDown();
+		GemJewelrySetInfo set = jewelryTick(stack, level, player);
+		long plrEmc = set.plrEmc();
+		if (level.isClientSide) {
+			// Client
+			if (sneaking && plrEmc >= 10 && !player.getAbilities().flying) {
 				fastDescend(player, level);
 			}
-		}
+		} //else {
+			// Server
+			if (!stack.isDamaged()) {
+				if (plrEmc > 0 && set.chest().pristine()) {
+					//if (sneaking && player.isOnGround()) {
+					//	plrEmc -= EmcHelper.consumeAvaliableEmc(player, repelEntities(player, level, plrEmc));
+					//}
+					
+					if (!sneaking) {
+						plrEmc -= EmcHelper.consumeAvaliableEmc(player, vacuumItems(player, level, plrEmc));
+					}
+				}
+				
+				if (sneaking && plrEmc >= 10 && !player.getAbilities().flying) {
+					plrEmc -= EmcHelper.consumeAvaliableEmc(player, 10);
+				}
+			}
+		//}
 	}
 	
 	// nearly identical to normal gem leggings fast descend
@@ -88,14 +99,35 @@ public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmo
 	 * @return modified plrEmc
 	 */
 	private long repelEntities(Player player, Level level, long plrEmc) {
-		if (plrEmc >= 1) {
-			plrEmc -= EmcHelper.consumeAvaliableEmc(player, 1);
-			AABB box = new AABB(player.getX() - 3.5, player.getY() - 3.5, player.getZ() - 3.5,
-					player.getX() + 3.5, player.getY() + 3.5, player.getZ() + 3.5);
-			WorldHelper.repelEntitiesSWRG(level, box, player);
+		AABB box = new AABB(player.getX() - 3.5, player.getY() - 3.5, player.getZ() - 3.5, player.getX() + 3.5, player.getY() + 3.5, player.getZ() + 3.5);
+		Vec3 vec = player.position();
+		int consumed = 0;
+		for (Entity ent : level.getEntitiesOfClass(Entity.class, box, entity -> validRepelTarget(entity))) {
+			if (consumed >= plrEmc) break;
+			if (ent instanceof Projectile) {
+				Projectile projectile = (Projectile)ent;
+				Entity owner = projectile.getOwner();
+				if ((level.isClientSide() && owner == null) || (owner != null && player.getUUID().equals(owner.getUUID()))) {
+					continue;
+				}
+			}
+			consumed++;
+			Vec3 t = new Vec3(ent.getX(), ent.getY(), ent.getZ());
+			Vec3 r = new Vec3(t.x - vec.x, t.y - vec.y, t.z - vec.z);
+			double distance = vec.distanceTo(t) + 0.1D;
+			ent.setDeltaMovement(ent.getDeltaMovement().add(r.scale( (2d/3d)/distance )));
 		}
-		
-		return plrEmc;
+		return EmcHelper.consumeAvaliableEmc(player, consumed);
+	}
+	
+	private boolean validRepelTarget(Entity entity) {
+		if (!entity.isSpectator() && !entity.getType().is(PETags.Entities.BLACKLIST_SWRG)) {
+			if (entity instanceof Projectile) {
+				return !entity.isOnGround();
+			}
+			return entity instanceof Mob;
+		} 
+		return false;
 	}
 	
 	/**
@@ -108,18 +140,20 @@ public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmo
 	 * @return modified plrEmc total
 	 */
 	public long vacuumItems(@NotNull Player player, @NotNull Level level, long plrEmc) {
+		int consumed = 0;
 		if (!BotaniaAPI.instance().hasSolegnoliaAround(player)) {
 			for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(7))) {
-				if (plrEmc >= 1 && isMagnetable(item)) {
+				if (consumed >= plrEmc) break;
+				if (isMagnetable(item)) {
 					if (ItemHelper.simulateFit(player.getInventory().items, item.getItem()) < item.getItem().getCount()) {
-						plrEmc -= EmcHelper.consumeAvaliableEmc(player, 1);
+						consumed += Math.max(1, item.getItem().getCount());
 						WorldHelper.gravitateEntityTowards(item, player.getX(), player.getY(), player.getZ());
 					}
 				}
 				
 			}
 		}
-		return plrEmc;
+		return consumed;
 	}
 	
 	// Slightly modified from Botanias ItemMagnetRing.canPullItem()

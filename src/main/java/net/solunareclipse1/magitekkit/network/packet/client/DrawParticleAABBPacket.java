@@ -1,12 +1,10 @@
 package net.solunareclipse1.magitekkit.network.packet.client;
 
-import java.util.Random;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
@@ -16,11 +14,33 @@ import net.minecraft.world.phys.Vec3;
 
 import net.minecraftforge.network.NetworkEvent;
 
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 
-import vazkii.botania.client.fx.WispParticleData;
-
-public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, int preset) {
+public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, ParticlePreset preset) {
+	
+	public enum ParticlePreset {
+		INVALID(-1),
+		DEBUG(0),
+		DEBUG_FILL(1),
+		SENTIENT_ARROW_TARGET_LOST(2);
+		public final int id;
+		
+		private ParticlePreset(int id) {
+			this.id = id;
+		}
+		
+		public static ParticlePreset fromId(int id) {
+			switch (id) {
+			
+			case 0: return ParticlePreset.DEBUG;
+			case 1: return ParticlePreset.DEBUG_FILL;
+			case 2: return ParticlePreset.SENTIENT_ARROW_TARGET_LOST;
+			
+			default: return ParticlePreset.INVALID;
+			}
+		}
+	}
 	
 	public void enc(FriendlyByteBuf buffer) {
 		buffer.writeDouble(cMin.x); //
@@ -31,46 +51,50 @@ public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, int preset) {
 		buffer.writeDouble(cMax.y); // max corner
 		buffer.writeDouble(cMax.z); //
 		
-		buffer.writeInt(preset); // particle preset
+		buffer.writeInt(preset.id); // particle preset
 	}
 
 	public static DrawParticleAABBPacket dec(FriendlyByteBuf buffer) {
 		return new DrawParticleAABBPacket(
 				new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble()), // min corner
 				new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble()), // max corner
-				buffer.readInt() // particle preset
+				ParticlePreset.fromId(buffer.readInt()) // particle preset
 		);
 	}
 	
 	public boolean handle(Supplier<NetworkEvent.Context> sup) {
         NetworkEvent.Context ctx = sup.get();
         ctx.enqueueWork(() -> {
-        	ClientLevel level = Minecraft.getInstance().level;
+        	@SuppressWarnings("resource")
+			ClientLevel level = Minecraft.getInstance().level;
         	AABB box = new AABB(cMin, cMax);
         	Vec3 cent = box.getCenter();
+        	boolean infRange = false;
         	ParticleOptions particle;
         	double stepSize = 0.1;
         	switch (preset) {
         	
-        	case -1: // debug fill
-        		MiscHelper.drawAABBWithParticles(box.deflate(0.05), ParticleTypes.DRIPPING_WATER, stepSize, level, true);
-        	case 0: // debug outline
+        	case DEBUG_FILL: // debug fill
+        		MiscHelper.drawAABBWithParticles(box, ParticleTypes.DRIPPING_WATER, stepSize, level, true, true);
+        	case DEBUG: // debug outline
         		particle = ParticleTypes.DRIPPING_LAVA;
+        		infRange = true;
         		break;
         		
-        	case 1: // smart arrow lost target
+        	case SENTIENT_ARROW_TARGET_LOST: // smart arrow lost target
         		stepSize = 1;
         		particle = ParticleTypes.ENCHANT;
         		break;
         	
         	default: // invalid
-        		level.playSound(null, cent.x, cent.y, cent.z, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.MASTER, 100, 1);
+				LoggerHelper.printWarn("DrawParticleAABBPacket", "InvalidPreset", "AABB particles preset " + preset + " is undefined!");
+        		level.playSound(null, cent.x, cent.y, cent.z, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.MASTER, 100, 2);
         		level.addAlwaysVisibleParticle(ParticleTypes.ELDER_GUARDIAN, cent.x, cent.y, cent.z, 0, 0, 0);
-        		MiscHelper.drawAABBWithParticles(box.deflate(0.05), ParticleTypes.DRAGON_BREATH, stepSize, level, true);
+        		MiscHelper.drawAABBWithParticles(box, ParticleTypes.DRAGON_BREATH, stepSize, level, true, true);
         		particle = ParticleTypes.CAMPFIRE_SIGNAL_SMOKE;
         		break;
         	}
-        	MiscHelper.drawAABBWithParticles(box, particle, stepSize, level, false);
+        	MiscHelper.drawAABBWithParticles(box, particle, stepSize, level, false, infRange);
         });
         return true;
     }

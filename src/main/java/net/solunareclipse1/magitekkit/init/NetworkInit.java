@@ -8,9 +8,13 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.GustParticlePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
+import net.solunareclipse1.magitekkit.network.packet.server.GravityAnvilItemRenamePacket;
 import net.solunareclipse1.magitekkit.network.packet.server.LeftClickAirPacket;
 
 public class NetworkInit {
@@ -34,6 +38,12 @@ public class NetworkInit {
                 .consumer(LeftClickAirPacket::handle)
                 .add();
         
+        CHANNEL.messageBuilder(GravityAnvilItemRenamePacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+				.encoder(GravityAnvilItemRenamePacket::enc)
+        		.decoder(GravityAnvilItemRenamePacket::dec)
+        		.consumer(GravityAnvilItemRenamePacket::handle)
+        		.add();
+        
         
         
         // server -> client
@@ -53,6 +63,24 @@ public class NetworkInit {
 				.encoder(DrawParticleAABBPacket::enc)
         		.decoder(DrawParticleAABBPacket::dec)
         		.consumer(DrawParticleAABBPacket::handle)
+        		.add();
+        
+        CHANNEL.messageBuilder(CreateLoopingSoundPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(CreateLoopingSoundPacket::enc)
+        		.decoder(CreateLoopingSoundPacket::dec)
+        		.consumer(CreateLoopingSoundPacket::handle)
+        		.add();
+        
+        CHANNEL.messageBuilder(ModifyPlayerVelocityPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ModifyPlayerVelocityPacket::enc)
+        		.decoder(ModifyPlayerVelocityPacket::dec)
+        		.consumer(ModifyPlayerVelocityPacket::handle)
+        		.add();
+        
+        CHANNEL.messageBuilder(GustParticlePacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(GustParticlePacket::enc)
+        		.decoder(GustParticlePacket::dec)
+        		.consumer(GustParticlePacket::handle)
         		.add();
     }
     

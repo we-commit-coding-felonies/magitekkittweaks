@@ -3,19 +3,19 @@ package net.solunareclipse1.magitekkit.data;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.tags.BlockTagsProvider;
 import net.minecraft.data.tags.ItemTagsProvider;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import moze_intel.projecte.gameObjs.PETags;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 
+import mekanism.common.tags.LazyTagLookup;
 import vazkii.botania.common.lib.ModTags;
 
 public class MGTKItemTags extends ItemTagsProvider {
@@ -25,6 +25,8 @@ public class MGTKItemTags extends ItemTagsProvider {
 
 	public void init() {
 	}
+	
+	public static final LazyTagLookup<Item> COVALENCE_DUST_LOOKUP = LazyTagLookup.create(ForgeRegistries.ITEMS, PETags.Items.COVALENCE_DUST);
 
     @Override
     protected void addTags() {

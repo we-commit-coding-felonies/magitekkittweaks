@@ -45,21 +45,18 @@ public class LayerHalo extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
 			if (!(stack.getItem() instanceof GemJewelryBase) || stack.isDamaged()) return;
 			if (stack.getItem() instanceof GemAmulet) {
 				GemAmulet amulet = (GemAmulet) stack.getItem();
-				emcLevel = (float) amulet.getStoredEmc(stack) / amulet.getMaximumEmc(stack);
+				emcLevel = (float)amulet.getStoredEmc(stack) / (float)amulet.getMaximumEmc(stack);
 			}
 		}
 		if (emcLevel <= 0) return;
 		int timer = Math.round(ageInTicks);
-		//if (timer % 20 == 0) System.out.println("EMC Percentage: "+emcLevel);
 		poseStack.pushPose();
 		renderer.getModel().jacket.translateAndRotate(poseStack);
 		poseStack.mulPose(Vector3f.XP.rotationDegrees(270)); // rotate upright
 		poseStack.scale(1.5f, 1.5f, 1.5f); // bigger!
 		poseStack.mulPose(Vector3f.YP.rotationDegrees(ageInTicks*0.6f % 360)); // spinny
 		poseStack.translate(-0.5, -0.25, -0.5); // positioning behind the head
-		ResourceLocation texture = HALO_TEXTURE;
-		// nerd
-		if (NERD_UUID.equals(player.getUUID())) texture = NERD_TEXTURE;
+		ResourceLocation texture = player.getUUID().equals(NERD_UUID) ? NERD_TEXTURE : HALO_TEXTURE; // nerd
 		VertexConsumer poly = renderBuffer.getBuffer(MGTKRenderType.HALO_RENDERER.apply(texture));
 		Matrix4f matrix4f = poseStack.last().pose();
 		Color c1 = Color.COVALENCE_GREEN_TRUE;

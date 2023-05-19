@@ -19,23 +19,25 @@ public class ColorsHelper {
 	 * <li> <b>R, G, B</b> = 0-255
 	 * <li> <b>H</b> = 0-360
 	 * <li> <b>S, V</b> = 0-100
+	 * <li> <b>I</b> = Integer color value (0xRRGGBB)
 	 */
 	public enum Color {
-		MIDGREEN(0, 128, 0, 120, 100, 50),
-		PHILOSOPHERS(179, 47, 103, 335, 74, 70),
-		COVALENCE_GREEN(0, 210, 74, 141, 100, 82),
-		COVALENCE_BLUE(0, 77, 210, 218, 100, 82),
-		COVALENCE_GREEN_TRUE(39, 210, 0, 109, 100, 82)
-		;
-		public final int R,G,B,H,S,V;
+		MIDGREEN(0, 128, 0, 120, 100, 50, 0x008000),
+		PHILOSOPHERS(179, 47, 103, 335, 74, 70, 0xb32f67),
+		COVALENCE_GREEN(0, 210, 74, 141, 100, 82, 0x00d149),
+		COVALENCE_TEAL(0, 209, 207, 179, 100, 82, 0x00d1cf),
+		COVALENCE_BLUE(0, 77, 210, 218, 100, 82, 0x004dd1),
+		COVALENCE_GREEN_TRUE(39, 210, 0, 109, 100, 82, 0x26d100);
+		public final int R,G,B,H,S,V,I;
 		
-		private Color(int r, int g, int b, int h, int s, int v) {
+		private Color(int r, int g, int b, int h, int s, int v, int i) {
 			R = r;
 			G = g;
 			B = b;
 			H = h;
 			S = s;
 			V = v;
+			I = i;
 		}
 	}
 	

@@ -32,19 +32,18 @@ public class MGTKItemModels extends ItemModelProvider {
         
         BandOfArcana bracelet = ObjectInit.GEM_BRACELET.get();
         ItemModelBuilder builder = getBuilder(bracelet.getRegistryName().getPath());
-        // 80 texture files for 1 item
-        // https://www.youtube.com/watch?v=KnhXwlFeRP8
+        // 80 auto-generated texture files for 1 item
         for (int i = 0; i < 10; i++) {
         	for (int j = 0; j < 2; j++) {
         		for (int k = 0; k < 2; k++) {
         			for (int l = 0; l < 2; l++) {
                        	builder.override()
-                       	.predicate(ClientInit.ARC_MODE, i)
-                   		.predicate(ClientInit.ARC_OFFENSIVE, j)
-                   		.predicate(ClientInit.ARC_LIQUID, k)
-                   		.predicate(ClientInit.ARC_WOFT, l)
-                       	.model(withExistingParent(String.format("item/gem_bracelet/mode%1$s_offensive%2$s_liquid%3$s_woft%4$s", i, j, k, l), "item/generated")
-                       	.texture("layer0", modLoc(String.format("item/curio/band_of_arcana/mode%1$s_offensive%2$s_liquid%3$s_woft%4$s", i, j, k, l))))
+                       	.predicate(ClientInit.BOA_MODE, i)
+                   		.predicate(ClientInit.BOA_COVALENCE, j)
+                   		.predicate(ClientInit.BOA_LIQUID, k)
+                   		.predicate(ClientInit.BOA_WOFT, l)
+                       	.model(withExistingParent(String.format("item/tool/band_of_arcana/mode%1$s_cov%2$s_liquid%3$s_woft%4$s", i, j, k, l), "item/generated")
+                       	.texture("layer0", modLoc(String.format("item/tool/band_of_arcana/mode%1$s_cov%2$s_liquid%3$s_woft%4$s", i, j, k, l))))
                        	.end();
         			}
         		}

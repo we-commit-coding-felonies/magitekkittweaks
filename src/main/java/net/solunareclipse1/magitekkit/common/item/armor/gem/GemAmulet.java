@@ -15,22 +15,33 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
 import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.api.capabilities.item.IItemEmcHolder;
 import moze_intel.projecte.capability.EmcHolderItemCapabilityWrapper;
 import moze_intel.projecte.gameObjs.items.ItemPE;
-import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.WorldHelper;
 
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.init.NetworkInit;
+import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.util.ColorsHelper;
+import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
+import net.solunareclipse1.magitekkit.util.PlrHelper;
+import net.solunareclipse1.magitekkit.util.ProjectileHelper;
+
+import mekanism.api.Coord4D;
+import mekanism.api.MekanismAPI;
 
 /**
  * Chestplate
@@ -77,7 +88,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
-		tips.add(new TranslatableComponent("tip.mgtk.gem_amulet").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.2").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	
 	//@Override
@@ -88,36 +99,185 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	
 	@Override
 	public void onArmorTick(ItemStack stack, Level level, Player player) {
-		long plrEmc = jewelryTick(stack, level, player);
-		
-		// leaks emc when below half durability
-		if (getDamage(stack) >= getMaxDamage(stack)/2) {
-			plrEmc = leakEmc(stack, level, player, plrEmc);
-		}
-		
-		// self-refilling
-		autoRefill(stack, player);
-		
-		// life stone
-		plrEmc = rejuvenatePlayer(level, player, plrEmc);
-		
-		// hum sound, should be done last so that plrEmc is accurate
-		if (level.getGameTime() % 160 == 0) { // nested if statement to we dont run shieldCondition every tick
-			if (shieldCondition(player, 1f, DamageSource.GENERIC, stack) && plrEmc > 0) {
-				level.playSound(player, player, EffectInit.SHIELD_AMBIENT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+		if (level.isClientSide) {
+			// Client
+			if (!stack.isDamaged()) {
+				GemJewelrySetInfo set = jewelryTick(stack, level, player);
+				long plrEmc = set.plrEmc();
+				
+				// This should be last, so that plrEmc is accurate!
+				if (plrEmc > 0 && level.getGameTime() % 160 == 0) {
+					shieldHum(player, stack);
+				}
+			}
+		} else {
+			// Server
+			GemJewelrySetInfo set = jewelryTick(stack, level, player);
+			long plrEmc = set.plrEmc();
+			if (!stack.isDamaged()) {
+				// gem of density
+				long amount = Math.min(CAPACITY/10, CAPACITY - getStoredEmc(stack));
+				if (amount > 0 && getInfo(player, EquipmentSlot.LEGS).pristine()) {
+					condenserRefill(stack, player, amount);
+					// recalculate plrEmc, since it could be desynced
+					plrEmc = EmcHelper.getAvaliableEmc(player);
+				}
+				
+				// life stone
+				if (!player.hasEffect(EffectInit.TRANSMUTING.get()) && plrEmc >= Constants.EmcCosts.JEWELRY_REJUVENATE && level.getGameTime() % 7 == 0) {
+					if (tryHeal(player)) {
+						plrEmc -= Constants.EmcCosts.JEWELRY_REJUVENATE;
+					}
+					// plrEmc might have changed, need to re-check
+					if (plrEmc >= Constants.EmcCosts.JEWELRY_REJUVENATE && tryFeed(player)) {
+						plrEmc -= Constants.EmcCosts.JEWELRY_REJUVENATE;
+					}
+				}
+				
+				
+				// This should be last, so that plrEmc is accurate!
+				if (plrEmc > 0 && level.getGameTime() % 160 == 0) {
+					shieldHum(player, stack);
+				}
+			} else {
+				// leaky when damaged
+				if (getDamage(stack) >= getMaxDamage(stack)/2) {
+					plrEmc -= tryLeak(stack, level, player, plrEmc);
+				}
 			}
 		}
 	}
 	
+	
+	private void shieldHum(Player player, ItemStack stack) {
+		if (shieldCondition(player, 1f, DamageSource.GENERIC, stack)) {
+			player.level.playSound(player, player, EffectInit.SHIELD_AMBIENT.get(), SoundSource.PLAYERS, 1, 1);
+		}
+	}
+	
+	private void condenserRefill(ItemStack stack, Player player, long requested) {
+		long consumed = EmcHelper.consumeAvaliableEmcExcludeSelf(player, requested, stack);
+		long needed = getNeededEmc(stack);
+		if (needed < consumed) {
+			player.level.playSound(null, player.blockPosition(), EffectInit.EMC_WASTE.get(), SoundSource.PLAYERS, 1, 1);
+			consumed = needed;
+		}
+		insertEmc(stack, consumed, EmcAction.EXECUTE);
+	}
+	
+	private boolean tryHeal(Player player) {
+		if (player.getHealth() < player.getMaxHealth()) {
+			player.heal(1);
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean tryFeed(Player player) {
+		if (player.getFoodData().needsFood()) {
+			player.getFoodData().eat(1, 10);
+			return true;
+		}
+		return false;
+	}
+	
+	private long tryLeak(ItemStack stack, Level level, Player player, long plrEmc) {
+		if (plrEmc > 0) {
+			int remaining = getMaxDamage(stack)-getDamage(stack);
+			if (Math.round(level.getGameTime() % remaining) == 0) {
+				return EmcHelper.consumeAvaliableEmc(player, doLeak(stack, level, player, Math.max(remaining, 16))-1);
+			}
+		}
+		return 0;
+	}
+	
+	public long doLeak(ItemStack stack, Level level, Player player, int shenanigansChance) {
+		long consumed = extractEmc(stack, 1, EmcAction.EXECUTE);
+		if (consumed > 0) {
+			level.playSound(null, player.blockPosition(), EffectInit.EMC_LEAK.get(), SoundSource.PLAYERS, 1, 1);
+			if (player.getRandom().nextInt(shenanigansChance) == 0) {
+				consumed += doShenanigans(stack, level, player);
+			}
+		}
+		return consumed;
+	}
+	
+	private long doShenanigans(ItemStack stack, Level level, Player player) {
+		Random rand = player.getRandom();
+		long consumed = 0;
+		AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), rand.nextInt(1,14), rand.nextInt(1,14), rand.nextInt(1,14));
+		switch (rand.nextInt(1,14)) {
+		case 1:
+			MiscHelper.funnySound(rand, level, player.blockPosition());
+			consumed++;
+			break;
+		case 2:
+			WorldHelper.freezeInBoundingBox(level, area, player, true);
+			consumed += Constants.EmcCosts.BOA_TEMPERATURE;
+			break;
+		case 3:
+			WorldHelper.extinguishNearby(level, player);
+			consumed += Constants.EmcCosts.BOA_TEMPERATURE;
+			break;
+		case 4:
+			MiscHelper.burnInBoundingBox(level, area, player, false);
+			consumed += Constants.EmcCosts.BOA_TEMPERATURE;
+			break;
+		case 5:
+			WorldHelper.growNearbyRandomly(rand.nextBoolean(), level, player.blockPosition(), player);
+			consumed += Constants.EmcCosts.BOA_BONEMEAL;
+			break;
+		case 6:
+			for (int i = 0; i < rand.nextInt(1,14); i++) {
+				WorldHelper.repelEntitiesSWRG(level, area, player);
+				consumed += i;
+			}
+			break;
+		case 7:
+			ModifyPlayerVelocityPacket pkt = new ModifyPlayerVelocityPacket(new Vec3(rand.nextInt(-1, 2),rand.nextInt(-1, 2),rand.nextInt(-1, 2)), (byte)rand.nextInt(-1, 4));
+			NetworkInit.toClient(pkt, (ServerPlayer)player);
+			break;
+		case 8:
+			consumed += Constants.EmcCosts.BOA_ARROW*ProjectileHelper.fiftyTwoCardPickup(rand, level, player, true);
+			break;
+		case 9:
+			MiscHelper.pokeNearby(level, player, stack);
+			break;
+		case 10:
+			if (player instanceof ServerPlayer) { // TODO: this check might be unneccessary
+				MiscHelper.smiteSelf(level, (ServerPlayer) player);
+				consumed += Constants.EmcCosts.BOA_LIGHTNING;
+			} break;
+		case 11:
+			long oldXp = PlrHelper.getXp(player);
+			player.giveExperienceLevels(rand.nextInt(-1, 2));
+			long diff = PlrHelper.getXp(player) - oldXp;
+			consumed += Math.max(0, diff);
+			break;
+		case 12:
+			player.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 100, 0));
+			break;
+		case 13:
+			consumed += rand.nextInt(1, 8193);
+			double sv = Math.pow(2d, (9d*consumed)/8192d );
+			MekanismAPI.getRadiationManager().radiate(new Coord4D(player), sv);
+			break;
+		}
+		
+		//if (consumed < 0) consumed = Long.MAX_VALUE;
+		
+		return consumed;
+	}
+	
+	/*
+	 * OLD
 	/**
 	 * Fills an ItemStack to max EMC capacity, pulling from the players inventory
 	 * @param stack
 	 * @param player
-	 */
 	public void autoRefill(ItemStack stack, Player player) {
 		long needed = CAPACITY - getStoredEmc(stack);
-		long consumed = EmcHelper.consumeAvaliableEmcExcludeSelf(player, CAPACITY - getStoredEmc(stack), stack);
-		if (consumed > needed) System.out.println("CRINGE DETECTED!");
+		long consumed = EmcHelper.consumeAvaliableEmcExcludeSelf(player, needed, stack);
 		insertEmc(stack, consumed, EmcAction.EXECUTE); 
 	}
 	
@@ -163,7 +323,6 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	 * Does random stuff when called, most of which isnt pleasant
 	 * 
 	 * @return emc consumed by shenanigans
-	 */
 	public long performShenanigans(ItemStack stack, Level level, Player player, long plrEmc) {
 		Random rand = player.getRandom();
 		long consumed = 0;
@@ -219,7 +378,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 		if (consumed < 0) consumed = Long.MAX_VALUE;
 		
 		return EmcHelper.consumeAvaliableEmc(player, consumed);
-	}
+	}*/
 	
 	// Built-in klein star stuff
 	// Modified from KleinStar.java

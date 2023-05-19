@@ -1,7 +1,9 @@
 package net.solunareclipse1.magitekkit.common.event;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,9 +20,8 @@ import moze_intel.projecte.events.PlayerEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
+import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
-import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 import morph.avaritia.entity.InfinityArrowEntity;
@@ -41,6 +42,7 @@ public class EntityLivingEventHandler {
 		Entity ent = event.getEntity();
 		
 		// this fixes the server getting stuck in an infinite loop when hit by piercing smart arrows
+		// TODO: check if this is actually necessary
 		if (ent instanceof EntityDoppleganger gaia && gaia.getInvulTime() > 0) {
 			if (event.getSource().getDirectEntity() instanceof SmartArrow arrow) {
 				arrow.becomeInert();
@@ -92,11 +94,34 @@ public class EntityLivingEventHandler {
 	
 	@SubscribeEvent
 	public static void livingHurt(LivingHurtEvent event) {
-		float dmg = event.getAmount();
-		if (dmg > 0) {
+		if (event.getAmount() > 0) {
 			LivingEntity entity = event.getEntityLiving();
 			DamageSource source = event.getSource();
-			float drVal = 0, newDmg = dmg;
+			Map<ItemStack, Float> absorbList = new HashMap<>();
+			float totalDr = 0;
+			for (ItemStack stack : entity.getArmorSlots()) {
+				if (!stack.isEmpty() && stack.getItem() instanceof IDamageReducer drItem) {
+					float dr = drItem.getDr(stack, source);
+					totalDr += dr;
+					absorbList.put(stack, dr);
+				}
+			}
+			if (totalDr > 0) {
+				if (totalDr >= 1) {
+					event.setCanceled(true);
+				} else {
+					event.setAmount( event.getAmount() * (1f - totalDr) );
+				}
+				entity.level.playSound(null, entity, EffectInit.ARMOR_ABSORB.get(), entity.getSoundSource(), Math.min(1, totalDr), 1);
+				for (Entry<ItemStack, Float> absorber : absorbList.entrySet()) {
+					ItemStack stack = absorber.getKey();
+					float absorbed = absorber.getValue()*event.getAmount();
+					absorber.getKey().hurtAndBreak((int)absorbed, entity, ent -> {
+						// TODO: gem explosion
+					});
+				}
+			}
+			/*float drVal = 0, newDmg = dmg;
 			for (ItemStack stack : entity.getArmorSlots()) {
 				if (stack.isEmpty()) continue;
 				if (stack.getItem() instanceof VoidArmorBase) {
@@ -104,7 +129,7 @@ public class EntityLivingEventHandler {
 				}
 			}
 			newDmg *= 1 - drVal;
-			if (newDmg <= 0) event.setCanceled(true); else event.setAmount(newDmg);
+			if (newDmg <= 0) event.setCanceled(true); else event.setAmount(newDmg);*/
 			
 		}
 	}
@@ -147,21 +172,21 @@ public class EntityLivingEventHandler {
 	 * @param entity the wearer
 	 * @return percent damage reduction item should provide
 	 */
-	private static float calcDr(ItemStack stack, DamageSource source, LivingEntity entity) {
-		if (isUnblockableSource(source)) return 0;
-		VoidArmorBase item = (VoidArmorBase) stack.getItem();
-		float drMod = 1; // 100% of the dr
-		if (source.isBypassMagic()) drMod = 0.5f;
-		else if (source.isBypassArmor()) drMod = 0.9f;
-		entity.level.playSound(null, entity.blockPosition(), EffectInit.ARMOR_ABSORB.get(), SoundSource.PLAYERS, 0.1f, 1);
-		if (item instanceof GemJewelryBase) {
-			// gem jewelry always 100% dr, instead takes more dura damage
-			int dmg = 1; // 1, 2 if bypass armor, 3 if bypass magic
-			if (drMod < 1f) dmg = drMod < 0.9f ? 3 : 2;
-			stack.hurtAndBreak(dmg, entity, ent -> {});
-			//item.damageItem(stack, dmg, entity, ent -> {});
-			return item.getDr(stack);
-		}
-		return item.getDr(stack) * drMod;
-	}
+	//private static float calcDr(ItemStack stack, DamageSource source, LivingEntity entity) {
+	//	if (isUnblockableSource(source)) return 0;
+	//	VoidArmorBase item = (VoidArmorBase) stack.getItem();
+	//	float drMod = 1; // 100% of the dr
+	//	if (source.isBypassMagic()) drMod = 0.5f;
+	//	else if (source.isBypassArmor()) drMod = 0.9f;
+	//	entity.level.playSound(null, entity.blockPosition(), EffectInit.ARMOR_ABSORB.get(), SoundSource.PLAYERS, 0.1f, 1);
+	//	if (item instanceof GemJewelryBase) {
+	//		// gem jewelry always 100% dr, instead takes more dura damage
+	//		int dmg = 1; // 1, 2 if bypass armor, 3 if bypass magic
+	//		if (drMod < 1f) dmg = drMod < 0.9f ? 3 : 2;
+	//		stack.hurtAndBreak(dmg, entity, ent -> {});
+	//		//item.damageItem(stack, dmg, entity, ent -> {});
+	//		return item.getDr(stack);
+	//	}
+	//	return item.getDr(stack) * drMod;
+	//}
 }

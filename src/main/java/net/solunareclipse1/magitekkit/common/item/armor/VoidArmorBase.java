@@ -1,14 +1,14 @@
 package net.solunareclipse1.magitekkit.common.item.armor;
 
-import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
@@ -17,13 +17,27 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ProtectionEnchantment;
 import net.minecraft.world.level.Level;
 
-import moze_intel.projecte.api.capabilities.PECapabilities;
-import moze_intel.projecte.gameObjs.registries.PESoundEvents;
-
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
+import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.util.EntityHelper;
 
-public class VoidArmorBase extends MGTKArmorItem {
+import mekanism.common.registries.MekanismDamageSource;
+
+public class VoidArmorBase extends MGTKArmorItem implements IDamageReducer {
 	private float baseDr;
+	
+	/** Damage sources with corresponging DR multipliers. 0.5 would mean 1/2 DR */
+	public static final Map<DamageSource, Float> DMG_SRC_MODS_DR = new HashMap<>();
+	/** Damage sources in here will *never* be affected by DR */
+	public static DamageSource[] dmgSrcBlacklistDr = {
+			DamageSource.DROWN,
+			DamageSource.FREEZE,
+			DamageSource.OUT_OF_WORLD,
+			DamageSource.STARVE,
+			MekanismDamageSource.RADIATION,
+			DamageSource.WITHER
+	};
 	/**
 	 * Semiclone of Dark Matter armor. <br>
 	 * Has reduced damage reduction when enchanted. <br>
@@ -36,13 +50,11 @@ public class VoidArmorBase extends MGTKArmorItem {
 	public VoidArmorBase(ArmorMaterial mat, EquipmentSlot slot, Properties props, float baseDr) {
 		super(mat, slot, props);
 		this.baseDr = baseDr;
-	}
-	
-	@Override
-	public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-		System.out.println(entity.getName());
-		entity.level.playSound(null, entity, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
-		return 0;
+
+		DMG_SRC_MODS_DR.put(DamageSource.LIGHTNING_BOLT, 0.99f/4f);
+		DMG_SRC_MODS_DR.put(DamageSource.ANVIL, 0.1f/4f);
+		DMG_SRC_MODS_DR.put(DamageSource.badRespawnPointExplosion(), 0.8f/4f);
+		DMG_SRC_MODS_DR.put(MekanismDamageSource.LASER, 0.12f/4f);
 	}
 	
 	@Override
@@ -50,13 +62,10 @@ public class VoidArmorBase extends MGTKArmorItem {
 		//if (level.getGameTime() % 160 != 0) return;
 		//level.playSound(null, player, SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 0.3F, 0.5F);
 	}
-
-	/**
-	 * Gets the max possible damage reduction value of this item
-	 * 
-	 * @return Damage Reduction percentage
-	 */
-	public float getDrMax() {return this.baseDr;}
+	
+	public float getBaseDr() {
+		return baseDr;
+	}
 	
 	/**
 	 * Gets the current damage reduction value this itemstack can provide
@@ -64,7 +73,44 @@ public class VoidArmorBase extends MGTKArmorItem {
 	 * @param stack the stack 
 	 * @return
 	 */
-	public float getDr(ItemStack stack) {return this.baseDr;}
+	public float getDr(ItemStack stack, DamageSource source) {
+		if (sourceCanBeReduced(source)) {
+			return getDrForSource(source);
+		}
+		return 0;
+	}
+	
+	public static boolean sourceCanBeReduced(DamageSource source) {
+		// hardcoded checks for things that should absolutely never be blocked
+		if (source.isCreativePlayer()
+			|| source.isBypassInvul()
+			|| EntityHelper.isDamageSourceInfinite(source)) {
+			return false;
+		}
+		if (source instanceof MGTKDmgSrc src && src.isBypassDr()) return false;
+		
+		for (int i = 0; i < dmgSrcBlacklistDr.length; i++) {
+			if (source == dmgSrcBlacklistDr[i]) return false;
+		}
+		return true;
+	}
+	
+	public float getDrForSource(DamageSource source) {
+		// explicit overrides
+		if (DMG_SRC_MODS_DR.containsKey(source)) {
+			return DMG_SRC_MODS_DR.get(source);
+		}
+		
+		float dr = getBaseDr();
+		if (source.isBypassArmor()) dr *= 0.9;
+		if (source.isMagic() || source.isBypassMagic()) dr *= 0.75;
+		if (source.isFire()) dr *= 1.1;
+		if (source instanceof MGTKDmgSrc src) {
+			if (src.isPlasma()) dr *= 1.1;
+			if (src.isAlchemy()) dr -= 0.2;
+		}
+		return dr;
+	}
 	
 	@Override
 	public boolean isEnchantable(@NotNull ItemStack stack) {return true;}
@@ -73,7 +119,6 @@ public class VoidArmorBase extends MGTKArmorItem {
 	@Override
 	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {
 		if (ench instanceof ProtectionEnchantment) return false;
-		System.out.println(PECapabilities.EMC_STORAGE_CAPABILITY);
 		return true;
 	}
 	

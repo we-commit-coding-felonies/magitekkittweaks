@@ -9,6 +9,7 @@ import com.google.common.collect.Multimap;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -35,6 +36,7 @@ import net.solunareclipse1.magitekkit.util.EmcHelper;
  * @author solunareclipse1
  */
 public class CurioCovalentCapabilityWrapper extends CovalentCapabilityWrapper<ICurio> implements ICurio {
+	ItemStack oldStack = ItemStack.EMPTY;
 	
 	@Override
 	public Capability<ICurio> getCapability() {
@@ -50,10 +52,11 @@ public class CurioCovalentCapabilityWrapper extends CovalentCapabilityWrapper<IC
 	@Override
 	public void curioTick(SlotContext ctx) {
 		if (ctx.cosmetic()) return;
-		if (ctx.entity() instanceof Player) {
+		if (ctx.entity() instanceof Player && getState()) {
 			//if (!getState()) setState(true);
 			if (getPoolNeeded() > 0) {
-				setPool(EmcHelper.consumeAvaliableEmc((Player) ctx.entity(), getPoolNeeded()));
+				long consumed = EmcHelper.consumeAvaliableEmc((Player) ctx.entity(), getPoolNeeded());
+				setPool(Mth.clamp(getPool() + consumed, 0, getPoolMax()));
 			}
 		}
 		getItem().curioTick(ctx);

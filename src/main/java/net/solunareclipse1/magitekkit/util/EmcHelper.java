@@ -1,14 +1,17 @@
 package net.solunareclipse1.magitekkit.util;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
-import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -22,6 +25,7 @@ import moze_intel.projecte.utils.EMCHelper;
 import moze_intel.projecte.utils.PlayerHelper;
 
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
+import net.solunareclipse1.magitekkit.data.MGTKItemTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 /**
@@ -30,6 +34,22 @@ import net.solunareclipse1.magitekkit.init.EffectInit;
  * @author solunareclipse1
  */
 public class EmcHelper {
+	/**
+	 * if this is null, it should be initialized when needed<br>
+	 * @see EmcHelper.initializeCovalenceDustMap()
+	 */
+	public static List<Item> COVALENCE_MAP = null;
+	
+	public static void initializeCovalenceDustMap() {
+		if (COVALENCE_MAP != null) {
+			LoggerHelper.printWarn("EmcHelper", "CovMapAlreadyInitialized", "Tried to initialize COVALENCE_DUST_MAP, but it already is!");
+			return;
+		}
+		COVALENCE_MAP = MGTKItemTags.COVALENCE_DUST_LOOKUP.tag().stream()
+			.filter(EMCHelper::doesItemHaveEmc)
+			.sorted(Comparator.comparing(EMCHelper::getEmcValue))
+			.toList();
+	}
 	
 	/**
 	 * checks if the player has any emc <br>
@@ -164,7 +184,6 @@ public class EmcHelper {
 				ItemStack stack = inv.getStackInSlot(i);
 				if (stack.isEmpty()) continue;
 				if ( stack.getItem() instanceof GemAmulet ) {
-					System.out.println(i);
 				}
 				
 				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
@@ -187,7 +206,10 @@ public class EmcHelper {
 	}
 	
 	/**
-	 * Same as consumeAvaliableEmc() but will ignore a specific itemstack
+	 * Same as consumeAvaliableEmc() but will ignore a specific itemstack <br>
+	 * also doesnt play the "wasted emc" sound
+	 * <p>
+	 * intended for use with auto-refilling klein stars
 	 * 
 	 * @param player
 	 * @param toConsume
@@ -202,7 +224,7 @@ public class EmcHelper {
 
 		ItemStack offhand = player.getOffhandItem();
 		if (!offhand.isEmpty() && offhand != excluded) {
-			consumed = consumeAvaliableEmcOfStack(offhand, toConsume - totalConsumed, player);
+			consumed = consumeAvaliableEmcOfStack(offhand, toConsume - totalConsumed);
 			if (consumed != 0) {
 				didConsume = true;
 				totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
@@ -219,7 +241,7 @@ public class EmcHelper {
 			for (int i = 0; i < curios.getSlots(); i++) {
 				ItemStack stack = curios.getStackInSlot(i);
 				if (stack.isEmpty() || stack == excluded) continue;
-				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
 				if (consumed != 0) {
 					didConsume = true;
 					totalConsumed += addEmcToTotal(totalConsumed, consumed, player);
@@ -240,7 +262,7 @@ public class EmcHelper {
 				ItemStack stack = inv.getStackInSlot(i);
 				if (stack.isEmpty() || stack == excluded) continue;
 				
-				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed, player);
+				consumed = consumeAvaliableEmcOfStack(stack, toConsume - totalConsumed);
 				
 				
 				if (consumed != 0) {
@@ -300,7 +322,6 @@ public class EmcHelper {
 				stack.shrink(itemsToConsume);
 			}
 		}
-		if (consumed > toConsume) System.out.println(consumed +" and "+ toConsume);
 		if (consumed < 0) return Long.MAX_VALUE;
 		return consumed;
 	}
@@ -331,7 +352,7 @@ public class EmcHelper {
 				stack.shrink(itemsToConsume);
 			}
 		}
-		if (consumed > toConsume) player.getLevel().playSound(null, player, EffectInit.EMC_WASTE.get(), SoundSource.PLAYERS, 1, 1);
+		if (consumed > toConsume) player.getLevel().playSound(null, player.blockPosition(), EffectInit.EMC_WASTE.get(), SoundSource.PLAYERS, 1, 1);
 		if (consumed < 0) return Long.MAX_VALUE;
 		return consumed;
 	}
@@ -354,5 +375,38 @@ public class EmcHelper {
 		long newTotal = currentTotal + toBeAdded;
 		if (newTotal < 0) return Long.MAX_VALUE;
 		return newTotal;
+	}
+	
+	/**
+	 * Takes a given amount of emc, and calculates the smallest amount of covalence dust needed to represent it <br>
+	 * designed to support both extra covalence dust items (using the item tag) and any values the dusts might have
+	 * <p><br>
+	 * Example: Passing in an emc value of 796, it would return (using projecte's default covalence values of 208, 8, 1):
+	 * <li> 3 High Covalence Dust (624 emc)
+	 * <li> 21 Medium Covalence Dust (168 emc)
+	 * <li> 4 Low Covalence Dust (3 emc) <br>
+	 * as an array: {3, 21, 4}
+	 * <br><br>
+	 * @param emc
+	 * @return Map
+	 */
+	public static Map<Item, Long> emcToCovalenceDust(long emc) {
+		if (COVALENCE_MAP == null) {
+			initializeCovalenceDustMap();
+		}
+		Map<Item, Long> items = new HashMap<>();
+		long total = emc;
+		//long[] itemCount = new long[COVALENCE_MAP.size()];
+		for (int i = COVALENCE_MAP.size()-1; i >= 0; i--) {
+			long val = EMCHelper.getEmcValue(COVALENCE_MAP.get(i));
+			if (total >= val) {
+				long count = total / val;
+				items.put(COVALENCE_MAP.get(i), count);
+				total -= count*val;
+			} else {
+				items.put(COVALENCE_MAP.get(i), 0l);
+			}
+		}
+		return items;
 	}
 }

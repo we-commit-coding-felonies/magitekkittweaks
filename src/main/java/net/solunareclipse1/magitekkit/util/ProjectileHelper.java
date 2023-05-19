@@ -1,14 +1,18 @@
 package net.solunareclipse1.magitekkit.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.Level;
@@ -16,105 +20,131 @@ import net.minecraft.world.phys.Vec3;
 
 import moze_intel.projecte.gameObjs.entity.EntityHomingArrow;
 
+import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
+import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
+
 /**
  * Contains stuff for working with / firing projectiles
  * @author solunareclipse1
  */
 public class ProjectileHelper {
 	
-	/**
-	 * Conjures an arrow
-	 */
-	//public static void conjureArrow(Projectile proj, LivingEntity shooter, float velocity, float spread) {
-	//	float pX = player.getXRot(),
-	//			pY = player.getYRot(),
-	//			pZ = 0,
-	//			pVelocity = 5,
-	//			pInaccuracy = 0;
-	//	float f = -Mth.sin(pY * ((float)Math.PI / 180F)) * Mth.cos(pX * ((float)Math.PI / 180F));
-	//	float f1 = -Mth.sin((pX + pZ) * ((float)Math.PI / 180F));
-	//	float f2 = Mth.cos(pY * ((float)Math.PI / 180F)) * Mth.cos(pX * ((float)Math.PI / 180F));
-	//	if (true) { // arrow.shoot((double)f, (double)f1, (double)f2, pVelocity, pInaccuracy);
-	//		pX = f; pY = f1; pZ = f2;
-	//		Vec3 vec3 = (new Vec3(pX, pY, pZ)).normalize().add(arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy, arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy, arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy).scale((double)pVelocity);
-	//		arrow.setDeltaMovement(vec3);
-	//		double d0 = vec3.horizontalDistance();
-	//		arrow.setYRot((float)(Mth.atan2(vec3.x, vec3.z) * (double)(180F / (float)Math.PI)));
-	//		arrow.setXRot((float)(Mth.atan2(vec3.y, d0) * (double)(180F / (float)Math.PI)));
-	//		arrow.yRotO = arrow.getYRot();
-	//		arrow.xRotO = arrow.getXRot();
-	//	}
-	//	Vec3 vec3 = pShooter.getDeltaMovement();
-	//	arrow.setDeltaMovement(arrow.getDeltaMovement().add(vec3.x, shooter.isOnGround() ? 0.0D : vec3.y, vec3.z));
-	//}
+	public static class ShootContext {
+		@NotNull
+		final Level level;
+		
+		@Nullable
+		final LivingEntity shooter;
+		
+		@Nullable
+		final Vec3 pos, rot;
+		
+		public ShootContext(Level level, LivingEntity shooter) {
+			this.level = level;
+			this.shooter = shooter;
+			this.pos = null;
+			this.rot = new Vec3(shooter.getXRot(), shooter.getYRot(), 0);
+		}
+		public ShootContext(Level level, LivingEntity shooter, Vec3 rot) {
+			this.level = level;
+			this.shooter = shooter;
+			this.pos = null;
+			this.rot = rot;
+		}
+		public ShootContext(Level level, Vec3 pos, Vec3 rot) {
+			this.level = level;
+			this.shooter = null;
+			this.pos = pos;
+			this.rot = rot;
+		}
+	}
+	
+	public record ArrowOptions(float damage, float velocity, float spread, byte pierce, boolean crit, Pickup pickup) {}
+	
+	public enum ArrowType {
+		NORMAL,
+		STRAIGHT,
+		SMART,
+		HOMING,
+		SENTIENT;
+		
+		AbstractArrow make(ShootContext ctx, ArrowOptions opts) {
+			AbstractArrow arrow;
+			switch (this) {
+			case STRAIGHT:
+				if (ctx.shooter == null) {
+					LoggerHelper.printWarn("ProjectileHelper.ArrowType.make()", "UnsupportedNullShooter", "Attempted to create arrow of type "+this.name()+" with a null shooter, but that type does not support it. Falling back on a normal arrow.");
+					arrow = new Arrow(ctx.level, ctx.pos.x, ctx.pos.y, ctx.pos.z);
+					arrow.setBaseDamage(opts.damage);
+				} else arrow = new SmartArrow(ctx.level, ctx.shooter, opts.damage, 20, (byte) 2);
+				arrow.setNoGravity(true);
+				break;
+			case SMART:
+				if (ctx.shooter == null) {
+					LoggerHelper.printWarn("ProjectileHelper.ArrowType.make()", "UnsupportedNullShooter", "Attempted to create arrow of type "+this.name()+" with a null shooter, but that type does not support it. Falling back on a normal arrow.");
+					arrow = new Arrow(ctx.level, ctx.pos.x, ctx.pos.y, ctx.pos.z);
+					arrow.setBaseDamage(opts.damage);
+				} else arrow = new SmartArrow(ctx.level, ctx.shooter, opts.damage);
+				break;
+			case HOMING:
+				if (ctx.shooter == null) {
+					LoggerHelper.printWarn("ProjectileHelper.ArrowType.make()", "UnsupportedNullShooter", "Attempted to create arrow of type "+this.name()+" with a null shooter, but that type does not support it. Falling back on a normal arrow.");
+					arrow = new Arrow(ctx.level, ctx.pos.x, ctx.pos.y, ctx.pos.z);
+					arrow.setBaseDamage(opts.damage);
+				} else arrow = new EntityHomingArrow(ctx.level, ctx.shooter, opts.damage);
+				break;
+			case SENTIENT:
+				arrow = ctx.shooter == null ?
+						new SentientArrow(ctx.level, ctx.pos.x, ctx.pos.y, ctx.pos.z) :
+						new SentientArrow(ctx.level, ctx.shooter);
+				arrow.setGlowingTag(true);
+				arrow.setBaseDamage(opts.damage);
+				break;
+				
+			default:
+				arrow = ctx.shooter == null ?
+						new Arrow(ctx.level, ctx.pos.x, ctx.pos.y, ctx.pos.z) :
+						new Arrow(ctx.level, ctx.shooter);
+				arrow.setBaseDamage(opts.damage);
+				break;
+			}
+			if (ctx.shooter != null) {
+				arrow.shootFromRotation(ctx.shooter, (float)ctx.rot.x, (float)ctx.rot.y, 0, opts.velocity, opts.spread);
+			} else {
+				float mx = -Mth.sin((float) (ctx.rot.y * (Math.PI / 180d))) * Mth.cos((float) (ctx.rot.x * (Math.PI / 180d)));
+				float my = -Mth.sin((float) ((ctx.rot.x + ctx.rot.z) * (Math.PI / 180d)));
+				float mz = Mth.cos((float) (ctx.rot.y * (Math.PI / 180d))) * Mth.cos((float) (ctx.rot.x * (Math.PI / 180d)));
+				Random rand = ctx.level.random;
+				Vec3 m = new Vec3(mx, my, mz).normalize().add(rand.nextGaussian() * 0.0075d * opts.spread, rand.nextGaussian() * 0.0075d * opts.spread, rand.nextGaussian() * 0.0075d * opts.spread).scale(opts.velocity);
+				arrow.setDeltaMovement(m);
+			}
+			arrow.setPierceLevel(opts.pierce);
+			arrow.setCritArrow(opts.crit);
+			arrow.pickup = opts.pickup;
+			return arrow;
+		}
+	}
 	
 	/**
-	 * Helper for shooting arrows <br>
-	 * contains way too goddamn many options
+	 * helper for shooting arrows
+	 * @param amount number of arrows to shoot
+	 * @param type what kind of arows to shoot
+	 * @param ctx the context of shooting
+	 * @param opts universal arrow settings
 	 * 
-	 * @param level The level to shoot in
-	 * @param shooter who is shooting the arrow
-	 * @param damage the base damage of the arrow
-	 * @param vel the velocity of the arrow
-	 * @param spread inaccuracy
-	 * @param pierce level of pierce enchant
-	 * @param crit if the arrow has crit particles
-	 * @param homing if true, arrow will be a ProjectE homing arrow
-	 * @param pickup pickupability of arrow
+	 * @return array of all arrows shot
 	 */
-	public static void shootArrow(Level level, LivingEntity shooter, float damage, float vel, float spread, byte pierce, boolean crit, boolean homing, Pickup pickup) {
-		Arrow arrow = null;
-		if (homing) {
-			arrow = new EntityHomingArrow(level, shooter, damage);
+	public static List<AbstractArrow> shootArrow(int amount, ArrowType type, ShootContext ctx, ArrowOptions opts) {
+		List<AbstractArrow> arrows = new ArrayList<>(amount);
+		for (int i = 0; i < amount; i++) {
+			AbstractArrow a = type.make(ctx, opts);
+			ctx.level.addFreshEntity(a);
+			ctx.level.playSound(null, a.getX(), a.getY(), a.getZ(),
+					SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS,
+					1f, 1f / (ctx.level.getRandom().nextFloat() * 0.4f + 1.2f) + (opts.velocity/3f) * 0.5f);
+			arrows.add(a);
 		}
-		else {
-			arrow = new Arrow(level, shooter);
-			arrow.setBaseDamage(damage);
-		}
-		arrow.shootFromRotation(shooter, shooter.getXRot(), shooter.getYRot(), 0, vel, spread);
-		arrow.setPierceLevel(pierce);
-		arrow.setCritArrow(crit);
-		arrow.pickup = pickup;
-		
-		level.addFreshEntity(arrow);
-		level.playSound(null, shooter, SoundEvents.ARROW_SHOOT, shooter.getSoundSource(), 1.0F, Math.min(2, 1.0F / (level.random.nextFloat() * 0.4F + 1.2F) + (vel / 3) * 0.5F));
-	}
-
-	/**
-	 * 
-	 * 
-	 * @param level The level to shoot in
-	 * @param shooter who is shooting the arrow
-	 * @param damage the base damage of the arrow
-	 * @param vel the velocity of the arrow
-	 * @param spread inaccuracy
-	 * @param pierce level of pierce enchant
-	 * @param crit if the arrow has crit particles
-	 * @param homing if true, arrow will be a ProjectE homing arrow
-	 * @param pickup pickupability of arrow <br><br>
-	 * @param effects MobEffectInstance(s) to apply to this arrow
-	 */
-	public static void shootArrowTipped(Level level, LivingEntity shooter, float damage, float vel, float spread, byte pierce, boolean crit, boolean homing, Pickup pickup, MobEffectInstance... effects) {
-		Arrow arrow = null;
-		if (homing) {
-			arrow = new EntityHomingArrow(level, shooter, damage);
-		}
-		else {
-			arrow = new Arrow(level, shooter);
-			arrow.setBaseDamage(damage);
-		}
-		
-		arrow.shootFromRotation(shooter, shooter.getXRot(), shooter.getYRot(), 0, vel, spread);
-		arrow.setPierceLevel(pierce);
-		arrow.setCritArrow(crit);
-		arrow.pickup = pickup;
-		
-		for (MobEffectInstance effect : effects) {
-			arrow.addEffect(effect);
-		}
-		
-		level.addFreshEntity(arrow);
-		level.playSound(null, shooter, SoundEvents.ARROW_SHOOT, shooter.getSoundSource(), 1.0F, Math.min(2, 1.0F / (level.random.nextFloat() * 0.4F + 1.2F) + (vel / 3) * 0.5F));
+		return arrows;
 	}
 	
 	/**
@@ -150,7 +180,6 @@ public class ProjectileHelper {
 				level.playSound(null, player, SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, 2.5F / (rand.nextFloat() * 0.4F + 1.2F));
 			}
 		}
-		//System.out.println(summoned);
 		return summoned;
 	}
 }

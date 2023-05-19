@@ -1,62 +1,229 @@
 {
-  "item.alchshield.ambient": {
-    "subtitle": "subtitles.mgtk.alchshield.ambient",
-    "sounds": [{
-        "name": "minecraft:block/beacon/ambient",
-        "pitch": 0.5
-    }]
-  },
+    "alchshield.ambient": {
+        "subtitle": "subtitles.mgtk.alchshield.ambient",
+        "sounds": [{
+            "name": "minecraft:block/beacon/ambient",
+            "pitch": 0.5
+        }]
+    },
+    "alchshield.fail": {
+        "subtitle": "subtitles.mgtk.alchshield.fail",
+        "sounds": [ "magitekkit:alchshield/fail" ]
+    },
+    "alchshield.ignored": {
+        "subtitle": "subtitles.mgtk.alchshield.ignored"
+    },
+    "alchshield.protect": {
+        "subtitle": "subtitles.mgtk.alchshield.protect",
+        "sounds": [ "magitekkit:alchshield/protect" ]
+    },
 
-  "item.alchshield.protect": {
-    "subtitle": "subtitles.mgtk.alchshield.protect",
-    "sounds": [ "magitekkit:item/alchshield/protect" ]
-  },
 
-  "item.alchshield.fail": {
-    "subtitle": "subtitles.mgtk.alchshield.fail",
-    "sounds": [ "magitekkit:item/alchshield/fail" ]
-  },
 
-  "item.emc.waste": {
-    "subtitle": "subtitles.mgtk.emc.waste",
-    "sounds": [ "magitekkit:item/emc/waste" ]
-  },
 
-  "item.matterarmor.absorb": {
-    "subtitle": "subtitles.mgtk.matterarmor.absorb",
-    "sounds": [{
-        "name": "projecte:item/pepower",
-        "pitch": 2.0
-    }]
-  },
 
-  "item.matterarmor.break": {
-    "subtitle": "subtitles.mgtk.matterarmor.break",
-    "sounds": [ "projecte:item/nova" ]
-  },
+    "emc.leak": {
+        "subtitle": "subtitles.mgtk.emc.leak",
+        "sounds": [ "projecte:item/chargetick" ]
+    },
+    "emc.waste": {
+        "subtitle": "subtitles.mgtk.emc.waste",
+        "sounds": [ "magitekkit:emc/waste" ]
+    },
 
-  "item.jewelry.break": {
-    "subtitle": "subtitles.mgtk.jewelry.break",
-    "sounds": [
-      {
-        "name": "entity/endereye/dead1",
-        "volume": 1.3
-      },
-      {
-        "name": "entity/endereye/dead2",
-        "volume": 1.3
-      }
-    ]
-  },
 
-  "item.emc.leak": {
-    "subtitle": "subtitles.mgtk.emc.leak",
-    "sounds": [ "projecte:item/chargetick" ]
-  },
 
-  "item.woft.tick": {
-    "subtitle": "subtitles.mgtk.woft.tick",
-    "sounds": [ "projecte:item/tock" ]
-  }
 
+
+    "god.attack": {
+        "subtitle": "subtitles.mgtk.god.attack"
+    },
+    "god.chat": {
+        "subtitle": "subtitles.mgtk.god.chat"
+    },
+
+
+
+
+
+    "item.archangels.expire": {
+        "subtitle": "subtitles.mgtk.item.archangels.expire",
+        "sounds": [ "minecraft:random/breath" ]
+    },
+    "item.archangels.redirect": {
+        "subtitle": "subtitles.mgtk.item.archangels.redirect",
+        "sounds": [ "magitekkit:item/archangels/redirect" ]
+    },
+    "item.archangels.sentient.ambient": {
+        "subtitle": "subtitles.mgtk.item.archangels.sentient.ambient",
+        "sounds": [ "magitekkit:item/archangels/sentient/ambient" ]
+    },
+    "item.archangels.sentient.hit": {
+        "subtitle": "subtitles.mgtk.item.archangels.sentient.hit",
+        "sounds": [ "projecte:item/pedestruct" ]
+    },
+    "item.archangels.sentient.yondu": {
+        "subtitle": "subtitles.mgtk.item.archangels.sentient.yondu",
+        "sounds": [
+            "magitekkit:item/archangels/sentient/yondu1",
+            "magitekkit:item/archangels/sentient/yondu2",
+            "magitekkit:item/archangels/sentient/yondu3"
+        ]
+    },
+
+
+
+    "item.boa.mode": {
+        "subtitle": "subtitles.mgtk.item.boa.mode",
+        "sounds": [
+            "minecraft:block/end_portal/eyeplace1",
+            "minecraft:block/end_portal/eyeplace2",
+            "minecraft:block/end_portal/eyeplace3"
+        ]
+    },
+
+    "item.boa.liquid.destroy": {
+        "subtitle": "subtitles.mgtk.item.boa.liquid.destroy",
+        "sounds": [ "minecraft:mob/enderman/portal2" ]
+    },
+
+    "item.boa.liquid.water.create": {
+        "subtitle": "subtitles.mgtk.item.boa.liquid.water.create",
+        "sounds": [ "projecte:item/pewatermagic" ]
+    },
+    "item.boa.liquid.water.switch": {
+        "subtitle": "subtitles.mgtk.item.boa.liquid.water.switch",
+        "sounds": [
+            "minecraft:item/bucket/fill1",
+            "minecraft:item/bucket/fill2",
+            "minecraft:item/bucket/fill3"
+        ]
+    },
+
+    "item.boa.liquid.lava.create": {
+        "subtitle": "subtitles.mgtk.item.boa.liquid.lava.create",
+        "sounds": [ "magitekkit:item/boa/liquid/lava/create" ]
+    },
+    "item.boa.liquid.lava.switch": {
+        "subtitle": "subtitles.mgtk.item.boa.liquid.lava.switch",
+        "sounds": [
+            "minecraft:item/bucket/fill_lava1",
+            "minecraft:item/bucket/fill_lava2",
+            "minecraft:item/bucket/fill_lava3"
+        ]
+    },
+
+
+
+    "item.ignition.burn": {
+        "subtitle": "subtitles.mgtk.item.ignition.burn",
+        "sounds": [ "magitekkit:item/ignition/burn" ]
+    },
+    "item.ignition.click": {
+        "subtitle": "subtitles.mgtk.item.ignition.click",
+        "sounds": [
+            "magitekkit:item/ignition/click1",
+            "magitekkit:item/ignition/click2",
+            "magitekkit:item/ignition/click3"
+        ]
+    },
+
+
+
+    "item.matterarmor.absorb": {
+        "subtitle": "subtitles.mgtk.item.matterarmor.absorb",
+        "sounds": [{
+            "name": "projecte:item/pepower",
+            "pitch": 2.0
+        }]
+    },
+    "item.matterarmor.degrade": {
+        "subtitle": "subtitles.mgtk.item.matterarmor.degrade",
+        "sounds": [ "projecte:item/nova" ]
+    },
+    "item.matterarmor.shatter": {
+        "subtitle": "subtitles.mgtk.item.matterarmor.shatter",
+        "sounds": [{
+            "name": "entity/endereye/dead1",
+            "volume": 1.3
+        },{
+            "name": "entity/endereye/dead2",
+            "volume": 1.3
+        }]
+    },
+
+
+
+    "item.philo.3x3gui": {
+        "subtitle": "subtitles.mgtk.item.philo.3x3gui",
+        "sounds": [ "projecte:item/peheal" ]
+    },
+    "item.philo.attack": {
+        "subtitle": "subtitles.mgtk.item.philo.attack",
+        "sounds": [ "botania:terrasteelcraft" ]
+    },
+    "item.philo.itemize": {
+        "subtitle": "subtitles.mgtk.item.philo.itemize",
+        "sounds": [
+            "magitekkit:item/philo/itemize1",
+            "magitekkit:item/philo/itemize2"
+        ]
+    },
+    "item.philo.transmute": {
+        "subtitle": "subtitles.mgtk.item.philo.transmute",
+        "sounds": [ "projecte:item/petransmute" ]
+    },
+    "item.philo.xray": {
+        "subtitle": "subtitles.mgtk.item.philo.xray",
+        "sounds": [ "minecraft:ambient/nether/warped_forest/help2" ]
+    },
+
+
+
+    "item.swrg.boost": {
+        "subtitle": "subtitles.mgtk.item.swrg.boost",
+        "sounds": [ "projecte:item/gust" ]
+    },
+    "item.swrg.smite": {
+        "subtitle": "subtitles.mgtk.item.swrg.smite",
+        "sounds": [
+            "minecraft:item/trident/thunder1",
+            "minecraft:item/trident/thunder2"
+        ]
+    },
+
+
+
+    "item.woft.attract": {
+        "subtitle": "subtitles.mgtk.item.woft.attract",
+        "sounds": [ "magitekkit:item/woft/attract" ]
+    },
+    "item.woft.blink": {
+        "subtitle": "subtitles.mgtk.item.woft.blink",
+        "sounds": [
+            "minecraft:mob/endermen/portal",
+            "minecraft:mob/endermen/portal2"
+        ]
+    },
+    "item.woft.mode": {
+        "subtitle": "subtitles.mgtk.item.woft.mode",
+        "sounds": [ "projecte:item/tock" ]
+    },
+    "item.woft.repel": {
+        "subtitle": "subtitles.mgtk.item.woft.repel",
+        "sounds": [ "magitekkit:item/woft/repel" ]
+    },
+    "item.woft.tick": {
+        "subtitle": "subtitles.mgtk.item.woft.tick",
+        "sounds": [ "projecte:item/tock" ]
+    },
+
+
+
+    "item.zero.freeze": {
+        "subtitle": "subtitles.mgtk.item.zero.freeze",
+        "sounds": [
+            "magitekkit:item/zero/freeze"
+        ]
+    }
 }

@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,17 +23,25 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Explosion.BlockInteraction;
 
+import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.gameObjs.items.IFireProtector;
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.api.capability.wrapper.HazmatCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
-import net.solunareclipse1.magitekkit.common.event.EntityLivingEventHandler;
+import net.solunareclipse1.magitekkit.api.item.IHazmatItem;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.config.EmcCfg;
+import net.solunareclipse1.magitekkit.config.EmcCfg.Gem;
 import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
-import net.solunareclipse1.magitekkit.util.EmcHelper;
 
-import morph.avaritia.util.InfinityDamageSource;
+import mekanism.common.registries.MekanismDamageSource;
+
+import net.solunareclipse1.magitekkit.util.EmcHelper;
+import net.solunareclipse1.magitekkit.util.EntityHelper;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
+
 import vazkii.botania.api.mana.IManaDiscountArmor;
 
 /**
@@ -42,23 +49,51 @@ import vazkii.botania.api.mana.IManaDiscountArmor;
  * 
  * @author solunareclipse1
  */
-public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireProtector, IManaDiscountArmor {
+public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireProtector, IManaDiscountArmor, IHazmatItem {
 	public GemJewelryBase(EquipmentSlot slot, Properties props, float baseDr) {
 		super(GemJewelryMaterial.MAT, slot, props, baseDr);
+		addItemCapability(HazmatCapabilityWrapper::new);
+		
+		DMG_SRC_MODS_ALCHSHIELD.put(DamageSource.LIGHTNING_BOLT, 13f);
+		DMG_SRC_MODS_ALCHSHIELD.put(DamageSource.ANVIL, 30f);
+		DMG_SRC_MODS_ALCHSHIELD.put(DamageSource.badRespawnPointExplosion(), 8f);
+		DMG_SRC_MODS_ALCHSHIELD.put(MekanismDamageSource.LASER, 1.2f);
 	}
+	
+	@Override
+	public boolean makesPiglinsNeutral(ItemStack stack, LivingEntity entity) {
+		return true;
+	}
+
+	/**
+	 * convert radiation into durability / emc
+	 * @param stack
+	 * @return
+	 */
+	@Override
+	public double protectionPercent(ItemStack stack) {
+		if (stack.isDamaged()) {
+			stack.setDamageValue(stack.getDamageValue() - 1);
+		} else if (stack.getItem() instanceof GemAmulet amulet) {
+			amulet.insertEmc(stack, EmcCfg.Gem.Chest.TRICKLE.get(), EmcAction.EXECUTE);
+		}
+		return 0.25d * ( 1d - (stack.getDamageValue() / stack.getMaxDamage()) );
+	}
+	
 	/** Damage sources with corresponging cost multipliers. 0.5 would mean 1/2 cost */
-	//public static final Map<DamageSource, Float> DMG_SRC_MODS = new HashMap<>();
+	public static final Map<DamageSource, Float> DMG_SRC_MODS_ALCHSHIELD = new HashMap<>();
 	/** Damage sources in here will *never* be blocked by the gem shield */
-	public static DamageSource[] dmgSrcBlacklist = {
+	public static DamageSource[] dmgSrcBlacklistAlchshield = {
 			DamageSource.DROWN,
 			DamageSource.FREEZE,
 			DamageSource.OUT_OF_WORLD,
-			DamageSource.STARVE
+			DamageSource.STARVE,
+			MekanismDamageSource.RADIATION
 	};
 
 	@Override
 	public int getBarColor(ItemStack stack) {
-		return Mth.hsvToRgb(0, 1, 1);
+		return 0x8f0000;
 	}
 	
 	public float getDiscount(ItemStack stack, int slot, Player player, @Nullable ItemStack tool) {
@@ -83,19 +118,33 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	}
 	
 	/**
-	 * Common tick function for all 4 pieces
-	 * called in onArmorTick
-	 * <p>
-	 * we store the players avaliable emc in a variable so we dont have to call getAvaliableEmc whenever we want to change it
+	 * Common tick function for all 4 pieces <br>
+	 * gathers information about the wearer (such as pieces worn & inventory emc) for easy-access
 	 * 
 	 * @param stack The armor piece ItemStack
 	 * @param level The level
 	 * @param player The player with the armor
-	 * @return The avaliable EMC in the player's inventory
+	 * @return Info about the gem set's current state
 	 */
-	protected long jewelryTick(ItemStack stack, Level level, Player player) {
-		long plrEmc = EmcHelper.getAvaliableEmc(player);		
-		return plrEmc;
+	protected static GemJewelrySetInfo jewelryTick(ItemStack stack, Level level, Player player) {
+		long plrEmc = EmcHelper.getAvaliableEmc(player);
+		GemInfo head = getInfo(player, EquipmentSlot.HEAD),
+				chest = getInfo(player, EquipmentSlot.CHEST),
+				legs = getInfo(player, EquipmentSlot.LEGS),
+				feet = getInfo(player, EquipmentSlot.FEET);
+		boolean setBonus = head.id > 1 && chest.id > 1 && legs.id > 1 && feet.id > 1;
+		return new GemJewelrySetInfo(head, chest, legs, feet, setBonus, plrEmc);
+	}
+	
+	public static GemInfo getInfo(Player player, EquipmentSlot slot) {
+		ItemStack stack = player.getItemBySlot(slot);
+		if ( stack.isEmpty() || !(stack.getItem() instanceof GemJewelryBase) ) {
+			return GemInfo.MISSING;
+		} else if (stack.isDamaged()) {
+			return GemInfo.BROKEN;
+		} else {
+			return GemInfo.PRISTINE;
+		}
 	}
 
 
@@ -140,14 +189,15 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	 */
 	public static boolean sourceBlockedByGemShield(DamageSource source) {
 		// hardcoded checks for things that should absolutely never be blocked
-		if (source instanceof InfinityDamageSource
-				|| source.isCreativePlayer()
-				|| source.isBypassInvul())
+		if (source.isCreativePlayer()
+			|| source.isBypassInvul()
+			|| EntityHelper.isDamageSourceInfinite(source)) {
 			return false;
+		}
 		if (source instanceof MGTKDmgSrc src && src.isBypassAlchShield()) return false;
 		
-		for (int i = 0; i < dmgSrcBlacklist.length; i++) {
-			if (source == dmgSrcBlacklist[i]) return false;
+		for (int i = 0; i < dmgSrcBlacklistAlchshield.length; i++) {
+			if (source == dmgSrcBlacklistAlchshield[i]) return false;
 		}
 		return true;
 	}
@@ -159,7 +209,13 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	 * @return
 	 */
 	public static float getCostMultiplierForSource(DamageSource source) {
-		// overriders, we always use the biggest
+		// explicit overrides
+		if (DMG_SRC_MODS_ALCHSHIELD.containsKey(source)) {
+			return DMG_SRC_MODS_ALCHSHIELD.get(source);
+		}
+		
+		
+		// overriders, biggest goes last so it takes priority
 		float mult = 1f;
 		if (source.isBypassArmor()) mult = 1.1f;
 		if (source.isMagic() || source.isBypassMagic()) mult = 1.5f;
@@ -173,13 +229,13 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	}
 	
 	public long calcShieldingCost(Player player, float damage, DamageSource source, ItemStack stack) {
-		// (dmg*mod)^2 = emc
-		return (long) Math.max(EmcCosts.ALCHSHIELD_MIN, Math.pow(damage*getCostMultiplierForSource(source), 2));
+		// ( dmg * mod ) ^ exp = emc
+		return (long) Math.max(EmcCosts.ALCHSHIELD_MIN, Math.pow(damage*getCostMultiplierForSource(source), Gem.SHIELD_EXP.get()));
 	}
 	
 	public float calcAffordableDamage(Player player, float damage, DamageSource source, ItemStack stack, long emcHeld) {
-		// sqrt(emc)/mod = dmg
-		return (float) (Math.sqrt(emcHeld)/getCostMultiplierForSource(source));
+		// ( emc^(1/exp) ) / mod = dmg
+		return (float) (Math.pow(emcHeld, 1/Gem.SHIELD_EXP.get())/getCostMultiplierForSource(source));
 	}
 	
 	@Override
@@ -214,5 +270,40 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		public float getToughness() {return 0;}
 		@Override
 		public float getKnockbackResistance() {return 0.0f;}
+	}
+	
+	record GemJewelrySetInfo(GemInfo head, GemInfo chest, GemInfo legs, GemInfo feet, boolean hasBonus, long plrEmc) {
+		public GemInfo get(EquipmentSlot slot) {
+			switch (slot) {
+			case HEAD:
+				return head;
+			case CHEST:
+				return chest;
+			case LEGS:
+				return legs;
+			case FEET:
+				return feet;
+			default:
+				LoggerHelper.printWarn("GemJewelrySetInfo.get()", "InvalidArmorSlot", slot.toString());
+				return GemInfo.MISSING;
+			}
+		}
+	}
+	
+	public enum GemInfo {
+		ACTIVE((byte)3), PRISTINE((byte)2), BROKEN((byte)1), MISSING((byte)0);
+		
+		public final byte id;
+		private GemInfo(byte id) {
+			this.id = id;
+		}
+		
+		public boolean exists() {
+			return id >= 1;
+		}
+		
+		public boolean pristine() {
+			return id >= 2;
+		}
 	}
 }
