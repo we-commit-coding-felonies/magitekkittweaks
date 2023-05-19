@@ -32,11 +32,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 
+import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.common.inventory.container.PhiloEnchantmentMenu;
+import net.solunareclipse1.magitekkit.util.EmcHelper;
 
 public class PhiloEnchantmentScreen extends AbstractContainerScreen<PhiloEnchantmentMenu> {
 	/** The ResourceLocation containing the Enchantment GUI texture location */
-	private static final ResourceLocation ENCHANTING_TABLE_LOCATION = new ResourceLocation("textures/gui/container/enchanting_table.png");
+	private static final ResourceLocation ENCHANTING_TABLE_LOCATION = new ResourceLocation(MagiTekkit.MODID, "textures/gui/philo_enchanter.png");
 	/** The ResourceLocation containing the texture for the Book rendered above the enchantment table */
 	private static final ResourceLocation ENCHANTING_BOOK_LOCATION = new ResourceLocation("textures/entity/enchanting_table_book.png");
 	/** A Random instance for use with the enchantment gui */
@@ -147,19 +149,19 @@ public class PhiloEnchantmentScreen extends AbstractContainerScreen<PhiloEnchant
 			this.setBlitOffset(0);
 			RenderSystem.setShader(GameRenderer::getPositionTexShader);
 			RenderSystem.setShaderTexture(0, ENCHANTING_TABLE_LOCATION);
-			int cost = (this.menu).costs[costIdx];
+			int xpReq = menu.costs[costIdx];
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			if (cost == 0) {
+			if (xpReq == 0) {
 				this.blit(poseStack, j, h + 14 + 19 * costIdx, 0, 185, 108, 19);
 			} else {
-				String s = "" + cost;
+				String s = "" + xpReq;
 				int maxFontWidth = 86 - this.font.width(s);
-				FormattedText text = EnchantmentNames.getInstance().getRandomName(this.font, maxFontWidth);
+				FormattedText keenText = EnchantmentNames.getInstance().getRandomName(this.font, maxFontWidth);
 				int colorInt = 6839882;
-				if (((fuel < costIdx + 1 || this.minecraft.player.experienceLevel < cost) && !this.minecraft.player.getAbilities().instabuild) || this.menu.enchantClue[costIdx] == -1) { // Forge: render buttons as disabled when enchantable but enchantability not met on lower levels
+				if ((fuel < costIdx + 1 && !this.minecraft.player.getAbilities().instabuild) || this.menu.enchantClue[costIdx] == -1) { // Forge: render buttons as disabled when enchantable but enchantability not met on lower levels
 					this.blit(poseStack, j, h + 14 + 19 * costIdx, 0, 185, 108, 19);
 					this.blit(poseStack, j + 1, h + 15 + 19 * costIdx, 16 * costIdx, 239, 16, 16);
-					this.font.drawWordWrap(text, k, h + 16 + 19 * costIdx, maxFontWidth, (colorInt & 16711422) >> 1);
+					this.font.drawWordWrap(keenText, k, h + 16 + 19 * costIdx, maxFontWidth, (colorInt & 16711422) >> 1);
 					colorInt = 4226832;
 				} else {
 					int k2 = x - (w + 60);
@@ -172,7 +174,7 @@ public class PhiloEnchantmentScreen extends AbstractContainerScreen<PhiloEnchant
 					}
 
 					this.blit(poseStack, j + 1, h + 15 + 19 * costIdx, 16 * costIdx, 223, 16, 16);
-					this.font.drawWordWrap(text, k, h + 16 + 19 * costIdx, maxFontWidth, colorInt);
+					this.font.drawWordWrap(keenText, k, h + 16 + 19 * costIdx, maxFontWidth, colorInt);
 					colorInt = 8453920;
 				}
 				this.font.drawShadow(poseStack, s, (float)(k + 86 - this.font.width(s)), (float)(h + 16 + 19 * costIdx + 7), colorInt);
@@ -180,56 +182,57 @@ public class PhiloEnchantmentScreen extends AbstractContainerScreen<PhiloEnchant
 		}
 	}
 
-	public void render(PoseStack pPoseStack, int pMouseX, int pMouseY, float pPartialTick) {
-		pPartialTick = this.minecraft.getFrameTime();
-		this.renderBackground(pPoseStack);
-		super.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
-		this.renderTooltip(pPoseStack, pMouseX, pMouseY);
-		boolean flag = this.minecraft.player.getAbilities().instabuild;
-		int i = this.menu.getGoldCount();
+	public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		partialTick = this.minecraft.getFrameTime();
+		this.renderBackground(poseStack);
+		super.render(poseStack, mouseX, mouseY, partialTick);
+		this.renderTooltip(poseStack, mouseX, mouseY);
+		boolean creative = this.minecraft.player.getAbilities().instabuild;
+		int dustAmount = this.menu.getGoldCount();
 
-		for (int j = 0; j < 3; ++j) {
-			int k = (this.menu).costs[j];
-			Enchantment enchantment = Enchantment.byId((this.menu).enchantClue[j]);
-			int l = (this.menu).levelClue[j];
-			int i1 = j + 1;
-			if (this.isHovering(60, 14 + 19 * j, 108, 17, (double)pMouseX, (double)pMouseY) && k > 0) {
+		for (int costIdx = 0; costIdx < 3; ++costIdx) {
+			Enchantment clueEnch = Enchantment.byId(menu.enchantClue[costIdx]);
+			int clueEnchLvl = menu.levelClue[costIdx];
+			int dustCost = costIdx + 1;
+			if (isHovering(60, 14 + 19 * costIdx, 108, 17, mouseX, mouseY) && menu.costs[costIdx] > 0) {
 				List<Component> list = Lists.newArrayList();
-				list.add((new TranslatableComponent("container.enchant.clue", enchantment == null ? "" : enchantment.getFullname(l))).withStyle(ChatFormatting.WHITE));
-				if (enchantment == null) {
+				list.add((new TranslatableComponent("container.enchant.clue", clueEnch == null ? "" : clueEnch.getFullname(clueEnchLvl))).withStyle(ChatFormatting.WHITE));
+				if (clueEnch == null) {
 					list.add(new TextComponent(""));
 					list.add(new TranslatableComponent("forge.container.enchant.limitedEnchantability").withStyle(ChatFormatting.RED));
-				} else if (!flag) {
-					list.add(TextComponent.EMPTY);
-					if (this.minecraft.player.experienceLevel < k) {
-						list.add((new TranslatableComponent("container.enchant.level.requirement", (this.menu).costs[j])).withStyle(ChatFormatting.RED));
-					} else {
-						MutableComponent mutablecomponent;
-						if (i1 == 1) {
-							mutablecomponent = new TranslatableComponent("container.enchant.lapis.one");
-						} else {
-							mutablecomponent = new TranslatableComponent("container.enchant.lapis.many", i1);
+				} else {
+					boolean affordable = dustAmount >= dustCost;
+					if (!creative) {
+						list.add(TextComponent.EMPTY);
+						MutableComponent dustCostText = new TranslatableComponent("gui.mgtk.philo.enchanter.dust", dustCost);
+						list.add(dustCostText.withStyle(affordable ? ChatFormatting.GRAY : ChatFormatting.RED));
+					}
+					if (creative || affordable) {
+						ItemStack fuel = menu.getSlot(1).getItem();
+						if (EmcHelper.COVALENCE_MAP == null) {
+							EmcHelper.initializeCovalenceDustMap();
 						}
-						list.add(mutablecomponent.withStyle(i >= i1 ? ChatFormatting.GRAY : ChatFormatting.RED));
-						MutableComponent mutablecomponent1;
-						if (i1 == 1) {
-							mutablecomponent1 = new TranslatableComponent("container.enchant.level.one");
-						} else {
-							mutablecomponent1 = new TranslatableComponent("container.enchant.level.many", i1);
+						int tier = EmcHelper.COVALENCE_MAP.indexOf(fuel.getItem());
+						
+						if (tier > 0) {
+							MutableComponent bonusAmountText = new TranslatableComponent("gui.mgtk.philo.enchanter.bonusamount", tier);
+							list.add(bonusAmountText.withStyle(ChatFormatting.GRAY));
+							
+							MutableComponent levelBonusText = new TranslatableComponent("gui.mgtk.philo.enchanter.bonus", dustCost*tier);
+							list.add(levelBonusText.withStyle(ChatFormatting.GRAY));
 						}
-						list.add(mutablecomponent1.withStyle(ChatFormatting.GRAY));
 					}
 				}
-				this.renderComponentTooltip(pPoseStack, list, pMouseX, pMouseY);
+				this.renderComponentTooltip(poseStack, list, mouseX, mouseY);
 				break;
 			}
 		}
 	}
 
 	public void tickBook() {
-		ItemStack itemstack = this.menu.getSlot(0).getItem();
-		if (!ItemStack.matches(itemstack, this.last)) {
-			this.last = itemstack;
+		ItemStack targetStack = this.menu.getSlot(0).getItem();
+		if (!ItemStack.matches(targetStack, this.last)) {
+			this.last = targetStack;
 
 			do {
 				this.flipT += (float)(this.random.nextInt(4) - this.random.nextInt(4));
@@ -239,15 +242,15 @@ public class PhiloEnchantmentScreen extends AbstractContainerScreen<PhiloEnchant
 		++this.time;
 		this.oFlip = this.flip;
 		this.oOpen = this.open;
-		boolean flag = false;
+		boolean bookShouldOpen = false;
 
 		for(int i = 0; i < 3; ++i) {
 			if ((this.menu).costs[i] != 0) {
-				flag = true;
+				bookShouldOpen = true;
 			}
 		}
 
-		if (flag) {
+		if (bookShouldOpen) {
 			this.open += 0.2F;
 		} else {
 			this.open -= 0.2F;
@@ -255,7 +258,6 @@ public class PhiloEnchantmentScreen extends AbstractContainerScreen<PhiloEnchant
 
 		this.open = Mth.clamp(this.open, 0.0F, 1.0F);
 		float f1 = (this.flipT - this.flip) * 0.4F;
-		float f = 0.2F;
 		f1 = Mth.clamp(f1, -0.2F, 0.2F);
 		this.flipA += (f1 - this.flipA) * 0.9F;
 		this.flip += this.flipA;

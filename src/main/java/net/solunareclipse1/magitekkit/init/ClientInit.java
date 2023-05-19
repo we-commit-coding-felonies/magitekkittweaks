@@ -16,6 +16,8 @@ import moze_intel.projecte.PECore;
 import moze_intel.projecte.rendering.EntitySpriteRenderer;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.client.gui.GravityAnvilScreen;
+import net.solunareclipse1.magitekkit.client.gui.PhiloEnchantmentScreen;
 import net.solunareclipse1.magitekkit.client.render.LayerHalo;
 import net.solunareclipse1.magitekkit.client.render.SentientArrowRenderer;
 import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
@@ -41,7 +43,8 @@ public class ClientInit {
     		ItemProperties.register(bracelet.asItem(), BOA_WOFT, (stack, level, entity, seed) -> ItemNBTHelper.getBoolean(stack, BandOfArcana.TAG_WOFT, false) ? 1 : 0);
     		
     		// Screens
-    		//MenuScreens.register(ObjectInit.PHILO_ENCHANTER.get(), EnchantmentScreen::new);
+    		MenuScreens.register(ObjectInit.PHILO_ENCHANTER.get(), PhiloEnchantmentScreen::new);
+    		MenuScreens.register(ObjectInit.GRAVITY_ANVIL.get(), GravityAnvilScreen::new);
 		});
     }
 

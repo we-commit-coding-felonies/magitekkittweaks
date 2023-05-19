@@ -14,6 +14,7 @@ import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePack
 import net.solunareclipse1.magitekkit.network.packet.client.GustParticlePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
+import net.solunareclipse1.magitekkit.network.packet.server.GravityAnvilItemRenamePacket;
 import net.solunareclipse1.magitekkit.network.packet.server.LeftClickAirPacket;
 
 public class NetworkInit {
@@ -36,6 +37,12 @@ public class NetworkInit {
                 .decoder(LeftClickAirPacket::dec)
                 .consumer(LeftClickAirPacket::handle)
                 .add();
+        
+        CHANNEL.messageBuilder(GravityAnvilItemRenamePacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+				.encoder(GravityAnvilItemRenamePacket::enc)
+        		.decoder(GravityAnvilItemRenamePacket::dec)
+        		.consumer(GravityAnvilItemRenamePacket::handle)
+        		.add();
         
         
         

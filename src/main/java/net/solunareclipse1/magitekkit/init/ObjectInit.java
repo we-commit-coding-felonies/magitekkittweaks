@@ -23,6 +23,7 @@ import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectil
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
+import net.solunareclipse1.magitekkit.common.inventory.container.GravityAnvilMenu;
 import net.solunareclipse1.magitekkit.common.inventory.container.PhiloEnchantmentMenu;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor;
 import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor.CrimsonArmorMaterial;
@@ -130,6 +131,7 @@ public class ObjectInit {
     
     // Menus / Containers
     public static final RegistryObject<MenuType<PhiloEnchantmentMenu>> PHILO_ENCHANTER = MENUS.register("philo_enchanter", () -> IForgeMenuType.create((window, inv, data) -> new PhiloEnchantmentMenu(window, inv)));
+    public static final RegistryObject<MenuType<GravityAnvilMenu>> GRAVITY_ANVIL = MENUS.register("gravity_anvil", () -> IForgeMenuType.create((window, inv, data) -> new GravityAnvilMenu(window, inv)));
     
     
     

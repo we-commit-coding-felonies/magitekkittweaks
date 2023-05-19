@@ -1,5 +1,6 @@
 package net.solunareclipse1.magitekkit.util;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -24,6 +25,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -42,7 +44,10 @@ import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.FishingSpeedEnchantment;
+import net.minecraft.world.item.enchantment.QuickChargeEnchantment;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BambooBlock;
 import net.minecraft.world.level.block.Block;
@@ -307,6 +312,10 @@ public class MiscHelper {
 		Vec3 line = end.subtract(start);
 		Vec3 step = line.normalize().scale(stepSize);
 		int numSteps = (int) (line.length() / step.length());
+		if (step.length() <= 0) {
+			// avoids floating point nonsense
+			numSteps = 1;
+		}
 		
 		Vec3 curPos = start;
 		for (int i = 0; i < numSteps; i++) {
@@ -510,5 +519,12 @@ public class MiscHelper {
 			return Blocks.AIR.defaultBlockState();
 		return state.getFluidState()
 			.createLegacyBlock();
+	}
+	
+	public static int getTrueEnchMaxLevel(Enchantment ench) {
+		if (ench instanceof FishingSpeedEnchantment
+				|| ench instanceof QuickChargeEnchantment)
+			return 5;
+		return 10;
 	}
 }

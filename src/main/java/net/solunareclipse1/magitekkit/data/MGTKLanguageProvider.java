@@ -135,6 +135,14 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.gem.ref.2", "I am become death, the destroyer of worlds");
         add("tip.mgtk.gem.ref.3", "2... 3... 5... 7... 11... 13...");
         add("tip.mgtk.gem.ref.4", "Not to be confused with Anklet of the Wind");
+        
+
+        add("gui.mgtk.philo.enchanter.name", "Arcanum");
+        add("gui.mgtk.philo.enchanter.dust", "%s Covalence Dust");
+        add("gui.mgtk.philo.enchanter.bonus", "Up to %s bonus enchantment levels");
+        add("gui.mgtk.philo.enchanter.bonusamount", "Up to %s bonuses applied");
+        
+        add("gui.mgtk.woft.anvil.name", "Gravitational Anomaly");
 
         
         
@@ -170,7 +178,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.item.matterarmor.degrade", "Armor degrades");
         add("subtitles.mgtk.item.matterarmor.shatter", "Jewellery shatters");
 
-        add("subtitles.mgtk.item.philo.3x3gui", "Alchemist opens crafting grid");
+        add("subtitles.mgtk.item.philo.3x3gui", "Incorporeal block accessed");
         add("subtitles.mgtk.item.philo.attack", "Magnum Opus transmutes entity");
         add("subtitles.mgtk.item.philo.itemize", "Something becomes item");
         add("subtitles.mgtk.item.philo.transmute", "Minium transmutation");
@@ -184,6 +192,8 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.item.woft.mode", "Pocketwatch clicks");
         add("subtitles.mgtk.item.woft.repel", "Gravity pushes");
         add("subtitles.mgtk.item.woft.tick", "Time accelerates");
+        
+        add("subtitles.mgtk.item.zero.freeze", "Frost magic");
 
         
         

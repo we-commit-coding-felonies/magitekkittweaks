@@ -162,6 +162,8 @@ import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectil
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
+import net.solunareclipse1.magitekkit.common.inventory.container.GravityAnvilMenu;
+import net.solunareclipse1.magitekkit.common.inventory.container.PhiloEnchantmentMenu;
 import net.solunareclipse1.magitekkit.common.item.MGTKCovalenceItem;
 import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
@@ -1217,19 +1219,19 @@ public class BandOfArcana extends MGTKCovalenceItem
 				}
 				break;
 			case 2: // Watch (ender chest / anvil)
-				player.level.playSound(null, player, SoundEvents.ENDER_CHEST_OPEN, SoundSource.PLAYERS, 1F, 1f);
+				player.level.playSound(null, player, EffectInit.PHILO_3X3GUI.get(), SoundSource.PLAYERS, 1, 2f);
 				if (player.isShiftKeyDown()) {
 					// anvil
 					player.openMenu(new SimpleMenuProvider((window, inv, plr) -> {
-				         return new AnvilMenu(window, inv, ContainerLevelAccess.create(level, plr.blockPosition()));
-				      }, stack.getHoverName()));
+				         return new GravityAnvilMenu(window, inv, ContainerLevelAccess.create(level, plr.blockPosition()));
+				      }, new TranslatableComponent("gui.mgtk.woft.anvil.name")));
 					player.level.playSound(null, player, SoundEvents.ANVIL_PLACE, SoundSource.PLAYERS, 0.5F, 1f);
 				} else {
 					// echest
 					player.openMenu(new SimpleMenuProvider((window, inv, plr) -> {
 						return ChestMenu.threeRows(window, inv, plr.getEnderChestInventory());
 					}, stack.getHoverName()));
-					player.level.playSound(null, player, SoundEvents.ENDER_CHEST_CLOSE, SoundSource.PLAYERS, 1F, 1f);
+					player.level.playSound(null, player, SoundEvents.ENDER_CHEST_OPEN, SoundSource.PLAYERS, 1F, 1f);
 				}
 				didDo = true;
 				break;
@@ -1244,9 +1246,9 @@ public class BandOfArcana extends MGTKCovalenceItem
 					//NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(area.minX, area.minY, area.minZ), new Vec3(area.maxX, area.maxY, area.maxZ), ParticlePreset.DEBUG), (ServerPlayer)player);
 					didDo = true;
 				}
-				if (client) {
-					MiscHelper.drawAABBWithParticles(area, ParticleTypes.DRIPPING_LAVA, 0.1, (ClientLevel)level, false, true);
-				}
+				//if (client) {
+				//	MiscHelper.drawAABBWithParticles(area, ParticleTypes.DRIPPING_LAVA, 0.1, (ClientLevel)level, false, true);
+				//}
 				break;
 			case 4: // Liquid (change liquid)
 				changeLiquid(stack);
@@ -1254,28 +1256,72 @@ public class BandOfArcana extends MGTKCovalenceItem
 				didDo = true;
 				break;
 			case 5: // Philo (crafting / enchant)
-				player.level.playSound(null, player, EffectInit.PHILO_3X3GUI.get(), SoundSource.PLAYERS, 1, 2f);
+				player.level.playSound(null, player, EffectInit.PHILO_3X3GUI.get(), SoundSource.PLAYERS, 0.6f, 2f);
 				if (player.isShiftKeyDown()) {
 					// enchant
 					player.openMenu( new SimpleMenuProvider((window, inv, plr) -> {
-						return new EnchantmentMenu(window, inv, ContainerLevelAccess.create(level, player.blockPosition()));
-					}, stack.getHoverName()));
+						return new PhiloEnchantmentMenu(window, inv, ContainerLevelAccess.create(level, player.blockPosition()));
+					}, new TranslatableComponent("gui.mgtk.philo.enchanter.name")));
+					player.level.playSound(null, player, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1, 1f);
+					didDo = true;
 				} else {
 					// crafting
 					didDo = PEItems.PHILOSOPHERS_STONE.get().doExtraFunction(stack, player, hand);
 				}
 				break;
 			case 6: // Archangel
-				System.out.println("NYI: " + getMode(stack));
+				if (plrEmc >= Archangel.SMART.get() && ready) {
+					boolean up = player.isOnGround();
+					long amount = Math.min(up ? 28 : 56, plrEmc/Archangel.SMART.get());
+					ShootContext ctx = up ?
+							new ShootContext(level, player, new Vec3(-90, 0, 0)) :
+							new ShootContext(level, player);
+					List<AbstractArrow> arrows = ProjectileHelper.shootArrow((int)amount, ArrowType.SMART, ctx,
+							new ArrowOptions(1, 0.5f, up ? 75 : 300, (byte)0, false, Pickup.DISALLOWED));
+					cd.addCooldown(cdItem, arrows.size() / 2);
+				}
 				break;
 			case 7: // SWRG
-				System.out.println("NYI: " + getMode(stack));
+				if (plrEmc >= SWRG.STORM.get() && ready && !level.isThundering()
+					&& player.level.getLevelData() instanceof ServerLevelData dat) {
+					smite(level, player.position(), (ServerPlayer)player, true);
+					dat.setRainTime(6000);
+					dat.setThunderTime(6000);
+					dat.setRaining(true);
+					dat.setThundering(true);
+					EmcHelper.consumeAvaliableEmc(player, SWRG.STORM.get());
+					cd.addCooldown(cdItem, 100);
+					didDo = true;
+				}
 				break;
 			case 8: // Zero
-				System.out.println("NYI: " + getMode(stack));
+				if (plrEmc >= Zero.FREEZE.get() && ready && !client) {
+					AABB range = AABB.ofSize(player.getBoundingBox().getCenter(), 32, 32, 32);
+					int frozen = 0;
+					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, range, ent -> canBeFrozen(ent) && !ent.is(player) )) {
+						this.freezeEntity(ent, (ServerPlayer)player);
+						frozen++;
+					}
+					WorldHelper.freezeInBoundingBox(level, range, player, false);
+					EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get()*frozen);
+					level.playSound(null, player.blockPosition(), EffectInit.ZERO_FREEZE.get(), SoundSource.PLAYERS, 5, 0.5f);
+					//cd.addCooldown(cdItem, 273);
+					cd.addCooldown(cdItem, 60);
+				}
 				break;
 			case 9: // Ignition
-				System.out.println("NYI: " + getMode(stack));
+				if (plrEmc >= Ignition.BURN.get() && ready && !client) {
+					AABB range = AABB.ofSize(player.getBoundingBox().getCenter(), 32, 32, 32);
+					int burnt = 0;
+					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, range, ent -> canBeBurnt(ent) && !ent.is(player) )) {
+						this.burnEntity(ent, (ServerPlayer)player);
+						burnt++;
+					}
+					MiscHelper.burnInBoundingBox(level, range, player, false);
+					EmcHelper.consumeAvaliableEmc(player, Ignition.BURN.get()*burnt);
+					level.playSound(null, player.blockPosition(), EffectInit.IGNITION_BURN.get(), SoundSource.PLAYERS, 5, 1.5f);
+					cd.addCooldown(cdItem, 451);
+				}
 				break;
 			
 			default:

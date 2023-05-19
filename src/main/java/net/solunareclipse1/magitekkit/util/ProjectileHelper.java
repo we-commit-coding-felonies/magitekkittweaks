@@ -109,7 +109,7 @@ public class ProjectileHelper {
 				break;
 			}
 			if (ctx.shooter != null) {
-				arrow.shootFromRotation(ctx.shooter, ctx.shooter.getXRot(), ctx.shooter.getYRot(), 0, opts.velocity, opts.spread);
+				arrow.shootFromRotation(ctx.shooter, (float)ctx.rot.x, (float)ctx.rot.y, 0, opts.velocity, opts.spread);
 			} else {
 				float mx = -Mth.sin((float) (ctx.rot.y * (Math.PI / 180d))) * Mth.cos((float) (ctx.rot.x * (Math.PI / 180d)));
 				float my = -Mth.sin((float) ((ctx.rot.x + ctx.rot.z) * (Math.PI / 180d)));

@@ -5,12 +5,18 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Stack;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.Lists;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -59,8 +65,12 @@ import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket.LineParticlePreset;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
+import net.solunareclipse1.magitekkit.util.MiscHelper;
+import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
+import vazkii.botania.client.fx.WispParticleData;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityPixie;
 
@@ -81,6 +91,8 @@ public class SentientArrow extends AbstractArrow {
 		PATHING,   // Following path to to target
 		INERT
 	}
+	private static final EntityDataAccessor<Byte> AI_STATE = SynchedEntityData.defineId(SentientArrow.class, EntityDataSerializers.BYTE);
+	private static final EntityDataAccessor<Integer> TARGET_ID = SynchedEntityData.defineId(SentientArrow.class, EntityDataSerializers.INT);
 	private ArrowState state = ArrowState.SEARCHING;
 	/** the integer entity id of our current tracked target */
 	private int victimId = -1;
@@ -119,20 +131,34 @@ public class SentientArrow extends AbstractArrow {
 		super(ObjectInit.SENTIENT_ARROW.get(), shooter, level);
 		maxLife = 200;
 	}
+
+	@Override
+	public void defineSynchedData() {
+		super.defineSynchedData();
+		entityData.define(AI_STATE, (byte) 0);
+		entityData.define(TARGET_ID, -1);
+	}
 	
 	@Override
 	public void tick() {
-		this.hasImpulse = true;
-		if ( tickCount > maxLife || owner() == null ) this.kill();
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "Tick");
+		if ( tickCount > maxLife || owner() == null ) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "OldOrBadOwner");
+			this.kill();
+		}
 		else if (tickCount < 5) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "YoungArrow");
 			this.setPos(position().add(this.getDeltaMovement()));
 		}
 		else {
 			if (isLookingForTarget()) {
+				if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "LookingForTarget");
 				if (searchTime < 10) {
 					searchTime++;
 					if (!attemptAutoRetarget() && searchTime >= 10) {
-						if (tickCount == searchTime) becomeInert();
+						if (tickCount == searchTime) {
+							becomeInert();
+						}
 						else {
 							isReturningToOwner = true;
 						}
@@ -143,28 +169,35 @@ public class SentientArrow extends AbstractArrow {
 			}
 			// TRAJECTORY MODIFICATION
 			if (isHoming()) {
+				if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "Homing");
 				Entity target = isReturningToOwner ? owner() : getTarget();
 				if (isReturningToOwner || this.shouldContinueHomingTowards(target)) {
 					boolean lineOfSight = canSee(target);
 					if (lineOfSight) {
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "LineOfSight");
 						// BEELINE
 						forgetPaths();
 						targetPos = target.getBoundingBox().getCenter();
-						if (state != ArrowState.DIRECT) {
+						if (getState() != ArrowState.DIRECT) {
 							//particles(0);
-							state = ArrowState.DIRECT; // target visible
+							setState(ArrowState.DIRECT); // target visible
 						}
 					} else {
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "Obstructed");
 						// PATHFIND
-						state = ArrowState.PATHING; // target obstructed
+						setState(ArrowState.PATHING); // target obstructed
 						pathTo(target);
 					}
 					if (!isInert() && targetPos != null) {
-						shootAt(targetPos, 5);
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "Redirecting");
+						if (!level.isClientSide) {
+							shootAt(targetPos, 3f);
+						}
 					}
 				} else {
+					if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "InvalidTarget");
 					resetTarget();
-					state = ArrowState.SEARCHING; // searching for target
+					setState(ArrowState.SEARCHING); // searching for target
 				}
 			}
 			// MOVEMENT & COLLISION
@@ -175,23 +208,23 @@ public class SentientArrow extends AbstractArrow {
 	
 	@Override
 	protected void onHitBlock(BlockHitResult hitRes) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "OnHitBlock");
 		BlockPos pos = hitRes.getBlockPos();
 		BlockState hit = level.getBlockState(hitRes.getBlockPos());
 		if (!hit.isAir()) {
 			if (hit.is(MGTKBlockTags.ARROW_ANNIHILATE)) {
 				if (transmuteBlockIntoCovDust(pos)) {
-					/*if (level instanceof ClientLevel lvl) {
-						MiscHelper.drawAABBWithParticles(
-								AABB.unitCubeFromLowerCorner(Vec3.atLowerCornerOf(pos)),
-								ParticleTypes.WHITE_ASH, 0.1, (ClientLevel) level, false);
-					}*/
 					level.playSound(null, pos, EffectInit.ARCHANGELS_SENTIENT_HIT.get(), this.getSoundSource(), 1, 2);
 					return; // dont need to process collision on something that doesnt exist
 				}
+			} else if (hit.is(MGTKBlockTags.ARROW_NOCLIP)) {
+				return;
 			}
 		}
 		if (isLookingForTarget()) {
-			if (!attemptAutoRetarget()) becomeInert();
+			if (!attemptAutoRetarget()) {
+				becomeInert();
+			}
 		}
 		if (isInert()) {
 			super.onHitBlock(hitRes);
@@ -200,6 +233,7 @@ public class SentientArrow extends AbstractArrow {
 	
 	@Override
 	protected void onHitEntity(EntityHitResult hitRes) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "OnHitEntity");
 		Entity hit = hitRes.getEntity();
 		if (isReturningToOwner && hit.is(owner())) {
 			isReturningToOwner = false;
@@ -219,11 +253,12 @@ public class SentientArrow extends AbstractArrow {
 	 */
 	private void moveAndCollide() {
 		projectileTick();
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "MoveAndCollide");
 		boolean noClip = !isInert() || this.isNoPhysics();
 		Vec3 curPos = this.position();
 		Vec3 motion = getDeltaMovement();
 		double horizVel = motion.horizontalDistance();
-		if (this.xRotO == 0.0F && this.yRotO == 0.0F) {
+		if (!level.isClientSide && this.xRotO == 0.0F && this.yRotO == 0.0F) {
 			this.setXRot((float)(Mth.atan2(motion.y, horizVel) * (double)(180F / (float)Math.PI)));
 			this.setYRot((float)(Mth.atan2(motion.x, motion.z) * (double)(180F / (float)Math.PI)));
 			this.xRotO = this.getXRot();
@@ -243,6 +278,7 @@ public class SentientArrow extends AbstractArrow {
 				if (!blockShape.isEmpty()) {
 
 					for(AABB aabb : blockShape.toAabbs()) {
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "BlockAABBCollisionLoop");
 						if (aabb.move(curBlockPos).contains(curPos)) {
 							this.inGround = true;
 							break;
@@ -273,13 +309,14 @@ public class SentientArrow extends AbstractArrow {
 			Vec3 nextPos = curPos.add(motion);
 			HitResult hitRes = this.level.clip(new ClipContext(curPos, nextPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
 			if (hitRes.getType() != HitResult.Type.MISS) {
-				if ( !noClip || !level.getBlockState(new BlockPos(hitRes.getLocation())).is(MGTKBlockTags.ARROW_NOCLIP) ) {
+				if ( !noClip && !level.getBlockState(new BlockPos(hitRes.getLocation())).is(MGTKBlockTags.ARROW_NOCLIP) ) {
 					nextPos = hitRes.getLocation();
 				}
 			}
 
 			boolean didHit = false;
 			while(!this.isRemoved()) {
+				if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "EntCollisionLoop");
 				EntityHitResult entHitRes = this.findHitEntity(curPos, nextPos);
 				if (entHitRes != null) {
 					hitRes = entHitRes;
@@ -319,29 +356,25 @@ public class SentientArrow extends AbstractArrow {
 			double velY = motion.y;
 			double velZ = motion.z;
 			if (level instanceof ServerLevel lvl) {
+				//ParticleOptions particle = WispParticleData.wisp(0.5f, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 1);
+				//MiscHelper.drawVectorWithParticles(position(), position().add(getDeltaMovement()), particle, 0.1, lvl);
+				//for(int i = 0; i < 24; ++i) {
+				//	this.level.addParticle(particle, this.getX() + velX * (double)i / 4.0D, this.getY() + velY * (double)i / 4.0D, this.getZ() + velZ * (double)i / 4.0D, 0,0,0);//-velX, -velY + 0.2D, -velZ);
+				//}
 				// TODO: fix clientside jank because doing this every tick is bad juju
 				for (ServerPlayer plr : lvl.players()) {
 					BlockPos pos = plr.blockPosition();
-					if (pos.closerToCenterThan(this.position(), 64d)) {
-						NetworkInit.toClient(new DrawParticleLinePacket(position().add(getDeltaMovement()), position(), LineParticlePreset.SENTIENT_RETARGET), plr);
+					if (pos.closerToCenterThan(this.position(), 96d)) {
+						NetworkInit.toClient(new DrawParticleLinePacket(position().add(getDeltaMovement()), position(), LineParticlePreset.SENTIENT_TRACER), plr);
 					}
 				}
-				//MiscHelper.drawVectorWithParticles(position().subtract(getDeltaMovement()), position(), particle, 0.1, (ClientLevel)level);
-				//for(int i = 0; i < 4; ++i) {
-				//	this.level.addParticle(particle, this.getX() + velX * (double)i / 4.0D, this.getY() + velY * (double)i / 4.0D, this.getZ() + velZ * (double)i / 4.0D, -velX, -velY + 0.2D, -velZ);
-				//}
 			}
 
 			double nextX = this.getX() + velX;
 			double nextY = this.getY() + velY;
 			double nextZ = this.getZ() + velZ;
 			//double horizVel = vel.horizontalDistance();
-			if (noClip) {
-				this.setYRot((float)(Mth.atan2(-velX, -velZ) * (double)(180F / (float)Math.PI)));
-			} else {
-				this.setYRot((float)(Mth.atan2(velX, velZ) * (double)(180F / (float)Math.PI)));
-			}
-
+			this.setYRot((float)(Mth.atan2(velX, velZ) * (double)(180F / (float)Math.PI)));
 			this.setXRot((float)(Mth.atan2(velY, horizVel) * (double)(180F / (float)Math.PI)));
 			this.setXRot(lerpRotation(this.xRotO, this.getXRot()));
 			this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
@@ -349,6 +382,7 @@ public class SentientArrow extends AbstractArrow {
 			//float f1 = 0.05F;
 			if (this.isInWater()) {
 				for(int j = 0; j < 4; ++j) {
+					if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "InWaterLoop");
 					//float f2 = 0.25F;
 					this.level.addParticle(ParticleTypes.BUBBLE, nextX - velX * 0.25D, nextY - velY * 0.25D, nextZ - velZ * 0.25D, velX, velY, velZ);
 				}
@@ -372,6 +406,7 @@ public class SentientArrow extends AbstractArrow {
 	 * identical to Projectile.tick()
 	 */
 	private void projectileTick() {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "ProjectileTick");
 		if (!this.hasBeenShot) {
 			this.gameEvent(GameEvent.PROJECTILE_SHOOT, this.getOwner(), this.blockPosition());
 			this.hasBeenShot = true;
@@ -388,6 +423,7 @@ public class SentientArrow extends AbstractArrow {
 	 * identical to Entity.tick()
 	 */
 	private void entityTick() {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "EntityTick");
 		this.level.getProfiler().push("entityBaseTick");
 		this.feetBlockState = null;
 		if (this.isPassenger() && this.getVehicle().isRemoved()) {
@@ -459,13 +495,18 @@ public class SentientArrow extends AbstractArrow {
 	// FUNCTIONS //
 	///////////////
 	public void becomeInert() {
-		state = ArrowState.INERT;
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "BecomingInert");
+		this.setState(ArrowState.INERT);
 		resetTarget();
 	}
+	
 	@Override
 	public void kill() {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "EndOfLife");
 		playSound(EffectInit.ARCHANGELS_EXPIRE.get(), 1, 1);
-		level.playSound(null, getOwner().blockPosition(), EffectInit.ARCHANGELS_EXPIRE.get(), SoundSource.PLAYERS, 1, 0.1f);
+		if (getOwner() != null) {
+			level.playSound(null, getOwner().blockPosition(), EffectInit.ARCHANGELS_EXPIRE.get(), SoundSource.PLAYERS, 1, 0.1f);
+		}
 		discard();
 	}
 	
@@ -508,9 +549,11 @@ public class SentientArrow extends AbstractArrow {
 		Vec3 motion = heading.scale(vel);
 		shoot(heading.x, heading.y, heading.z, (float) motion.length(), 0);
 	}
-	private Path findPathTo(Entity ent) {
+	@Nullable
+	private Path findPathTo(@NotNull Entity ent) {
 		return findPathTo(ent.getBoundingBox().getCenter());
 	}
+	@Nullable
 	private Path findPathTo(Vec3 pos) {
 		return nav.createPath(pos, 0);
 	}
@@ -519,6 +562,7 @@ public class SentientArrow extends AbstractArrow {
 		List<Node> nodes = Lists.newArrayList();
 		nodes.add(path.getNode(0));
 		for (int i = 1; i < path.getNodeCount() - 1; i++) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "NodeTrimLoop");
 			if (!isUnobstructed(nodes.get(nodes.size() - 1).asVec3(), path.getNode(i+1).asVec3())) {
 				nodes.add(path.getNode(i));
 			}
@@ -531,6 +575,7 @@ public class SentientArrow extends AbstractArrow {
 		boolean isInsane = path == null || path.sameAs(currentPath) || path.getNode(0) == path.getEndNode();
 		if (!isInsane) {
 			for (Path oldPath : previousPaths) {
+				if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "PathInsanityLoop");
 				if (path.sameAs(oldPath)) {
 					isInsane = true;
 					break;
@@ -556,14 +601,25 @@ public class SentientArrow extends AbstractArrow {
 	 * @return if pathfinding was unsuccessfull
 	 */
 	private void pathTo(Entity ent) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "PathTo");
 		Entity target = ent;
+		Path lastMemorized = null;
 		while (!hasPath()) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "FindPathLoop");
 			// FIND PATH
-			if (currentPath != null) {
+			if (currentPath != null && !currentPath.sameAs(lastMemorized)) {
 				previousPaths.push(currentPath);
+				lastMemorized = currentPath;
 			}
 			Path newPath = findPathTo(target);
-			if (isPathInsane(newPath)) {
+			boolean insane;
+			if (newPath == null) {
+				insane = true;
+			} else {
+				newPath = trimNodes(newPath);
+				insane = isPathInsane(newPath);
+			}
+			if (insane) {
 				if (isReturningToOwner) {
 					isReturningToOwner = false;
 					becomeInert();
@@ -576,12 +632,9 @@ public class SentientArrow extends AbstractArrow {
 					}
 				}
 			}
-			newPath = trimNodes(newPath);
 			if (DebugCfg.ARROW_PATHFIND.get()) {
-					drawDebugPath(newPath);
+				drawDebugPath(newPath);
 			}
-			
-			
 			currentPath = newPath;
 			break;
 		}
@@ -641,6 +694,7 @@ public class SentientArrow extends AbstractArrow {
 	 */
 	@Nullable
 	private boolean transmuteBlockIntoCovDust(BlockPos blockPos) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "BlockToCovDust");
 		if (this.level.isClientSide) return false;
 		else {
 			ServerLevel lvl = (ServerLevel) level;
@@ -650,6 +704,7 @@ public class SentientArrow extends AbstractArrow {
 				long dropEmc = 0;
 				if (!drops.isEmpty()) {
 					for (ItemStack drop : drops) {
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "DropsEmcLoop");
 						if (EMCHelper.doesItemHaveEmc(drop)) {
 							dropEmc += EMCHelper.getEmcValue(drop);
 						} else {
@@ -660,6 +715,7 @@ public class SentientArrow extends AbstractArrow {
 				if (dropEmc <= 0) dropEmc = 1;
 				Vec3 pos = Vec3.atCenterOf(blockPos);
 				for (Entry<Item, Long> dust : EmcHelper.emcToCovalenceDust(dropEmc).entrySet()) {
+					if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "DustCreationLoop");
 					int count = dust.getValue().intValue();
 					if (count > 0) {
 						ItemEntity itemEnt = new ItemEntity(this.level, pos.x, pos.y, pos.z, new ItemStack(dust.getKey(), count));
@@ -673,6 +729,7 @@ public class SentientArrow extends AbstractArrow {
 		}
 	}
 	private void attemptToTransmuteEntity(LivingEntity entity) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "AttemptTransmuteEntity");
 		Player owner = owner();
 		int oldInvuln = entity.invulnerableTime;
 		entity.invulnerableTime = 0;
@@ -705,6 +762,7 @@ public class SentientArrow extends AbstractArrow {
 		Node lastNode = null;
 		Node thisNode = null;
 		for (int i = 0; i < path.getNodeCount() - 1; i++) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "DebugPathLoop");
 			Node node = path.getNode(i);
 			lastNode = thisNode;
 			thisNode = node;
@@ -721,6 +779,7 @@ public class SentientArrow extends AbstractArrow {
 	// TARGET SELECTION //
 	//////////////////////
 	private LivingEntity findTargetNear(Vec3 pos) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "FindTargetNear");
 		if (!level.isClientSide()) {
 			List<LivingEntity> validTargets = level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(pos, 128, 128, 128), SentientArrow.this::isValidHomingTargetForAutomatic);
 			if (!validTargets.isEmpty()) {
@@ -743,10 +802,11 @@ public class SentientArrow extends AbstractArrow {
 		return null;
 	}
 	private boolean attemptAutoRetarget() {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "AutoTargetAttempt");
 		LivingEntity newTarget = findTargetNear(this.getBoundingBox().getCenter());
 		if (newTarget != null && !newTarget.is(getTarget())) {
-			victimId = newTarget.getId();
-			state = ArrowState.DIRECT; // target visible
+			setTarget(newTarget.getId());
+			setState(ArrowState.DIRECT); // target visible
 			searchTime = 0;
 			particles(1);
 			return true;
@@ -754,7 +814,8 @@ public class SentientArrow extends AbstractArrow {
 		return false;
 	}
 	public boolean attemptManualRetarget() {
-		if (isInert()) state = ArrowState.DIRECT;
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "ManualTargetAttempt");
+		if (isInert()) setState(ArrowState.DIRECT);
 		Entity owner = getOwner();
 		if (owner == null) return false;
 		if (this.inGround) {
@@ -783,20 +844,11 @@ public class SentientArrow extends AbstractArrow {
 		resetTarget();
 		isReturningToOwner = true;
 		return false;
-		/*Vec3 oldPos = this.position();
-		setPos(owner.getEyePosition());
-		boolean did = attemptAutoRetarget();
-		setPos(oldPos); // lol, lmao
-		if (!did) {
-			doParticles();
-			return false;
-		}
-		return true;*/
 	}
 	private boolean trySwappingTargetTo(Entity newTarget) {
 		if (newTarget != null && !newTarget.is(getTarget())) {
-			victimId = newTarget.getId();
-			state = ArrowState.DIRECT;
+			setTarget(newTarget.getId());
+			setState(ArrowState.DIRECT);
 			searchTime = 0;
 			return true;
 		}
@@ -864,17 +916,45 @@ public class SentientArrow extends AbstractArrow {
 	////////////////////////
 	// DATA / STATE STUFF //
 	////////////////////////
+	public ArrowState getState() {
+		switch (entityData.get(AI_STATE)) {
+		case 0:
+			return ArrowState.SEARCHING;
+		case 1:
+			return ArrowState.DIRECT;
+		case 2:
+			return ArrowState.PATHING;
+		default:
+			return ArrowState.INERT;
+		}
+	}
+	private void setState(ArrowState newState) {
+		switch (newState) {
+		case SEARCHING:
+			entityData.set(AI_STATE, (byte)0);
+			break;
+		case DIRECT:
+			entityData.set(AI_STATE, (byte)1);
+			break;
+		case PATHING:
+			entityData.set(AI_STATE, (byte)2);
+			break;
+		case INERT:
+			entityData.set(AI_STATE, (byte)3);
+			break;
+		}
+	}
 	public boolean isLookingForTarget() {
-		return state == ArrowState.SEARCHING;
+		return getState() == ArrowState.SEARCHING;
 	}
 	public boolean isHoming() {
 		return isReturningToOwner || hasTarget();
 	}
 	public boolean hasTarget() {
-		return (state == ArrowState.DIRECT || state == ArrowState.PATHING) && victimId != -1;
+		return (getState() == ArrowState.DIRECT || getState() == ArrowState.PATHING) && getTargetId() != -1;
 	}
 	public boolean isInert() {
-		return state == ArrowState.INERT;
+		return getState() == ArrowState.INERT;
 	}
 	
 	public Player owner() {
@@ -886,11 +966,17 @@ public class SentientArrow extends AbstractArrow {
 	
 	@Nullable
 	public Entity getTarget() {
-		return level.getEntity(victimId);
+		return level.getEntity(getTargetId());
+	}
+	public int getTargetId() {
+		return entityData.get(TARGET_ID);
+	}
+	public void setTarget(int targetId) {
+		entityData.set(TARGET_ID, targetId);
 	}
 	private void resetTarget() {
 		searchTime = 0;
-		victimId = -1;
+		setTarget(-1);
 		targetPos = null;
 		forgetPaths();
 	}

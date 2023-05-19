@@ -29,7 +29,12 @@ import net.minecraft.world.level.block.EnchantmentTableBlock;
 
 import moze_intel.projecte.gameObjs.PETags;
 
+import net.solunareclipse1.magitekkit.data.MGTKItemTags;
+import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
+import net.solunareclipse1.magitekkit.util.EmcHelper;
+
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 /**
  * buffed, portable enchantment table
@@ -109,13 +114,13 @@ public class PhiloEnchantmentMenu extends AbstractContainerMenu {
 			ItemStack enchTarget = inv.getItem(0);
 			if (!enchTarget.isEmpty() && enchTarget.isEnchantable()) {
 				this.access.execute((level, tablePos) -> {
-					float j = 0;
+					float j = 15;
 
-					for (BlockPos shelfPos : EnchantmentTableBlock.BOOKSHELF_OFFSETS) {
-						if (EnchantmentTableBlock.isValidBookShelf(level, tablePos, shelfPos)) {
-							j += level.getBlockState(tablePos.offset(shelfPos)).getEnchantPowerBonus(level, tablePos.offset(shelfPos));
-						}
-					}
+					//for (BlockPos shelfPos : EnchantmentTableBlock.BOOKSHELF_OFFSETS) {
+					//	if (EnchantmentTableBlock.isValidBookShelf(level, tablePos, shelfPos)) {
+					//		j += level.getBlockState(tablePos.offset(shelfPos)).getEnchantPowerBonus(level, tablePos.offset(shelfPos));
+					//	}
+					//}
 
 					this.random.setSeed((long)this.enchantmentSeed.get());
 
@@ -162,51 +167,10 @@ public class PhiloEnchantmentMenu extends AbstractContainerMenu {
 			int i = id + 1;
 			if ((enchFuel.isEmpty() || enchFuel.getCount() < i) && !player.getAbilities().instabuild) {
 				return false;
-			} else if (this.costs[id] <= 0 || enchTarget.isEmpty() || (player.experienceLevel < i || player.experienceLevel < this.costs[id]) && !player.getAbilities().instabuild) {
+			} else if (this.costs[id] <= 0 || enchTarget.isEmpty() && !player.getAbilities().instabuild) {
 				return false;
 			} else {
-				this.access.execute((level, tablePos) -> {
-					ItemStack enchResult = enchTarget;
-					List<EnchantmentInstance> enchList = this.getEnchantmentList(enchTarget, id, this.costs[id]);
-					if (!enchList.isEmpty()) {
-						player.onEnchantmentPerformed(enchTarget, i);
-						boolean isBook = enchTarget.is(Items.BOOK);
-						if (isBook) {
-							enchResult = new ItemStack(Items.ENCHANTED_BOOK);
-							CompoundTag compoundtag = enchTarget.getTag();
-							if (compoundtag != null) {
-								enchResult.setTag(compoundtag.copy());
-							}
-							this.enchantSlots.setItem(0, enchResult);
-						}
-
-						for (int j = 0; j < enchList.size(); ++j) {
-							EnchantmentInstance ench = enchList.get(j);
-							if (isBook) {
-								EnchantedBookItem.addEnchantment(enchResult, ench);
-							} else {
-								enchResult.enchant(ench.enchantment, ench.level);
-							}
-						}
-
-						if (!player.getAbilities().instabuild) {
-							enchFuel.shrink(i);
-							if (enchFuel.isEmpty()) {
-								this.enchantSlots.setItem(1, ItemStack.EMPTY);
-							}
-						}
-
-						player.awardStat(Stats.ENCHANT_ITEM);
-						if (player instanceof ServerPlayer plr) {
-							CriteriaTriggers.ENCHANTED_ITEM.trigger(plr, enchResult, i);
-						}
-
-						this.enchantSlots.setChanged();
-						this.enchantmentSeed.set(player.getEnchantmentSeed());
-						this.slotsChanged(this.enchantSlots);
-						level.playSound(null, tablePos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0F, level.random.nextFloat() * 0.1F + 0.9F);
-					}
-				});
+				performEnch(player, enchTarget, enchFuel, id);
 				return true;
 			}
 		} else {
@@ -214,13 +178,76 @@ public class PhiloEnchantmentMenu extends AbstractContainerMenu {
 			return false;
 		}
 	}
+	
+	private void performEnch(Player player, ItemStack enchTarget, ItemStack enchFuel, int id) {
+		int i = id + 1;
+		ItemStack enchResult = enchTarget;
+		List<EnchantmentInstance> enchList = this.getEnchantmentList(enchTarget, id, this.costs[id]);
+		if (!enchList.isEmpty()) {
+			player.onEnchantmentPerformed(enchTarget, 0);
+			boolean isBook = enchTarget.is(Items.BOOK);
+			if (isBook) {
+				enchResult = new ItemStack(Items.ENCHANTED_BOOK);
+				CompoundTag compoundtag = enchTarget.getTag();
+				if (compoundtag != null) {
+					enchResult.setTag(compoundtag.copy());
+				}
+				this.enchantSlots.setItem(0, enchResult);
+			}
+
+			if (EmcHelper.COVALENCE_MAP == null) {
+				EmcHelper.initializeCovalenceDustMap();
+			}
+			int tier = EmcHelper.COVALENCE_MAP.indexOf(enchFuel.getItem());
+			int amountOfIncreases = random.nextInt(tier+1);
+			boolean increaseAll = amountOfIncreases >= enchList.size();
+			IntOpenHashSet idxs = new IntOpenHashSet(tier);
+			while (amountOfIncreases > 0 && idxs.size() < amountOfIncreases && !increaseAll) {
+				int newIdx = random.nextInt(enchList.size());
+				if (!idxs.contains(newIdx)) {
+					idxs.add(newIdx);
+				}
+			}
+			int increased = 0;
+			for (int j = 0; j < enchList.size(); ++j) {
+				EnchantmentInstance ench = enchList.get(j);
+				if (tier > 0 && (increaseAll || idxs.contains(j)) ) {
+					int bonus = i*random.nextInt(tier+1);
+					if (bonus > 0) {
+						ench = new EnchantmentInstance(ench.enchantment, Math.min(10, ench.level + bonus));
+						increased++;
+						player.level.playSound(null, player.blockPosition(), EffectInit.PHILO_TRANSMUTE.get(), SoundSource.PLAYERS, 1, increased/2f);
+					}
+				}
+				if (isBook) {
+					EnchantedBookItem.addEnchantment(enchResult, ench);
+				} else {
+					enchResult.enchant(ench.enchantment, ench.level);
+				}
+			}
+
+			if (!player.getAbilities().instabuild) {
+				enchFuel.shrink(i);
+				if (enchFuel.isEmpty()) {
+					this.enchantSlots.setItem(1, ItemStack.EMPTY);
+				}
+			}
+
+			player.awardStat(Stats.ENCHANT_ITEM);
+			if (player instanceof ServerPlayer plr) {
+				CriteriaTriggers.ENCHANTED_ITEM.trigger(plr, enchResult, i);
+			}
+
+			this.enchantSlots.setChanged();
+			this.enchantmentSeed.set(player.getEnchantmentSeed());
+			this.slotsChanged(this.enchantSlots);
+			player.level.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0F, player.level.random.nextFloat() * 0.1F + 0.9F);
+		}
+	}
 
 	private List<EnchantmentInstance> getEnchantmentList(ItemStack stack, int enchSlot, int enchLevel) {
 		this.random.setSeed((long)(this.enchantmentSeed.get() + enchSlot));
-		List<EnchantmentInstance> list = EnchantmentHelper.selectEnchantment(this.random, stack, enchLevel, false);
-		if (stack.is(Items.BOOK) && list.size() > 1) {
-			list.remove(this.random.nextInt(list.size()));
-		}
+		List<EnchantmentInstance> list = EnchantmentHelper.selectEnchantment(this.random, stack, enchLevel, true);
 		return list;
 	}
 
@@ -238,16 +265,17 @@ public class PhiloEnchantmentMenu extends AbstractContainerMenu {
     */
    public void removed(Player player) {
       super.removed(player);
-      this.access.execute((level, pos) -> {
-         this.clearContainer(player, this.enchantSlots);
-      });
+      this.clearContainer(player, this.enchantSlots);
+      //this.access.execute((level, pos) -> {
+      //   this.clearContainer(player, this.enchantSlots);
+      //});
    }
 
    /**
     * Determines whether supplied player can use this container
     */
    public boolean stillValid(Player player) {
-      return stillValid(this.access, player, Blocks.ENCHANTING_TABLE);
+      return true;//stillValid(this.access, player, Blocks.ENCHANTING_TABLE);
    }
 
    /**

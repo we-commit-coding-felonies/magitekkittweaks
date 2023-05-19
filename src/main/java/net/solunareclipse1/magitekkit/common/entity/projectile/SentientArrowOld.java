@@ -53,6 +53,7 @@ import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityPixie;
 
 /** @deprecated in favor of the rewrite: SentientArrow */
+@Deprecated
 public class SentientArrowOld extends Arrow {
 	private static final boolean DEBUG = false;
 	/** 0 = searching, 1 = found & currently chasing, 2 = target lost */

@@ -30,4 +30,13 @@ public class DebugCfg {
 	}
 	
 	// Common
+	public static BooleanValue
+					ARROW_LOG;
+	public static void registerCommonConfig(Builder cfg) {
+		cfg.comment("Settings used for debugging. Enable these at your own risk.").push("debug");
+		ARROW_LOG = cfg
+				.comment("Enable sentient arrow debug logs")
+				.define("debugArrowLogs", false);
+		cfg.pop();
+	}
 }
