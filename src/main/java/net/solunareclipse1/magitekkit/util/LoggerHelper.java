@@ -18,7 +18,16 @@ import com.mojang.logging.LogUtils;
  */
 public class LoggerHelper {
     public static final Logger LOGGER = LogUtils.getLogger();
-
+    
+    /**
+	 * Prints a standardized, short DEBUG to the logs
+	 * 
+	 * @param name A name for what is printing this
+	 * @param label A label for this, meant for searching
+	 */
+	public static void printDebug(String name, String label) {
+		LOGGER.info("|"+ label +"| - Debug from ["+ name +"]");
+	}
     /**
 	 * Prints a standardized DEBUG to the logs
 	 * containing a simple 1 line message

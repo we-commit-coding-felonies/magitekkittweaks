@@ -36,31 +36,120 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.GEM_BRACELET.get(), "Band of Arcana");
         
         // tooltips
-        add("tip.mgtk.arc_mode_swap", "Abilities: %s");
-        add("tip.mgtk.arc_mode_0", "Disabled");
-        add("tip.mgtk.arc_mode_1", "Mind");
-        add("tip.mgtk.arc_mode_2", "Time & Space");
-        add("tip.mgtk.arc_mode_3", "Harvest");
-        add("tip.mgtk.arc_mode_4", "Liquid");
-        add("tip.mgtk.arc_mode_5", "Magnum Opus");
-        add("tip.mgtk.arc_mode_6", "Archangel's");
-        add("tip.mgtk.arc_mode_7", "Rending Gale");
-        add("tip.mgtk.arc_mode_8", "Zero");
-        add("tip.mgtk.arc_mode_9", "Ignition");
+        add("tip.mgtk.arcana.1", "Channels the latent power of Gem Jewellery");
+        add("tip.mgtk.arcana.2", "Press %s to change mode, %s to toggle Covalence");
+        add("tip.mgtk.arcana.3", "Hold %s to modify certain abilities");
+        add("tip.mgtk.arcana.4", "Current mode: %s");
+        add("tip.mgtk.arcana.guide", "%s: %s");
+        add("tip.mgtk.arcana.guide.alt", "%s+%s: %s");
+        add("tip.mgtk.arcana.guide.1.1", "Withdraw 1 Level");
+        add("tip.mgtk.arcana.guide.1.1.alt", "Withdraw 10 Levels");
+        add("tip.mgtk.arcana.guide.1.2", "Deposit 1 Level");
+        add("tip.mgtk.arcana.guide.1.2.alt", "Deposit 10 Levels");
+        add("tip.mgtk.arcana.guide.1.3", "Deposit All XP");
+        add("tip.mgtk.arcana.guide.1.3.alt", "Deposit All XP");
+        add("tip.mgtk.arcana.guide.1.4", "Withdraw All XP");
+        add("tip.mgtk.arcana.guide.1.4.alt", "Withdraw All XP");
+        add("tip.mgtk.arcana.guide.2.1", "Gravity well (attract)");
+        add("tip.mgtk.arcana.guide.2.1.alt", "Gravity well (repel)");
+        add("tip.mgtk.arcana.guide.2.2", "Time acceleration");
+        add("tip.mgtk.arcana.guide.2.2.alt", "Toggle global time acceleration");
+        add("tip.mgtk.arcana.guide.2.3", "Blink");
+        add("tip.mgtk.arcana.guide.2.3.alt", "Recall");
+        add("tip.mgtk.arcana.guide.2.4", "Ender Chest");
+        add("tip.mgtk.arcana.guide.2.4.alt", "Anvil");
+        add("tip.mgtk.arcana.guide.3.1", "Withering vine");
+        add("tip.mgtk.arcana.guide.3.1.alt", "Withering vine");
+        add("tip.mgtk.arcana.guide.3.2", "Fertilize");
+        add("tip.mgtk.arcana.guide.3.2.alt", "Fertilize");
+        add("tip.mgtk.arcana.guide.3.3", "Clear potion effects");
+        add("tip.mgtk.arcana.guide.3.3.alt", "Clear potion effects");
+        add("tip.mgtk.arcana.guide.3.4", "Grow nearby");
+        add("tip.mgtk.arcana.guide.3.4.alt", "Harvest nearby");
+        add("tip.mgtk.arcana.guide.4.1", "Void liquid");
+        add("tip.mgtk.arcana.guide.4.1.alt", "Void liquid");
+        add("tip.mgtk.arcana.guide.4.2", "Place liquid");
+        add("tip.mgtk.arcana.guide.4.2.alt", "Place liquid");
+        add("tip.mgtk.arcana.guide.4.3", "Shoot liquid orb");
+        add("tip.mgtk.arcana.guide.4.3.alt", "Shoot liquid orb");
+        add("tip.mgtk.arcana.guide.4.4", "Change liquid type");
+        add("tip.mgtk.arcana.guide.4.4.alt", "Change liquid type");
+        add("tip.mgtk.arcana.guide.5.1", "Transmute");
+        add("tip.mgtk.arcana.guide.5.1.alt", "Transmute");
+        add("tip.mgtk.arcana.guide.5.2", "Divining Rod");
+        add("tip.mgtk.arcana.guide.5.2.alt", "Divining Rod");
+        add("tip.mgtk.arcana.guide.5.3", "Shoot transmutation orb");
+        add("tip.mgtk.arcana.guide.5.3.alt", "Shoot transmutation orb");
+        add("tip.mgtk.arcana.guide.5.4", "Craft");
+        add("tip.mgtk.arcana.guide.5.4.alt", "Enchant");
+        add("tip.mgtk.arcana.guide.6.1", "Shotgun");
+        add("tip.mgtk.arcana.guide.6.1.alt", "Shotgun");
+        add("tip.mgtk.arcana.guide.6.2", "Arrow stream");
+        add("tip.mgtk.arcana.guide.6.2.alt", "Arrow stream");
+        add("tip.mgtk.arcana.guide.6.3", "Summon / control Sentient Arrow");
+        add("tip.mgtk.arcana.guide.6.3.alt", "Summon / control Sentient Arrow");
+        add("tip.mgtk.arcana.guide.6.4", "Smart arrows");
+        add("tip.mgtk.arcana.guide.6.4.alt", "Smart arrows");
+        add("tip.mgtk.arcana.guide.7.1", "Gust");
+        add("tip.mgtk.arcana.guide.7.1.alt", "Gust");
+        add("tip.mgtk.arcana.guide.7.2", "Smite");
+        add("tip.mgtk.arcana.guide.7.2.alt", "Smite");
+        add("tip.mgtk.arcana.guide.7.3", "Smite nearby");
+        add("tip.mgtk.arcana.guide.7.3.alt", "Smite nearby");
+        add("tip.mgtk.arcana.guide.7.4", "Create thunderstorm");
+        add("tip.mgtk.arcana.guide.7.4.alt", "Create thunderstorm");
+        add("tip.mgtk.arcana.guide.8.1", "Extinguish nearby");
+        add("tip.mgtk.arcana.guide.8.1.alt", "Extinguish nearby");
+        add("tip.mgtk.arcana.guide.8.2", "Freeze");
+        add("tip.mgtk.arcana.guide.8.2.alt", "Freeze");
+        add("tip.mgtk.arcana.guide.8.3", "Ice shield");
+        add("tip.mgtk.arcana.guide.8.3.alt", "Ice shield");
+        add("tip.mgtk.arcana.guide.8.4", "Freeze nearby");
+        add("tip.mgtk.arcana.guide.8.4.alt", "Freeze nearby");
+        add("tip.mgtk.arcana.guide.9.1", "Fireballs");
+        add("tip.mgtk.arcana.guide.9.1.alt", "Throw TNT");
+        add("tip.mgtk.arcana.guide.9.2", "Ignite");
+        add("tip.mgtk.arcana.guide.9.2.alt", "Ignite");
+        add("tip.mgtk.arcana.guide.9.3", "Alchemical Flameburst");
+        add("tip.mgtk.arcana.guide.9.3.alt", "Alchemical Flameburst");
+        add("tip.mgtk.arcana.guide.9.4", "Ignite nearby");
+        add("tip.mgtk.arcana.guide.9.4.alt", "Ignite nearby");
+        add("tip.mgtk.arcana.mode.0", "Disabled");
+        add("tip.mgtk.arcana.mode.1", "Mind");
+        add("tip.mgtk.arcana.mode.2", "Gravity");
+        add("tip.mgtk.arcana.mode.3", "Harvest");
+        add("tip.mgtk.arcana.mode.4", "Liquid");
+        add("tip.mgtk.arcana.mode.5", "Magnum Opus");
+        add("tip.mgtk.arcana.mode.6", "Archangel");
+        add("tip.mgtk.arcana.mode.7", "Rending Gale");
+        add("tip.mgtk.arcana.mode.8", "Zero");
+        add("tip.mgtk.arcana.mode.9", "Ignition");
+        add("tip.mgtk.arcana.charge.on", "Covalence enabled");
+        add("tip.mgtk.arcana.charge.off", "Covalence disabled");
+        add("tip.mgtk.arcana.liquid.water", "Aqua");
+        add("tip.mgtk.arcana.liquid.lava", "Magma");
         add("tip.mgtk.dr", "Provides a %s% damage reduction");
         add("tip.mgtk.dyndr", "Currently providing a %s% damage reduction");
         add("tip.mgtk.burnout", "Burnout: %1$s / %2$s");
-        add("tip.mgtk.gem_circlet", "PLACEHOLDER");
-        add("tip.mgtk.gem_amulet", "PLACEHOLDER: Perhaps wearing this around your neck isn't the best idea...");
-        add("tip.mgtk.gem_timepiece", "2... 3... 5... 7... 11... 13...");
-        add("tip.mgtk.gem_anklet", "Not to be confused with Anklet of the Wind");
+        add("tip.mgtk.gem.ref.1", "One shudders to imagine what inhuman thoughts lie within");
+        add("tip.mgtk.gem.ref.2", "I am become death, the destroyer of worlds");
+        add("tip.mgtk.gem.ref.3", "2... 3... 5... 7... 11... 13...");
+        add("tip.mgtk.gem.ref.4", "Not to be confused with Anklet of the Wind");
+        
+
+        add("gui.mgtk.philo.enchanter.name", "Arcanum");
+        add("gui.mgtk.philo.enchanter.dust", "%s Covalence Dust");
+        add("gui.mgtk.philo.enchanter.bonus", "Up to %s bonus enchantment levels");
+        add("gui.mgtk.philo.enchanter.bonusamount", "Up to %s bonuses applied");
+        
+        add("gui.mgtk.woft.anvil.name", "Gravitational Anomaly");
 
         
         
         // subtitles
-        add("subtitles.mgtk.alchshield.ambient", "Barrier hums");
+        add("subtitles.mgtk.alchshield.ambient", "Alchemical Barrier hums");
         add("subtitles.mgtk.alchshield.fail", "Barrier disintegrates");
-        add("subtitles.mgtk.alchshield.ignored", "Barrier pierced");
+        add("subtitles.mgtk.alchshield.ignored", "Barrier is pierced");
         add("subtitles.mgtk.alchshield.protect", "Barrier deflects");
         
         add("subtitles.mgtk.emc.leak", "EMC leaks");
@@ -89,7 +178,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.item.matterarmor.degrade", "Armor degrades");
         add("subtitles.mgtk.item.matterarmor.shatter", "Jewellery shatters");
 
-        add("subtitles.mgtk.item.philo.3x3gui", "Alchemist opens crafting grid");
+        add("subtitles.mgtk.item.philo.3x3gui", "Incorporeal block accessed");
         add("subtitles.mgtk.item.philo.attack", "Magnum Opus transmutes entity");
         add("subtitles.mgtk.item.philo.itemize", "Something becomes item");
         add("subtitles.mgtk.item.philo.transmute", "Minium transmutation");
@@ -103,6 +192,8 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.item.woft.mode", "Pocketwatch clicks");
         add("subtitles.mgtk.item.woft.repel", "Gravity pushes");
         add("subtitles.mgtk.item.woft.tick", "Time accelerates");
+        
+        add("subtitles.mgtk.item.zero.freeze", "Frost magic");
 
         
         

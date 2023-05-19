@@ -223,9 +223,7 @@
     "item.zero.freeze": {
         "subtitle": "subtitles.mgtk.item.zero.freeze",
         "sounds": [
-            "magitekkit:item/zero/freeze1",
-            "magitekkit:item/zero/freeze2",
-            "magitekkit:item/zero/freeze3"
+            "magitekkit:item/zero/freeze"
         ]
     }
 }

@@ -1,27 +1,20 @@
 package net.solunareclipse1.magitekkit.network.packet.client;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
-import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
-
 import net.minecraftforge.network.NetworkEvent;
 
 import net.solunareclipse1.magitekkit.client.sound.SentientAmbient;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
-import net.solunareclipse1.magitekkit.util.MiscHelper;
 
 public record CreateLoopingSoundPacket(byte type, int entId) {
 	public void enc(FriendlyByteBuf buffer) {
@@ -39,6 +32,7 @@ public record CreateLoopingSoundPacket(byte type, int entId) {
 	public boolean handle(Supplier<NetworkEvent.Context> sup) {
 		NetworkEvent.Context ctx = sup.get();
 		ctx.enqueueWork(() -> {
+			@SuppressWarnings("resource")
 			ClientLevel level = Minecraft.getInstance().level;
 			Entity entity = level.getEntity(entId);
 			if (entity != null) {

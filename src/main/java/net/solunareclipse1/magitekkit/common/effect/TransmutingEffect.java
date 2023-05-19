@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -19,8 +18,6 @@ import moze_intel.projecte.gameObjs.registries.PEItems;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
-import net.solunareclipse1.magitekkit.util.EmcHelper;
-import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 
 public class TransmutingEffect extends MobEffect {
 	
@@ -71,7 +68,7 @@ public class TransmutingEffect extends MobEffect {
 	public void applyEffectTick(LivingEntity entity, int amplifier) {
 		entity.invulnerableTime = 0;
 		MobEffectInstance effect = entity.getEffect(EffectInit.TRANSMUTING.get());
-		if (isDurationEffectTick(effect.getDuration(), amplifier)) {
+		if (entity.isAlive() && isDurationEffectTick(effect.getDuration(), amplifier)) {
 			if (amplifier > 0) {
 				//entity.addEffect(new MobEffectInstance(EFFECTS_OF_DOOM[3]));
 				entity.hurt( MGTKDmgSrc.TRANSMUTATION_POTION, Math.max(1, entity.getHealth()/2f) );
@@ -91,24 +88,25 @@ public class TransmutingEffect extends MobEffect {
 					}
 				}
 				return;
-			} else {
-				int rangeOfEffects = 13+1; // index of last universal, +1 to account for nextInt() being exclusive
-				
-				if (entity instanceof ServerPlayer player) {
-					ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
-					if (chestplate.getItem() instanceof GemAmulet amulet) {
-						amulet.doLeak(chestplate, player.level, player, 4);
+			}
+			int rangeOfEffects = 13+1; // index of last universal, +1 to account for nextInt() being exclusive
+			
+			if (entity instanceof ServerPlayer player) {
+				ItemStack chestplate = player.getItemBySlot(EquipmentSlot.CHEST);
+				if (chestplate.getItem() instanceof GemAmulet amulet) {
+					for (int i = 0; i < 13; i++) {
+						amulet.doLeak(chestplate, player.level, player, 130-amplifier*13);
 					}
-					rangeOfEffects = EFFECTS_OF_DOOM.length; // if we are a player more effects are avaliable
 				}
-				
-				if (!entity.level.isClientSide()) {
-					if (entity.getRandom().nextInt(12) == 0) {
-						int amount = entity.getRandom().nextInt(4);
-						for (int i = 0; i < amount; i++) {
-							MobEffectInstance fx = new MobEffectInstance(EFFECTS_OF_DOOM[entity.getRandom().nextInt(rangeOfEffects)]);
-							entity.addEffect(fx);
-						}
+				rangeOfEffects = EFFECTS_OF_DOOM.length; // if we are a player more effects are avaliable
+			}
+			
+			if (!entity.level.isClientSide()) {
+				if (entity.getRandom().nextInt(12) == 0) {
+					int amount = entity.getRandom().nextInt(4);
+					for (int i = 0; i < amount; i++) {
+						MobEffectInstance fx = new MobEffectInstance(EFFECTS_OF_DOOM[entity.getRandom().nextInt(rangeOfEffects)]);
+						entity.addEffect(fx);
 					}
 				}
 			}

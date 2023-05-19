@@ -1,11 +1,8 @@
 package net.solunareclipse1.magitekkit.util;
 
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 
 import net.solunareclipse1.magitekkit.util.Constants.Xp;
-
-import vazkii.botania.common.helper.ExperienceHelper;
 
 public class PlrHelper {
 	/**

@@ -17,7 +17,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.util.profiling.metrics.MetricCategory;
 import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.world.level.pathfinder.BinaryHeap;
 import net.minecraft.world.level.pathfinder.Node;

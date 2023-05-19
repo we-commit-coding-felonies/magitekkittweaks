@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Range;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -29,12 +28,8 @@ import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.api.capabilities.item.IItemEmcHolder;
 import moze_intel.projecte.capability.EmcHolderItemCapabilityWrapper;
 import moze_intel.projecte.gameObjs.items.ItemPE;
-import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.WorldHelper;
 
-import net.solunareclipse1.magitekkit.api.capability.wrapper.HazmatCapabilityWrapper;
-import net.solunareclipse1.magitekkit.api.item.IHazmatItem;
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase.GemJewelrySetInfo;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
@@ -47,7 +42,6 @@ import net.solunareclipse1.magitekkit.util.ProjectileHelper;
 
 import mekanism.api.Coord4D;
 import mekanism.api.MekanismAPI;
-import mekanism.api.radiation.capability.IRadiationShielding;
 
 /**
  * Chestplate
@@ -94,7 +88,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
-		tips.add(new TranslatableComponent("tip.mgtk.gem_amulet").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.2").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	
 	//@Override
@@ -130,7 +124,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 				}
 				
 				// life stone
-				if (plrEmc >= Constants.EmcCosts.JEWELRY_REJUVENATE && level.getGameTime() % 7 == 0) {
+				if (!player.hasEffect(EffectInit.TRANSMUTING.get()) && plrEmc >= Constants.EmcCosts.JEWELRY_REJUVENATE && level.getGameTime() % 7 == 0) {
 					if (tryHeal(player)) {
 						plrEmc -= Constants.EmcCosts.JEWELRY_REJUVENATE;
 					}
@@ -152,27 +146,6 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 				}
 			}
 		}
-		
-		/*
-		long plrEmc = jewelryTick(stack, level, player).plrEmc();
-		
-		// leaks emc when below half durability
-		if (getDamage(stack) >= getMaxDamage(stack)/2) {
-			plrEmc = leakEmc(stack, level, player, plrEmc);
-		}
-		
-		// self-refilling
-		autoRefill(stack, player);
-		
-		// life stone
-		plrEmc = rejuvenatePlayer(level, player, plrEmc);
-		
-		// hum sound, should be done last so that plrEmc is accurate
-		if (level.getGameTime() % 160 == 0) { // nested if statement to we dont run shieldCondition every tick
-			if (shieldCondition(player, 1f, DamageSource.GENERIC, stack) && plrEmc > 0) {
-				level.playSound(player, player, EffectInit.SHIELD_AMBIENT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
-			}
-		}*/
 	}
 	
 	
@@ -282,7 +255,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 			consumed += Math.max(0, diff);
 			break;
 		case 12:
-			player.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 4, 1));
+			player.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 100, 0));
 			break;
 		case 13:
 			consumed += rand.nextInt(1, 8193);

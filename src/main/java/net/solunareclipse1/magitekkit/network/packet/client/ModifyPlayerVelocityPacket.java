@@ -1,19 +1,13 @@
 package net.solunareclipse1.magitekkit.network.packet.client;
 
-import java.util.Random;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import net.minecraftforge.network.NetworkEvent;
-
-import vazkii.botania.client.fx.WispParticleData;
 
 /**
  * because changing velocity serverside doesnt seem to do anything <br>
@@ -45,7 +39,8 @@ public record ModifyPlayerVelocityPacket(Vec3 vector, byte operation) {
 	public boolean handle(Supplier<NetworkEvent.Context> sup) {
         NetworkEvent.Context ctx = sup.get();
         ctx.enqueueWork(() -> {
-        	LocalPlayer player = Minecraft.getInstance().player;
+        	@SuppressWarnings("resource")
+			LocalPlayer player = Minecraft.getInstance().player;
         	Vec3 newVel = player.getDeltaMovement();
         	switch (operation) {
         	

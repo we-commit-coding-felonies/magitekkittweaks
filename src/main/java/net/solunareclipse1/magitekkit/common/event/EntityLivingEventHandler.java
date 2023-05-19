@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,8 +22,6 @@ import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
-import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 import morph.avaritia.entity.InfinityArrowEntity;

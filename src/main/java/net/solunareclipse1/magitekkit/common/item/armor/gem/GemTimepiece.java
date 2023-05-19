@@ -25,8 +25,6 @@ import moze_intel.projecte.gameObjs.PETags;
 import moze_intel.projecte.utils.ItemHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase.GemJewelrySetInfo;
-import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
 import vazkii.botania.api.BotaniaAPI;
@@ -48,7 +46,7 @@ public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmo
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
 		super.appendHoverText(stack, level, tips, isAdvanced);
-		tips.add(new TranslatableComponent("tip.mgtk.gem_timepiece").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.3").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	
 	
@@ -62,13 +60,13 @@ public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmo
 			if (sneaking && plrEmc >= 10 && !player.getAbilities().flying) {
 				fastDescend(player, level);
 			}
-		} else {
+		} //else {
 			// Server
 			if (!stack.isDamaged()) {
 				if (plrEmc > 0 && set.chest().pristine()) {
-					if (sneaking && player.isOnGround()) {
-						plrEmc -= EmcHelper.consumeAvaliableEmc(player, repelEntities(player, level, plrEmc));
-					}
+					//if (sneaking && player.isOnGround()) {
+					//	plrEmc -= EmcHelper.consumeAvaliableEmc(player, repelEntities(player, level, plrEmc));
+					//}
 					
 					if (!sneaking) {
 						plrEmc -= EmcHelper.consumeAvaliableEmc(player, vacuumItems(player, level, plrEmc));
@@ -79,7 +77,7 @@ public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmo
 					plrEmc -= EmcHelper.consumeAvaliableEmc(player, 10);
 				}
 			}
-		}
+		//}
 	}
 	
 	// nearly identical to normal gem leggings fast descend

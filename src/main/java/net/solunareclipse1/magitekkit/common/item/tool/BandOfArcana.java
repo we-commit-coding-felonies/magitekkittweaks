@@ -1,9 +1,7 @@
 package net.solunareclipse1.magitekkit.common.item.tool;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.UUID;
@@ -12,26 +10,37 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllItems;
-import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.foundation.item.CustomArmPoseItem;
+
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.shaders.Effect;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.model.HumanoidModel.ArmPose;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.InteractionHand;
@@ -40,26 +49,49 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.animal.SnowGolem;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Blaze;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Drowned;
+import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.entity.monster.MagmaCube;
+import net.minecraft.world.entity.monster.Skeleton;
+import net.minecraft.world.entity.monster.Stray;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.MinecartTNT;
+import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.EnchantmentMenu;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
+import net.minecraft.world.entity.projectile.Fireball;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.NameTagItem;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -67,7 +99,6 @@ import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BonemealableBlock;
@@ -88,6 +119,8 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -114,22 +147,31 @@ import moze_intel.projecte.gameObjs.PETags.BlockEntities;
 import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.gameObjs.registries.PEItems;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
+import moze_intel.projecte.utils.ClientKeyHelper;
 import moze_intel.projecte.utils.EMCHelper;
+import moze_intel.projecte.utils.PEKeybind;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 import moze_intel.projecte.utils.text.PELang;
 
-import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.ChargeItemCapabilityWrapperButBetter;
+import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.item.ISwingItem;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
-import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrowOld;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
+import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
+import net.solunareclipse1.magitekkit.common.inventory.container.GravityAnvilMenu;
+import net.solunareclipse1.magitekkit.common.inventory.container.PhiloEnchantmentMenu;
+import net.solunareclipse1.magitekkit.common.item.MGTKCovalenceItem;
 import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
+import net.solunareclipse1.magitekkit.common.item.armor.gem.GemTimepiece;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.config.DebugCfg;
+import net.solunareclipse1.magitekkit.config.EmcCfg;
+import net.solunareclipse1.magitekkit.config.EmcCfg.Arcana.*;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
@@ -137,18 +179,24 @@ import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket.LineParticlePreset;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.GustParticlePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
 import net.solunareclipse1.magitekkit.util.Constants.Cooldowns;
 import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
 import net.solunareclipse1.magitekkit.util.Constants.Xp;
+import net.solunareclipse1.magitekkit.util.ColorsHelper;
 import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.PlrHelper;
 import net.solunareclipse1.magitekkit.util.ProjectileHelper;
+import net.solunareclipse1.magitekkit.util.ProjectileHelper.*;
+import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongComparators;
@@ -159,40 +207,40 @@ import vazkii.botania.api.mana.BurstProperties;
 import vazkii.botania.api.mana.ILensEffect;
 import vazkii.botania.client.fx.WispParticleData;
 import vazkii.botania.common.block.ModBlocks;
-import vazkii.botania.common.block.tile.ModTiles;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityManaBurst;
-import vazkii.botania.common.handler.ModSounds;
+import vazkii.botania.common.entity.EntityManaStorm;
 import vazkii.botania.common.helper.ItemNBTHelper;
 import vazkii.botania.common.item.ModItems;
 import vazkii.botania.common.item.relic.ItemDice;
 import vazkii.botania.xplat.IXplatAbstractions;
+import wayoftime.bloodmagic.api.compat.EnumDemonWillType;
+import wayoftime.bloodmagic.api.compat.IDemonWill;
+import wayoftime.bloodmagic.api.compat.IMultiWillTool;
 
-public class BandOfArcana extends MGTKItem
-	implements IModeChanger, IItemCharge, IProjectileShooter, IExtraFunction, ISwingItem, ILensEffect, CustomArmPoseItem {
+public class BandOfArcana extends MGTKCovalenceItem
+	implements IModeChanger, IItemCharge, IProjectileShooter, IExtraFunction, ISwingItem, ILensEffect, CustomArmPoseItem, IMultiWillTool {
 
 	//////////////////////////////////////////////
 	// CONSTANTS, GLOBAL VARS, AND CONSTRUCTORS //
 	//////////////////////////////////////////////
-	public static final Vec3 FORWARD_RELATIVE = new Vec3(0,0,1);
 	public static final String TAG_MODE = "boa_mode";
 	public static final String TAG_EXP = "boa_experience";
-	public static final String TAG_LVL = "boa_levels";
 	public static final String TAG_LIQUID = "boa_liquid";
 	public static final String TAG_WOFT = "boa_woft";
-	public static final String TAG_OFFENSIVE = "boa_offensive";
+	public static final String TAG_COVALENCE = CovalentCapabilityWrapper.TAG_STATE;
 	public static final String TAG_ARROWTRACKER = "boa_arrowtracker";
 	private static final String[] KEY_MODES = {
-			"tip.mgtk.arc_mode_0", // Disabled
-			"tip.mgtk.arc_mode_1", // Mind
-			"tip.mgtk.arc_mode_2", // Watch
-			"tip.mgtk.arc_mode_3", // Harvest
-			"tip.mgtk.arc_mode_4", // Liquid
-			"tip.mgtk.arc_mode_5", // Philo
-			"tip.mgtk.arc_mode_6", // Archangels
-			"tip.mgtk.arc_mode_7", // SWRG
-			"tip.mgtk.arc_mode_8", // Zero
-			"tip.mgtk.arc_mode_9"  // Ignition
+			"tip.mgtk.arcana.mode.0", // Disabled
+			"tip.mgtk.arcana.mode.1", // Mind
+			"tip.mgtk.arcana.mode.2", // Watch
+			"tip.mgtk.arcana.mode.3", // Harvest
+			"tip.mgtk.arcana.mode.4", // Liquid
+			"tip.mgtk.arcana.mode.5", // Philo
+			"tip.mgtk.arcana.mode.6", // Archangels
+			"tip.mgtk.arcana.mode.7", // SWRG
+			"tip.mgtk.arcana.mode.8", // Zero
+			"tip.mgtk.arcana.mode.9"  // Ignition
 	};
 	public static final UUID TIME_ACCEL_UUID = UUID.fromString("311f77f1-5573-431d-8340-06511e72d28f");
 	/** splits things into categories so that multiple similar items dont clog up drops */
@@ -283,6 +331,45 @@ public class BandOfArcana extends MGTKItem
 		addItemCapability(ProjectileShooterItemCapabilityWrapper::new);
 	}
 	
+	@Override
+	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
+		super.appendHoverText(stack, level, tips, isAdvanced);
+		tips.add(new TextComponent(""));
+		Minecraft mc = Minecraft.getInstance();
+		Options o = mc.options;
+		byte mode = getMode(stack);
+		Component[] bind = {
+				o.keyAttack.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.AQUA),					// 0
+				o.keyUse.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.AQUA),						// 1
+				ClientKeyHelper.getKeyName(PEKeybind.FIRE_PROJECTILE).copy().withStyle(ChatFormatting.AQUA),	// 2
+				ClientKeyHelper.getKeyName(PEKeybind.EXTRA_FUNCTION).copy().withStyle(ChatFormatting.AQUA),		// 3
+				ClientKeyHelper.getKeyName(PEKeybind.MODE).copy().withStyle(ChatFormatting.AQUA),				// 4
+				ClientKeyHelper.getKeyName(PEKeybind.CHARGE).copy().withStyle(ChatFormatting.AQUA),				// 5
+				o.keyShift.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.AQUA)						// 6
+		};
+		// Style(color, bold, italic, underline, strikethrough, obfuscated, clickevent, hoverevent, insertion, font)
+		Style modeStyle = getModeTextStyle(mode, getLiquid(stack));
+		tips.add(new TranslatableComponent("tip.mgtk.arcana.1").withStyle(ChatFormatting.UNDERLINE)); // Flavor
+		tips.add(new TranslatableComponent("tip.mgtk.arcana.2", bind[4], bind[5])); // Keys
+		tips.add(new TranslatableComponent("tip.mgtk.arcana.3", bind[6])); // Sneak
+		tips.add(new TranslatableComponent("tip.mgtk.arcana.4", new TranslatableComponent(KEY_MODES[mode]).withStyle(modeStyle))); // Mode
+		//Minecraft.getInstance().options.keyAttack.getTranslatedKeyMessage()
+		if (mode != 0) {
+			boolean sneak = InputConstants.isKeyDown(mc.getWindow().getWindow(), o.keyShift.getKey().getValue());
+			for (int i = 0; i < 4; i++) {
+				if (!sneak) {
+					tips.add(new TranslatableComponent("tip.mgtk.arcana.guide", bind[i],
+							new TranslatableComponent("tip.mgtk.arcana.guide."+mode+"."+(i+1)).withStyle(modeStyle.withBold(false).withItalic(true)))
+					);
+				} else {
+					tips.add(new TranslatableComponent("tip.mgtk.arcana.guide.alt", bind[6], bind[i],
+							new TranslatableComponent("tip.mgtk.arcana.guide."+mode+"."+(i+1)+".alt").withStyle(modeStyle.withBold(false).withItalic(true)))
+					);
+				}
+			}
+		}
+	}
+	
 	
 	
 	
@@ -297,144 +384,828 @@ public class BandOfArcana extends MGTKItem
 	//////////////////////////////////////////////////////////////
 	@Override
 	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
-		if (!selected) {
-			if ( entity instanceof Player player && !(player.isUsingItem() && player.getUseItem().equals(stack)) ) {
-				for (Attribute attribute : getTimeAccelAttributes()) {
-					player.getAttribute(attribute).removeModifier(TIME_ACCEL_UUID);
+		if (entity instanceof Player plr) {
+			while (!selected) {
+				// if player is currently accelerating with a different band, dont reset
+				if (plr.isUsingItem()) {
+					ItemStack using = plr.getUseItem();
+					if (using.getItem() instanceof BandOfArcana && getMode(using) == 2) {
+						break;
+					}
+				}
+				resetTimeAccelSpeed(plr);
+				break;
+			}
+			if (covalenceActive(stack)) {
+				long need = CovalentCapabilityWrapper.getPoolNeeded(stack);
+				if (need > 0) {
+					long consumed = EmcHelper.consumeAvaliableEmc(plr, need);
+					long newAmount = Math.min(CovalentCapabilityWrapper.getPoolMax(stack), CovalentCapabilityWrapper.getPool(stack) + Mth.clamp(consumed, 0, need));
+					CovalentCapabilityWrapper.setPool(stack, newAmount);
+					if (consumed < need) {
+						// shut off covalence when player runs out of EMC so that we dont search inventory every tick
+						changeCharge(plr, stack, null);
+					}
 				}
 			}
 		}
 	}
 	
-	// IExtraFunction (C)
 	@Override
-	public boolean doExtraFunction(@NotNull ItemStack stack, @NotNull Player player, @Nullable InteractionHand hand) {
-		//this.inventoryTick(pStack, pLevel, pEntity, pSlotId, pIsSelected);
-		if (!player.level.isClientSide && GemJewelryBase.fullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
-			long plrEmc = EmcHelper.getAvaliableEmc(player);
+	public boolean onSwingAir(Context ctx) {
+		ServerPlayer player = ctx.getSender();
+		ItemStack stack = player.getMainHandItem();
+		if (isValidRingUser(player, stack)) {
 			boolean didDo = false;
-			switch (getMode(stack)) {
+			ServerLevel level = player.getLevel();
+			boolean client = level.isClientSide;
+			byte mode = getMode(stack);
+			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
+			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
+			long plrEmc = EmcHelper.getAvaliableEmc(player);
 			
-			case 1: // Mind (deposit all xp)
+			switch (mode) {
+			case 1: // Mind (withdraw 1 / 10 levels)
+				didDo = tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
+				break;
+			case 2: // Watch (gravity attract / repel)
+				if (plrEmc >= WOFT.GRAVITY.get()) {
+					Vec3 singularity = player.getBoundingBox().getCenter();
+					long victimCount = gravitateEntities( level, singularity, plrEmc/WOFT.GRAVITY.get(), player.isShiftKeyDown() );
+					if (victimCount > 0) {
+						EmcHelper.consumeAvaliableEmc(player, victimCount*WOFT.GRAVITY.get());
+						level.playSound(null, player.blockPosition(), player.isShiftKeyDown() ? EffectInit.WOFT_REPEL.get() : EffectInit.WOFT_ATTRACT.get(), SoundSource.PLAYERS, 0.5f, 1);
+						didDo = true;
+					}
+				}
+				break;
+			case 3: // Harvest (wither vine)
+				if (plrEmc >= Harvest.WITHERVINE.get() && ready) {
+					WitherVineProjectile vine = new WitherVineProjectile(level, player);
+					vine.setDeltaMovement(player.getLookAngle().scale(2));
+					vine.setPos(player.getEyePosition());
+					level.addFreshEntity(vine);
+					EmcHelper.consumeAvaliableEmc(player, Harvest.WITHERVINE.get());
+					level.playSound(null, player.blockPosition(), SoundEvents.BONE_MEAL_USE, SoundSource.PLAYERS, 100, 1);
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
+				break;
+			case 4: // Liquid (destroy liquid)
+				if (plrEmc >= Liquid.DESTROY.get() && ModItems.openBucket.use(level, player, InteractionHand.MAIN_HAND).getResult().equals(InteractionResult.CONSUME)) {
+					EmcHelper.consumeAvaliableEmc(player, Liquid.DESTROY.get());
+					level.playSound(null, player.blockPosition(), PESoundEvents.DESTRUCT.get(), SoundSource.PLAYERS, 0.2f, 1);
+					didDo = true;
+				}
+				break;
+			case 5: // Philo (nothing)
+				break;
+			case 6: // Archangel (shotgun)
+				if (plrEmc >= Archangel.ARROW.get() && ready) {
+					EmcHelper.consumeAvaliableEmc(player,
+							ProjectileHelper.shootArrow((int)Math.min(16, plrEmc/Archangel.ARROW.get()), ArrowType.STRAIGHT,
+									new ShootContext(level, player),
+									new ArrowOptions(3, 3, 8, (byte)0, false, Pickup.DISALLOWED))
+							.size());
+					cd.addCooldown(cdItem, 5);
+					didDo = true;
+				}
+				break;
+			case 7: // SWRG (gust)
+				if (plrEmc >= SWRG.GUST.get() && ready && !client) {
+					windGust((ServerPlayer)player);
+					EmcHelper.consumeAvaliableEmc(player, SWRG.GUST.get());
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
+				break;
+			case 8: // Zero (extinguish AOE)
+				if (plrEmc >= Zero.EXTINGUISH.get()) {
+					EmcHelper.consumeAvaliableEmc(player,
+							extinguishAoe(player,
+									AABB.ofSize(player.getBoundingBox().getCenter(), 16, 16, 16),
+									plrEmc/Zero.EXTINGUISH.get())
+							* Zero.EXTINGUISH.get()
+					);
+					cd.addCooldown(cdItem, 5);
+					didDo = true;
+				}
+				break;
+			case 9: // Ignition (fireball / tnt)
+				if (plrEmc >= Ignition.FIREBALL.get() && ready) {
+					int cdTime = 2;
+					if (player.isShiftKeyDown() && plrEmc >= Ignition.TNT.get()) {
+						cdTime = 5;
+						PrimedTnt tnt = tnt(level, player.getEyePosition(), player.getLookAngle().scale(2), player);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.TNT.get());
+						level.playSound(null, tnt.blockPosition(), SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 1, 1);
+					} else {
+						for (int i = 0; i < 5; i++) {
+							fireball(level, player.getEyePosition(), player.getEyePosition().add(player.getLookAngle().scale(2)), player);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Ignition.FIREBALL.get());
+						level.playSound(null, player.blockPosition(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1, 1);
+					}
+					level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, level.random.nextFloat(0.7f, 1.4f));
+					cd.addCooldown(cdItem, cdTime);
+					didDo = true;
+				}
+				break;
+
+			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+			case 0:
+				break;
+			}
+			
+			return didDo;
+		} else {
+			changeMode(player, stack, InteractionHand.MAIN_HAND);
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean onLeftClickEntity(ItemStack stack, Player player, Entity victim) {
+		if (isValidRingUser(player, stack)) {
+			boolean didDo = false;
+			Level level = player.getLevel();
+			boolean client = level.isClientSide;
+			byte mode = getMode(stack);
+			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
+			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
+			long plrEmc = EmcHelper.getAvaliableEmc(player);
+			
+			switch (mode) {
+			case 1: // Mind (withdraw 1 / 10 levels)
+				didDo = tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
+				break;
+			case 2: // Watch (gravity attract / repel)
+				if (plrEmc >= WOFT.GRAVITY.get() && ready) {
+					Vec3 singularity = player.getBoundingBox().getCenter();
+					long victimCount = gravitateEntities( level, singularity, plrEmc/WOFT.GRAVITY.get(), player.isShiftKeyDown() );
+					if (victimCount > 0) {
+						EmcHelper.consumeAvaliableEmc(player, victimCount*WOFT.GRAVITY.get());
+						level.playSound(null, player.blockPosition(), player.isShiftKeyDown() ? EffectInit.WOFT_REPEL.get() : EffectInit.WOFT_ATTRACT.get(), SoundSource.PLAYERS, 0.5f, 1);
+						didDo = true;
+					}
+				}
+				break;
+			case 3: // Harvest (wither vine)
+				if (plrEmc >= Harvest.WITHERVINE.get() && ready) {
+					WitherVineProjectile vine = new WitherVineProjectile(level, player);
+					vine.setDeltaMovement(player.getLookAngle().scale(2));
+					vine.setPos(player.getEyePosition());
+					level.addFreshEntity(vine);
+					EmcHelper.consumeAvaliableEmc(player, Harvest.WITHERVINE.get());
+					level.playSound(null, player.blockPosition(), SoundEvents.BONE_MEAL_USE, SoundSource.PLAYERS, 100, 1);
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
+				break;
+			case 4: // Liquid (nothing)
+				break;
+			case 5: // Philo (transmute)
+				if (plrEmc >= Philo.TRANSMUTE.get() && !client && ready
+						&& victim instanceof LivingEntity lEnt
+						&& !lEnt.isDeadOrDying()
+						&& !lEnt.isInvulnerableTo(MGTKDmgSrc.TRANSMUTATION_POTION)
+						&& !EntityHelper.isInvincible(lEnt)
+				) {
+					if (plrEmc >= Philo.ITEMIZE.get() && !cd.isOnCooldown(stack.getItem())) {	
+						int cdTime = (int) lEnt.getHealth()*7;
+						if (entityItemizer(lEnt, player, null)) {
+							didDo = true;
+							level.playSound(null, lEnt.blockPosition(), EffectInit.PHILO_ITEMIZE.get(), SoundSource.PLAYERS, 1, 2);
+							cd.addCooldown(stack.getItem(), cdTime);
+							EmcHelper.consumeAvaliableEmc(player, Philo.ITEMIZE.get());
+							break;
+						}
+					}
+					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_2, Math.max(1, lEnt.getMaxHealth()/2));
+					lEnt.setLastHurtByPlayer(player);
+					if (lEnt instanceof NeutralMob mob) {
+						mob.setPersistentAngerTarget(player.getUUID());
+					}
+					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 3, 2), player);
+					EmcHelper.consumeAvaliableEmc(player, Philo.TRANSMUTE.get());
+					level.playSound(null, player, EffectInit.PHILO_ATTACK.get(), SoundSource.PLAYERS, 1, 2);
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
+				break;
+			case 6: // Archangel (shotgun)
+				if (plrEmc >= Archangel.ARROW.get() && ready) {
+					EmcHelper.consumeAvaliableEmc(player,
+							ProjectileHelper.shootArrow((int)Math.min(16, plrEmc/Archangel.ARROW.get()), ArrowType.STRAIGHT,
+									new ShootContext(level, player),
+									new ArrowOptions(3, 3, 8, (byte)0, false, Pickup.DISALLOWED))
+							.size());
+					cd.addCooldown(cdItem, 5);
+					didDo = true;
+				}
+				break;
+			case 7: // SWRG (gust)
+				if (plrEmc >= SWRG.GUST.get() && ready && !client) {
+					windGust((ServerPlayer)player);
+					EmcHelper.consumeAvaliableEmc(player, SWRG.GUST.get());
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
+				break;
+			case 8: // Zero (extinguish AOE)
+				if (plrEmc >= Zero.EXTINGUISH.get()) {
+					EmcHelper.consumeAvaliableEmc(player,
+							extinguishAoe(player,
+									AABB.ofSize(player.getBoundingBox().getCenter(), 16, 16, 16),
+									plrEmc/Zero.EXTINGUISH.get())
+							* Zero.EXTINGUISH.get()
+					);
+					cd.addCooldown(cdItem, 5);
+					didDo = true;
+				}
+				break;
+			case 9: // Ignition (fireball / tnt)
+				if (plrEmc >= Ignition.FIREBALL.get() && ready) {
+					int cdTime = 2;
+					if (player.isShiftKeyDown() && plrEmc >= Ignition.TNT.get()) {
+						cdTime = 5;
+						PrimedTnt tnt = tnt(level, player.getEyePosition(), player.getLookAngle().scale(2), player);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.TNT.get());
+						level.playSound(null, tnt.blockPosition(), SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 1, 1);
+					} else {
+						for (int i = 0; i < 5; i++) {
+							fireball(level, player.getEyePosition(), player.getEyePosition().add(player.getLookAngle().scale(2)), player);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Ignition.FIREBALL.get());
+						level.playSound(null, player.blockPosition(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1, 1);
+					}
+					level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, level.random.nextFloat(0.7f, 1.4f));
+					cd.addCooldown(cdItem, cdTime);
+					didDo = true;
+				}
+				break;
+			
+			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+			case 0:
+				break;
+			}
+			
+			return didDo;
+		} else {
+			changeMode(player, stack, InteractionHand.MAIN_HAND);
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean onSwingBlock(PlayerInteractEvent.LeftClickBlock evt) {
+		ItemStack stack = evt.getItemStack();
+		if (stack.isEmpty() || !(stack.getItem() instanceof BandOfArcana)) return false;
+		Player player = evt.getPlayer();
+		if (isValidRingUser(player, stack)) {
+			boolean didDo = false;
+			Level level = player.getLevel();
+			boolean client = level.isClientSide;
+			byte mode = getMode(stack);
+			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
+			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
+			long plrEmc = EmcHelper.getAvaliableEmc(player);
+			
+			switch (mode) {
+			case 1: // Mind (withdraw 1 / 10 levels)
+				didDo = tryWithdrawXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
+				break;
+			case 2: // Watch (gravity attract / repel)
+				if (plrEmc >= WOFT.GRAVITY.get()) {
+					Vec3 singularity = Vec3.atCenterOf(evt.getPos().relative(evt.getFace(), 1));
+					long victimCount = gravitateEntities( level, singularity, plrEmc/WOFT.GRAVITY.get(), player.isShiftKeyDown() );
+					if (victimCount > 0) {
+						EmcHelper.consumeAvaliableEmc(player, victimCount*WOFT.GRAVITY.get());
+						level.playSound(null, player.blockPosition(), player.isShiftKeyDown() ? EffectInit.WOFT_REPEL.get() : EffectInit.WOFT_ATTRACT.get(), SoundSource.PLAYERS, 0.5f, 1);
+						didDo = true;
+					}
+				}
+				break;
+			case 3: // Harvest (wither vine)
+				if (plrEmc >= Harvest.WITHERVINE.get() && ready) {
+					WitherVineProjectile vine = new WitherVineProjectile(level, player);
+					vine.setDeltaMovement(player.getLookAngle().scale(2));
+					vine.setPos(player.getEyePosition());
+					level.addFreshEntity(vine);
+					EmcHelper.consumeAvaliableEmc(player, Harvest.WITHERVINE.get());
+					level.playSound(null, player.blockPosition(), SoundEvents.BONE_MEAL_USE, SoundSource.PLAYERS, 100, 1);
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
+				break;
+			case 4: // Liquid (destroy liquid)
+				if (plrEmc >= Liquid.DESTROY.get() && ModItems.openBucket.use(level, player, InteractionHand.MAIN_HAND).getResult().equals(InteractionResult.CONSUME)) {
+					EmcHelper.consumeAvaliableEmc(player, Liquid.DESTROY.get());
+					level.playSound(null, player.blockPosition(), PESoundEvents.DESTRUCT.get(), SoundSource.PLAYERS, 0.2f, 1);
+					didDo = true;
+				}
+				break;
+			case 5: // Philo (transmute block)
+				if (ready) {
+					if (PEItems.PHILOSOPHERS_STONE.get().useOn(new UseOnContext(player, evt.getHand(), new BlockHitResult( Vec3.atCenterOf(evt.getPos()), evt.getFace(), evt.getPos(), false ))) == InteractionResult.SUCCESS) {
+						didDo = true;
+						cd.addCooldown(cdItem, 5);
+					}
+				}
+				break;
+			case 6: // Archangel (shotgun)
+				if (plrEmc >= Archangel.ARROW.get() && ready) {
+					EmcHelper.consumeAvaliableEmc(player,
+							ProjectileHelper.shootArrow((int)Math.min(16, plrEmc/Archangel.ARROW.get()), ArrowType.STRAIGHT,
+									new ShootContext(level, player),
+									new ArrowOptions(3, 3, 8, (byte)0, false, Pickup.DISALLOWED))
+							.size() * Archangel.ARROW.get());
+					cd.addCooldown(cdItem, 5);
+					didDo = true;
+				}
+				break;
+			case 7: // SWRG (gust)
+				if (plrEmc >= SWRG.GUST.get() && ready && !client) {
+					windGust((ServerPlayer)player);
+					EmcHelper.consumeAvaliableEmc(player, SWRG.GUST.get());
+					cd.addCooldown(cdItem, 30);
+					didDo = true;
+				}
+				break;
+			case 8: // Zero (extinguish AOE)
+				if (plrEmc >= Zero.EXTINGUISH.get()) {
+					EmcHelper.consumeAvaliableEmc(player,
+							extinguishAoe(player,
+									AABB.ofSize(player.getBoundingBox().getCenter(), 16, 16, 16),
+									plrEmc/Zero.EXTINGUISH.get())
+							* Zero.EXTINGUISH.get()
+					);
+					cd.addCooldown(cdItem, 5);
+					didDo = true;
+				}
+				break;
+			case 9: // Ignition (fireball / tnt)
+				if (plrEmc >= Ignition.FIREBALL.get() && ready) {
+					int cdTime = 2;
+					if (player.isShiftKeyDown() && plrEmc >= Ignition.TNT.get()) {
+						cdTime = 5;
+						PrimedTnt tnt = tnt(level, player.getEyePosition(), player.getLookAngle().scale(2), player);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.TNT.get());
+						level.playSound(null, tnt.blockPosition(), SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 1, 1);
+					} else {
+						for (int i = 0; i < 5; i++) {
+							fireball(level, player.getEyePosition(), player.getEyePosition().add(player.getLookAngle().scale(2)), player);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Ignition.FIREBALL.get());
+						level.playSound(null, player.blockPosition(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1, 1);
+					}
+					level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, level.random.nextFloat(0.7f, 1.4f));
+					cd.addCooldown(cdItem, cdTime);
+					didDo = true;
+				}
+				break;
+			
+			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+			case 0:
+				break;
+			}
+			
+			return didDo;
+		} else {
+			changeMode(player, stack, InteractionHand.MAIN_HAND);
+			return false;
+		}
+	}
+	
+	@NotNull
+	@Override
+	public InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+		ItemStack stack = player.getItemInHand(hand);
+		if (isValidRingUser(player, stack)) {
+			boolean didDo = false;
+			boolean client = level.isClientSide;
+			byte mode = getMode(stack);
+			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
+			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
+			long plrEmc = EmcHelper.getAvaliableEmc(player);
+			
+			switch (mode) {
+			case 1: // Mind (deposit 1 / 10 levels)
+				didDo = tryDepositXp(player.isShiftKeyDown() ? 10 : 1, stack, player);
+				break;
+			case 2: // Watch (Time acceleration start / toggle)
+				if (player.isShiftKeyDown()) {
+					changeWoft(stack);
+					level.playSound(null, player, EffectInit.WOFT_MODE.get(), SoundSource.PLAYERS, 1, 1.4f);
+				} else {
+					ItemNBTHelper.setBoolean(stack, "boa_tickhighpitch", false);
+					player.startUsingItem(hand);
+				}
+				didDo = true;
+				break;
+			case 3: // Harvest (none)
+				break;
+			case 4: // Liquid (none)
+				break;
+			case 5: // Philo (none)
+				break;
+			case 6: // Archangel (arrow machine gun)
+				player.startUsingItem(hand);
+				didDo = true;
+				break;
+			case 7: // SWRG (smite target)
+				if (plrEmc >= SWRG.SMITE.get() && ready && !client) {
+					HitResult hitRes = swrgSuperSmite(player, level);
+					if (hitRes.getType() != HitResult.Type.MISS) {
+						level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, 0.5f);
+						EmcHelper.consumeAvaliableEmc(player, SWRG.SMITE.get());
+						NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), hitRes.getLocation(), LineParticlePreset.SMITE), (ServerPlayer)player);
+						cd.addCooldown(cdItem, level.isThundering() ? 3 : 9);
+						didDo = true;
+					}
+				}
+				break;
+			case 8: // Zero (freeze air / entity)
+				if (plrEmc >= Zero.FREEZE.get() && ready) {
+					Vec3 pos = player.getEyePosition();
+					Vec3 ray = player.getLookAngle().scale(player.getReachDistance()-0.5);
+					EntityHitResult hitRes = ProjectileUtil.getEntityHitResult(player, pos, pos.add(ray), AABB.ofSize(pos, 0.05, 0.05, 0.05).expandTowards(ray), this::canBeFrozen, 0);
+					BlockPos bPos = new BlockPos(pos.add(ray));
+					if (hitRes != null && hitRes.getType() == HitResult.Type.ENTITY) {
+						LivingEntity ent = (LivingEntity) hitRes.getEntity();
+						bPos = ent.blockPosition();
+						if (!client) freezeEntity(ent, (ServerPlayer)player);
+						didDo = true;
+					} else if (level.getBlockState(bPos).isAir()) {
+						level.setBlockAndUpdate(bPos, ObjectInit.AIR_ICE.get().defaultBlockState());
+						didDo = true;
+					} else if (level.getBlockState(bPos).is(Blocks.WATER)) {
+						level.setBlockAndUpdate(bPos, Blocks.FROSTED_ICE.defaultBlockState());
+						didDo = true;
+					}
+					if (didDo) {
+						level.playSound(null, bPos, EffectInit.ZERO_FREEZE.get(), SoundSource.BLOCKS, 1, 1);
+						EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get());
+						cd.addCooldown(cdItem, 3);
+					}
+				}
+				break;
+			case 9: // Ignition (burn entity)
+				if (plrEmc >= Ignition.BURN.get() && ready) {
+					Vec3 pos1 = player.getEyePosition();
+					Vec3 pos2 = pos1.add(player.getLookAngle().scale(player.getReachDistance()-0.5));
+					EntityHitResult hitRes = ProjectileUtil.getEntityHitResult(player, pos1, pos2, AABB.ofSize(pos1, 0.05, 0.05, 0.05), this::canBeBurnt, 0);
+					if (hitRes != null && hitRes.getType() == HitResult.Type.ENTITY) {
+						LivingEntity ent = (LivingEntity) hitRes.getEntity();
+						BlockPos bPos = ent.blockPosition();
+						if (!client) burnEntity(ent, (ServerPlayer)player);
+						level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.BLOCKS, 1, 1);
+						level.playSound(null, bPos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1, 1);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.BURN.get());
+						didDo = true;
+					}
+				}
+				break;
+			
+			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+			case 0:
+				break;
+			}
+			
+			return didDo ? InteractionResultHolder.success(stack) : InteractionResultHolder.pass(stack);
+		} else {
+			changeMode(player, stack, hand);
+			return InteractionResultHolder.fail(stack);
+		}
+	}
+	
+	public InteractionResult useOn(UseOnContext ctx) {
+		ItemStack stack = ctx.getItemInHand();
+		Player player = ctx.getPlayer();
+		if (isValidRingUser(player, stack)) {
+			boolean didDo = false;
+			Level level = player.getLevel();
+			boolean client = level.isClientSide;
+			byte mode = getMode(stack);
+			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
+			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
+			long plrEmc = EmcHelper.getAvaliableEmc(player);
+			
+			switch (mode) {
+			case 1: // Mind (none)
+				break;
+			case 2: // Watch (none)
+				break;
+			case 3: // Harvest (bonemeal)
+				if (plrEmc >= Harvest.INSTAGROW.get() && !client) {
+					ItemStack meal = new ItemStack(Items.BONE_MEAL);
+					meal.setCount(12);
+					UseOnContext mealCtx = new UseOnContext(level, player, ctx.getHand(), meal,
+							new BlockHitResult(ctx.getClickLocation(), ctx.getClickedFace(), ctx.getClickedPos(), ctx.isInside()));
+					if (Items.BONE_MEAL.useOn(mealCtx) != InteractionResult.PASS) {
+						for (int i = 0; i < 11; i++) {
+							// it worked once, do it 11 more times
+							Items.BONE_MEAL.useOn(mealCtx);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Harvest.INSTAGROW.get());
+						didDo = true;
+					}
+				}
+				break;
+			case 4: // Liquid
+				if (plrEmc >= Liquid.CREATE.get() && liquid) {
+					// lava
+					Items.LAVA_BUCKET.use(level, player, ctx.getHand());
+					EmcHelper.consumeAvaliableEmc(player, Liquid.CREATE.get());
+				} else {
+					// water
+					Items.WATER_BUCKET.use(level, player, ctx.getHand());
+				}
+				break;
+			case 5: // Philo (divining rod)
+				if (plrEmc >= Philo.DIVINING.get() && ready) {
+					AABB area = WorldHelper.getBroadBox(ctx.getClickedPos(), ctx.getClickedFace(), 2).expandTowards(Vec3.atLowerCornerOf(ctx.getClickedFace().getNormal()).scale(-128));
+					EmcHelper.consumeAvaliableEmc(player, diviningRod(stack, player, area, plrEmc/Philo.DIVINING.get()) * Philo.DIVINING.get());
+					level.playSound(null, ctx.getClickedPos(), EffectInit.PHILO_XRAY.get(), SoundSource.PLAYERS, 1, 2);
+					cd.addCooldown(cdItem, 40);
+				}
+				break;
+			case 6: // Archangel (none)
+				break;
+			case 7: // SWRG (none)
+				break;
+			case 8: // Zero (freeze air)
+				if (plrEmc >= Zero.FREEZE.get() && ready) {
+					BlockPos bPos = ctx.getClickedPos().relative(ctx.getClickedFace());
+					if (level.getBlockState(bPos).isAir()) {
+						level.setBlockAndUpdate(bPos, ObjectInit.AIR_ICE.get().defaultBlockState());
+						didDo = true;
+					} else if (level.getBlockState(bPos).is(Blocks.WATER)) {
+						level.setBlockAndUpdate(bPos, Blocks.FROSTED_ICE.defaultBlockState());
+						didDo = true;
+					}
+					if (didDo) {
+						level.playSound(null, bPos, EffectInit.ZERO_FREEZE.get(), SoundSource.BLOCKS, 1, 1);
+						EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get());
+						cd.addCooldown(cdItem, 3);
+					}
+				}
+				break;
+			case 9: // Ignition (flint and steel)
+				if (plrEmc >= Ignition.BURN.get() && ready) {
+					InteractionResult res = Items.FLINT_AND_STEEL.useOn(ctx);
+					if (res == InteractionResult.SUCCESS) {
+						level.playSound(null, ctx.getClickedPos().relative(ctx.getClickedFace()), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1, 1);
+						EmcHelper.consumeAvaliableEmc(player, Ignition.BURN.get());
+						didDo = true;
+					}
+				}
+				break;
+			
+			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+			case 0:
+				break;
+			}
+			
+			return didDo ? InteractionResult.SUCCESS : InteractionResult.PASS;
+		} else {
+			changeMode(player, stack, InteractionHand.MAIN_HAND);
+			return InteractionResult.FAIL;
+		}
+	}
+	
+	@Override
+	public void onUsingTick(ItemStack stack, LivingEntity user, int time) {
+		if (user instanceof Player player) {
+			if (isValidRingUser(player, stack)) {
+				boolean didDo = false;
+				Level level = player.getLevel();
+				boolean client = level.isClientSide;
+				byte mode = getMode(stack);
+				boolean liquid = getLiquid(stack);
+				Item cdItem = getModeItem(mode, liquid);
+				long plrEmc = EmcHelper.getAvaliableEmc(player);
+				
+				switch (mode) {
+				case 1: // Mind (none)
+					break;
+				case 2: // Watch (time acceleration tick)
+					if (!client && plrEmc >= (getWoft(stack) ? WOFT.JOJO_STRONG.get() : WOFT.JOJO.get())) {
+						plrEmc -= EmcHelper.consumeAvaliableEmc(player, getWoft(stack) ? WOFT.JOJO_STRONG.get() : WOFT.JOJO.get());
+						jojoReference(player, stack, 60, Integer.MAX_VALUE - time, 1200, getWoft(stack) ? 24 : 0, plrEmc);
+					}
+					break;
+				case 3: // Harvest (none)
+					break;
+				case 4: // Liquid (none)
+					break;
+				case 5: // Philo (none)
+					break;
+				case 6: // Archangel (arrow machine gun)
+					if (plrEmc >= Archangel.ARROW.get()) {
+						List<AbstractArrow> arrows = ProjectileHelper.shootArrow(1, ArrowType.STRAIGHT, new ShootContext(level, player), new ArrowOptions(1, 5, 0, Byte.MAX_VALUE, true, Pickup.DISALLOWED));
+					}
+					break;
+				case 7: // SWRG (none)
+					break;
+				case 8: // Zero (none)
+					break;
+				case 9: // Ignition (none)
+					break;
+				
+				default:
+					LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+				case 0:
+					break;
+				}
+				
+				return;
+			} else {
+				changeMode(player, stack, InteractionHand.MAIN_HAND);
+				return;
+			}
+		}
+	}
+	
+	@Override
+	public boolean shootProjectile(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
+		if (isValidRingUser(player, stack)) {
+			boolean didDo = false;
+			Level level = player.getLevel();
+			boolean client = level.isClientSide;
+			byte mode = getMode(stack);
+			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
+			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
+			long plrEmc = EmcHelper.getAvaliableEmc(player);
+			
+			switch (mode) {
+			case 1: // Mind (deposit all)
 				if (PlrHelper.getXp(player) > 0) {
 					insertXp(stack, PlrHelper.extractAll(player));
 					player.level.playSound(null, player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1, 2f);
 					didDo = true;
 				}
 				break;
-				
-			case 2: // Watch (ender chest / toggle local/global time manip)
-				if (!player.isUsingItem()) {
-					if (player.isShiftKeyDown()) {
-						changeWoft(stack);
-						player.level.playSound(null, player, EffectInit.WOFT_MODE.get(), SoundSource.PLAYERS, 1, 1.4f);
-						didDo = true;
-					} else {
-						// thanks botania :D
-						player.openMenu(new SimpleMenuProvider((windowId, playerInv, p) -> {
-							return ChestMenu.threeRows(windowId, playerInv, p.getEnderChestInventory());
-						}, stack.getHoverName()));
-						player.level.playSound(null, player, SoundEvents.ENDER_CHEST_OPEN, SoundSource.PLAYERS, 1F, 1f);
-						player.level.playSound(null, player, SoundEvents.ENDER_CHEST_CLOSE, SoundSource.PLAYERS, 1F, 1f);
+			case 2: // Watch (blink)
+				if (plrEmc >= WOFT.TELEPORT.get()) {
+					didDo = PEItems.VOID_RING.get().doExtraFunction(stack, player, hand);
+					if (didDo) EmcHelper.consumeAvaliableEmc(player, WOFT.TELEPORT.get());
+				}
+				break;
+			case 3: // Harvest
+				if (ready) {
+					player.curePotionEffects(new ItemStack(Items.MILK_BUCKET));
+					int cdTime = 60;
+					if (player.hasEffect(EffectInit.TRANSMUTING.get())) {
+						player.curePotionEffects(new ItemStack(PEItems.PHILOSOPHERS_STONE.get()));
+						level.playSound(null, player, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 0.5f, 1);
+						cdTime *= 10;
+					}
+					level.playSound(null, player, SoundEvents.HONEY_DRINK, SoundSource.PLAYERS, 1, level.random.nextFloat(1, 2));
+					cd.addCooldown(cdItem, cdTime);
+				}
+				break;
+			case 4: // Liquid (orb)
+				if (plrEmc >= Liquid.ORB.get() && ready) {
+					didDo = liquid ? shootLavaProjectile(player) : PEItems.EVERTIDE_AMULET.get().shootProjectile(player, stack, hand);
+				}
+				if (didDo) {
+					cd.addCooldown(cdItem, 3);
+					EmcHelper.consumeAvaliableEmc(player, Liquid.ORB.get());
+				}
+				break;
+			case 5: // Philo (mob transmute orb)
+				if (plrEmc >= Philo.ORB.get() && ready) {
+					didDo = PEItems.PHILOSOPHERS_STONE.get().shootProjectile(player, stack, hand);
+					if (didDo) EmcHelper.consumeAvaliableEmc(player, Philo.ORB.get());
+					cd.addCooldown(cdItem, 5);
+				}
+				break;
+			case 6: // Archangel (sentient arrow)
+				if (ready) {
+					
+					if (hasTrackedArrow(stack)) {
+						SentientArrow arrow = getTrackedArrow(stack, player.level);
+						if (arrow == null) resetTrackedArrow(stack);
+						else {
+							sentientArrowControl(getTrackedArrow(stack, level), player);
+							cd.addCooldown(cdItem, 15);
+							break;
+						}
+					}
+					
+					if (plrEmc >= Archangel.HOMING.get()) {
+						SentientArrow arrow = (SentientArrow) ProjectileHelper.shootArrow(1, ArrowType.SENTIENT,
+								new ShootContext(player.level, player),
+								new ArrowOptions(1, 1, 0, (byte)0, false, Pickup.DISALLOWED)).get(0);
+						changeTrackedArrow(stack, arrow);
+						for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+							NetworkInit.toClient(new CreateLoopingSoundPacket((byte)1, arrow.getId()), plr);
+						}
+						EmcHelper.consumeAvaliableEmc(player, Archangel.HOMING.get());
+						cd.addCooldown(cdItem, 15);
 						didDo = true;
 					}
 				}
 				break;
-				
-			case 3: // Harvest (aoe harvest & grow)
-				if (plrEmc >= EmcCosts.BOA_BONEMEAL) {
-					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_BONEMEAL);
-					WorldHelper.growNearbyRandomly(true, player.level, player.blockPosition(), player);
+			case 7: // SWRG (aoe smite)
+				if (plrEmc >= SWRG.SMITE.get() && ready && !client) {
+					long costPer = SWRG.SMITE.get();
+					int smitten = 0;
+					AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), 32, 32, 32);
+					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
+						if (ent.is(player)) continue;
+						if (plrEmc <= costPer*smitten) break;
+						swrgSuperSmiteEnt(player, level, ent);
+						smitten++;
+					}
+					long totalCost = costPer*smitten;
+					EmcHelper.consumeAvaliableEmc(player, totalCost);
+					int cdTime = (int) Math.max(13, smitten * (level.isThundering() ? 1.3 : 13));
+					cd.addCooldown(cdItem, cdTime);
 					didDo = true;
 				}
 				break;
-				
-			case 4: // Liquid (swap current liquid)
-				changeLiquid(stack);
-				player.level.playSound(null, player, getLiquid(stack) ? EffectInit.LIQUID_LAVA_SWITCH.get() : EffectInit.LIQUID_WATER_SWITCH.get(), SoundSource.PLAYERS, 1, 0.7f);
-				didDo = true;
-				break;
-				
-			case 5: // Philo (crafting grid)
-				player.level.playSound(null, player, EffectInit.PHILO_3X3GUI.get(), SoundSource.PLAYERS, 1, 2f);
-				didDo = PEItems.PHILOSOPHERS_STONE.get().doExtraFunction(stack, player, hand);
-				break;
-				
-			case 6: // Archangels (scatter smart arrows)
-				if (plrEmc >= EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-					int shot;
-					for (shot = 0; shot < (player.isOnGround() ? 28 : 56); shot++) {
-						if ((shot+1)*EmcCosts.BOA_ARROW >= plrEmc) break;
-						else {
-							SmartArrow arrow = new SmartArrow(player.level, player, 1);
-							if (!player.isOnGround()) {
-								arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 0.5f, 300);
-							} else {
-								arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
-							}
-							player.level.addFreshEntity(arrow);
-							player.level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (player.level.random.nextFloat() * 0.4F + 1.2F) + (1 / 3) * 0.5F));
-							didDo = true;
+			case 8: // Zero (ice shield)
+				if (plrEmc >= Zero.ICESHIELD.get() && ready) {
+					EmcHelper.consumeAvaliableEmc(player, Zero.ICESHIELD.get());
+					AABB box = AABB.ofSize(player.getBoundingBox().getCenter(), 4, 4, 4);
+					BlockPos.betweenClosedStream(box).forEach(pos -> {
+						if (level.getBlockState(pos).is(Blocks.AIR)) {
+							level.setBlockAndUpdate(pos, ObjectInit.AIR_ICE.get().defaultBlockState());
+						} else if (level.getBlockState(pos).is(Blocks.WATER)) {
+							level.setBlockAndUpdate(pos, Blocks.FROSTED_ICE.defaultBlockState());
 						}
-					}
-					if (didDo) {
-						EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW*shot);
-						player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), shot/2);
+					});
+					box = AABB.ofSize(player.getBoundingBox().getCenter(), 2, 2, 2);
+					BlockPos.betweenClosedStream(box).forEach(pos -> {
+						if (level.getBlockState(pos).is(ObjectInit.AIR_ICE.get())
+								|| level.getBlockState(pos).is(Blocks.FROSTED_ICE)) {
+							level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+						}
+					});
+					EmcHelper.consumeAvaliableEmc(player, Zero.ICESHIELD.get());
+					level.playSound(null, new BlockPos(box.getCenter()), EffectInit.ZERO_FREEZE.get(), SoundSource.PLAYERS, 1, 0.7f);
+					player.hurt(DamageSource.FREEZE, 5);
+					player.addEffect(new MobEffectInstance(EffectInit.ICESHIELD.get(), 100));
+					cd.addCooldown(cdItem, 150);
+					didDo = true;
+				}
+				break;
+			case 9: // Ignition (flame nuke)
+				if (plrEmc >= Ignition.MUSTANG.get() && ready) {
+					if (shootMustang(player, stack)) {
+						EmcHelper.consumeAvaliableEmc(player, Ignition.MUSTANG.get());
+						cd.addCooldown(cdItem, 30);
+						didDo = true;
 					}
 				}
 				break;
-				
-			case 7: // SWRG (aoe smite)
-				if (player instanceof ServerPlayer) {
-					if (plrEmc >= EmcCosts.BOA_LIGHTNING && !player.getCooldowns().isOnCooldown(PEItems.SWIFTWOLF_RENDING_GALE.get())) {
-						long consumed = EmcHelper.consumeAvaliableEmc(player, MiscHelper.smiteAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc, EmcCosts.BOA_LIGHTNING));
-						if (consumed > 0) {
-							didDo = true;
-							player.level.playSound(null, player.blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1f, 1f);
-							player.getCooldowns().addCooldown( PEItems.SWIFTWOLF_RENDING_GALE.get(), (int)(10*(consumed/EmcCosts.BOA_LIGHTNING)) );
-						} else player.playSound(PESounds.UNCHARGE, 1, 2);
-					}
-				}
-				break;
-				
-			case 8: // Zero (aoe freeze)
-				if (player instanceof ServerPlayer) {
-					if (plrEmc >= EmcCosts.BOA_TEMPERATURE && !player.getCooldowns().isOnCooldown(PEItems.ZERO_RING.get())) {
-						player.level.playSound(null, player.blockPosition(), PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1f, 1f);
-						didDo = EmcHelper.consumeAvaliableEmc(player, MiscHelper.slowAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc, EmcCosts.BOA_TEMPERATURE)) > 0;
-						player.getCooldowns().addCooldown(PEItems.ZERO_RING.get(), Cooldowns.BOA_TEMPERATURE_AOE);
-					}
-				}
-				break;
-				
-			case 9: // Ignition (aoe burn)
-				if (player instanceof ServerPlayer) {
-					if (plrEmc >= EmcCosts.BOA_TEMPERATURE && !player.getCooldowns().isOnCooldown(PEItems.IGNITION_RING.get())) {
-						player.level.playSound(null, player.blockPosition(), EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1f, 1f);
-						didDo = EmcHelper.consumeAvaliableEmc(player, MiscHelper.burnAllInArea(player.level, player.getBoundingBox().inflate(24), (ServerPlayer) player, plrEmc, EmcCosts.BOA_TEMPERATURE)) > 0;
-						player.getCooldowns().addCooldown(PEItems.IGNITION_RING.get(), Cooldowns.BOA_TEMPERATURE_AOE);
-					}
-				}
-				break;
-				
+			
 			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+			case 0:
 				break;
 			}
-			return didDo;
-		}
-		return false;
-	}
-
-	
-	// IProjectileShooter
-	@Override
-	public boolean shootProjectile(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {		
-		if (!player.level.isClientSide() && GemJewelryBase.fullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
-			long plrEmc = EmcHelper.getAvaliableEmc(player);
-			boolean didDo = false;
-			ItemCooldowns cooldown = player.getCooldowns();
-			switch (getMode(stack)) {
 			
+			return didDo;
+		} else {
+			changeMode(player, stack, InteractionHand.MAIN_HAND);
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean doExtraFunction(@NotNull ItemStack stack, @NotNull Player player, @Nullable InteractionHand hand) {
+		if (isValidRingUser(player, stack)) {
+			boolean didDo = false;
+			Level level = player.getLevel();
+			boolean client = level.isClientSide;
+			byte mode = getMode(stack);
+			boolean liquid = getLiquid(stack);
+			ItemCooldowns cd = player.getCooldowns();
+			Item cdItem = getModeItem(mode, liquid);
+			boolean ready = !cd.isOnCooldown(cdItem);
+			long plrEmc = EmcHelper.getAvaliableEmc(player);
+			
+			switch (mode) {
 			case 1: // Mind (withdraw all)
 				long stackXp = getXp(stack);
 				long plrExp = PlrHelper.getXp(player);
@@ -447,578 +1218,122 @@ public class BandOfArcana extends MGTKItem
 					}
 				}
 				break;
-				
-			case 2: // Watch (Teleport)
-				if (plrEmc >= 72) {
-					didDo = PEItems.VOID_RING.get().doExtraFunction(stack, player, hand);
-					if (didDo) EmcHelper.consumeAvaliableEmc(player, 72);
+			case 2: // Watch (ender chest / anvil)
+				player.level.playSound(null, player, EffectInit.PHILO_3X3GUI.get(), SoundSource.PLAYERS, 1, 2f);
+				if (player.isShiftKeyDown()) {
+					// anvil
+					player.openMenu(new SimpleMenuProvider((window, inv, plr) -> {
+				         return new GravityAnvilMenu(window, inv, ContainerLevelAccess.create(level, plr.blockPosition()));
+				      }, new TranslatableComponent("gui.mgtk.woft.anvil.name")));
+					player.level.playSound(null, player, SoundEvents.ANVIL_PLACE, SoundSource.PLAYERS, 0.5F, 1f);
+				} else {
+					// echest
+					player.openMenu(new SimpleMenuProvider((window, inv, plr) -> {
+						return ChestMenu.threeRows(window, inv, plr.getEnderChestInventory());
+					}, stack.getHoverName()));
+					player.level.playSound(null, player, SoundEvents.ENDER_CHEST_OPEN, SoundSource.PLAYERS, 1F, 1f);
 				}
+				didDo = true;
 				break;
-				
-			case 3: // Harvest
-				System.out.println("NYI: " + getMode(stack));
-				break;
-				
-			case 4: // Liquid (Liquid orb)
-				boolean isLava = ItemNBTHelper.getBoolean(stack, TAG_LIQUID, false);
-				
-				ItemPE cdItem = isLava ? PEItems.VOLCANITE_AMULET.get() : PEItems.EVERTIDE_AMULET.get();
-				
-				if (!cooldown.isOnCooldown(cdItem)) {
-					didDo = isLava ? shootLavaProjectile(player) : PEItems.EVERTIDE_AMULET.get().shootProjectile(player, stack, hand);
+			case 3: // Harvest (grow / harvest nearby)
+				AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), 8, 5, 8);
+				if (plrEmc >= Harvest.AOEGROW.get() && ready && !client) {
+					boolean harv = player.isShiftKeyDown() && plrEmc >= Harvest.HARVEST.get();
+					if (harv) {
+						MiscHelper.harvestNearby((ServerPlayer)player, (ServerLevel)level, area, 1);
+					} else MiscHelper.growNearby((ServerLevel)level, area, 3);
+					EmcHelper.consumeAvaliableEmc(player, harv ? Harvest.HARVEST.get() : Harvest.AOEGROW.get());
+					//NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(area.minX, area.minY, area.minZ), new Vec3(area.maxX, area.maxY, area.maxZ), ParticlePreset.DEBUG), (ServerPlayer)player);
+					didDo = true;
 				}
-				if (didDo) {
-					cooldown.addCooldown(cdItem, 5);
-				}
-				break;
-				
-			case 5: // Philo (Mob transmute orb)
-				if (!cooldown.isOnCooldown(PEItems.PHILOSOPHERS_STONE.get())) {
-					didDo = PEItems.PHILOSOPHERS_STONE.get().shootProjectile(player, stack, hand);
-				}
-				break;
-				
-			case 6: // Archangels (sentient arrow)
-				//if (plrEmc >= 1024 && !cooldown.isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-				//	ProjectileHelper.shootArrow(player.level, player, 10, 10, 0, Byte.MAX_VALUE, true, false, Pickup.CREATIVE_ONLY);
-				//	EmcHelper.consumeAvaliableEmc(player, 1024);
-				//	cooldown.addCooldown(PEItems.ARCHANGEL_SMITE.get(), 5);
-				//	didDo = true;
+				//if (client) {
+				//	MiscHelper.drawAABBWithParticles(area, ParticleTypes.DRIPPING_LAVA, 0.1, (ClientLevel)level, false, true);
 				//}
-				if (hasTrackedArrow(stack)) {
-					SentientArrow arrow = getTrackedArrow(stack, player.level);
-					if (arrow == null) {
-						// arrow doesnt exist, stop tracking it
-						resetTrackedArrow(stack);
-					} else if (!player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-						// try redirecting the arrow
-						boolean foundTarget = arrow.attemptManualRetarget();
-						player.level.playSound(null, player, EffectInit.ARCHANGELS_SENTIENT_YONDU.get(), SoundSource.PLAYERS, 1, player.getRandom().nextFloat(0.1f, 2f));
-						if (foundTarget) {
-							for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
-								Entity target = arrow.getTarget();
-								BlockPos pos = plr.blockPosition();
-								boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 128);
-								// owner -> arrow communicate
-								if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 128)) {
-									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), 3), plr);
-								}
-								// owner -> target tracer
-								if (nearOwner || pos.closerToCenterThan(target.getBoundingBox().getCenter(), 128)) {
-									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), target.getBoundingBox().getCenter(), 2), plr);
-								}
-							}
-						} else {
-							// returning to owner
-							for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
-								BlockPos pos = plr.blockPosition();
-								boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 128);
-								// arrow -> owner tracer
-								if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 128)) {
-									NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), 2), plr);
-								}
-							}
-						}
-						player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 15);
-						break;
-					}
+				break;
+			case 4: // Liquid (change liquid)
+				changeLiquid(stack);
+				player.level.playSound(null, player, getLiquid(stack) ? EffectInit.LIQUID_LAVA_SWITCH.get() : EffectInit.LIQUID_WATER_SWITCH.get(), SoundSource.PLAYERS, 1, 0.7f);
+				didDo = true;
+				break;
+			case 5: // Philo (crafting / enchant)
+				player.level.playSound(null, player, EffectInit.PHILO_3X3GUI.get(), SoundSource.PLAYERS, 0.6f, 2f);
+				if (player.isShiftKeyDown()) {
+					// enchant
+					player.openMenu( new SimpleMenuProvider((window, inv, plr) -> {
+						return new PhiloEnchantmentMenu(window, inv, ContainerLevelAccess.create(level, player.blockPosition()));
+					}, new TranslatableComponent("gui.mgtk.philo.enchanter.name")));
+					player.level.playSound(null, player, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1, 1f);
+					didDo = true;
+				} else {
+					// crafting
+					didDo = PEItems.PHILOSOPHERS_STONE.get().doExtraFunction(stack, player, hand);
 				}
-				if (plrEmc >= EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-					SentientArrow arrow = new SentientArrow(player.level, player);
-					arrow.setBaseDamage(1);
-					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 1f, 0);
-					//if (!player.isOnGround()) {
-					//} else {
-					//	arrow.shootFromRotation(player, -90, 0, 0, 0.5f, 75);
-					//}
-					//arrow.setCritArrow(true);
-					arrow.setGlowingTag(true);
-					player.level.addFreshEntity(arrow);
-					changeTrackedArrow(stack, arrow);
-					for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
-						NetworkInit.toClient(new CreateLoopingSoundPacket((byte)1, arrow.getId()), plr);
-					}
-					player.level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (player.level.random.nextFloat() * 0.4F + 1.2F) + (1 / 3) * 0.5F));
-					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW);
+				break;
+			case 6: // Archangel
+				if (plrEmc >= Archangel.SMART.get() && ready) {
+					boolean up = player.isOnGround();
+					long amount = Math.min(up ? 28 : 56, plrEmc/Archangel.SMART.get());
+					ShootContext ctx = up ?
+							new ShootContext(level, player, new Vec3(-90, 0, 0)) :
+							new ShootContext(level, player);
+					List<AbstractArrow> arrows = ProjectileHelper.shootArrow((int)amount, ArrowType.SMART, ctx,
+							new ArrowOptions(1, 0.5f, up ? 75 : 300, (byte)0, false, Pickup.DISALLOWED));
+					cd.addCooldown(cdItem, arrows.size() / 2);
+				}
+				break;
+			case 7: // SWRG
+				if (plrEmc >= SWRG.STORM.get() && ready && !level.isThundering()
+					&& player.level.getLevelData() instanceof ServerLevelData dat) {
+					smite(level, player.position(), (ServerPlayer)player, true);
+					dat.setRainTime(6000);
+					dat.setThunderTime(6000);
+					dat.setRaining(true);
+					dat.setThundering(true);
+					EmcHelper.consumeAvaliableEmc(player, SWRG.STORM.get());
+					cd.addCooldown(cdItem, 100);
 					didDo = true;
 				}
 				break;
-				
-			case 7: // SWRG (Self-fling / Summon lightning)
-				if (!cooldown.isOnCooldown(PEItems.SWIFTWOLF_RENDING_GALE.get())) {
-					if (plrEmc >= 128 && !player.isShiftKeyDown() && !player.getAbilities().flying) {
-						player.moveRelative(2, player.getLookAngle());
-						player.level.playSound(null, player, EffectInit.SWRG_BOOST.get(), SoundSource.PLAYERS, 1, 1);
-					} else if (plrEmc >= 8192 && player.isShiftKeyDown() && player.level.getLevelData() instanceof ServerLevelData lvlData) {
-						lvlData.setRainTime(6000);
-						lvlData.setThunderTime(6000);
-						lvlData.setRaining(true);
-						lvlData.setThundering(true);
-						EmcHelper.consumeAvaliableEmc(player, 8192);
-						didDo = true;
-					}
-					
-				}
-				break;
-				
 			case 8: // Zero
-				System.out.println("NYI: " + getMode(stack));
+				if (plrEmc >= Zero.FREEZE.get() && ready && !client) {
+					AABB range = AABB.ofSize(player.getBoundingBox().getCenter(), 32, 32, 32);
+					int frozen = 0;
+					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, range, ent -> canBeFrozen(ent) && !ent.is(player) )) {
+						this.freezeEntity(ent, (ServerPlayer)player);
+						frozen++;
+					}
+					WorldHelper.freezeInBoundingBox(level, range, player, false);
+					EmcHelper.consumeAvaliableEmc(player, Zero.FREEZE.get()*frozen);
+					level.playSound(null, player.blockPosition(), EffectInit.ZERO_FREEZE.get(), SoundSource.PLAYERS, 5, 0.5f);
+					//cd.addCooldown(cdItem, 273);
+					cd.addCooldown(cdItem, 60);
+				}
 				break;
-				
 			case 9: // Ignition
-				if (plrEmc >= 139264 && !cooldown.isOnCooldown(PEItems.IGNITION_RING.get())) {
-					if (shootMustang(player, stack)) {
-						EmcHelper.consumeAvaliableEmc(player, 139264);
-						didDo = true;
+				if (plrEmc >= Ignition.BURN.get() && ready && !client) {
+					AABB range = AABB.ofSize(player.getBoundingBox().getCenter(), 32, 32, 32);
+					int burnt = 0;
+					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, range, ent -> canBeBurnt(ent) && !ent.is(player) )) {
+						this.burnEntity(ent, (ServerPlayer)player);
+						burnt++;
 					}
-					cooldown.addCooldown(PEItems.IGNITION_RING.get(), 30);
+					MiscHelper.burnInBoundingBox(level, range, player, false);
+					EmcHelper.consumeAvaliableEmc(player, Ignition.BURN.get()*burnt);
+					level.playSound(null, player.blockPosition(), EffectInit.IGNITION_BURN.get(), SoundSource.PLAYERS, 5, 1.5f);
+					cd.addCooldown(cdItem, 451);
 				}
 				break;
-				
+			
 			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "'"+player.getScoreboardName()+"' tried to use a Band of Arcana with an invalid mode, it may have corrupt NBT!");
+			case 0:
 				break;
 			}
+			
 			return didDo;
-		}
-		return false;
-	}
-	
-	@Override
-	public boolean onSwingAir(Context ctx) {
-		// this should never run clientside, so a check for that is unnecessary
-		ServerPlayer player = ctx.getSender();
-		if (GemJewelryBase.fullPristineSet(player) && getCharge(player.getMainHandItem()) == 1) {
-			boolean didDo = false;
-			ServerLevel level = player.getLevel();
-			ItemStack stack = player.getMainHandItem();
-			long plrEmc = EmcHelper.getAvaliableEmc(player);
-			switch (getMode(stack)) {
-			
-			case 1: // Mind (withdraw 1 / 10 levels)
-				if (getXp(stack) > 0 && PlrHelper.getXp(player) < Xp.VANILLA_MAX_POINTS) {
-					int lvls = player.isShiftKeyDown() ? 10 : 1;
-					long amount = 0;
-					for (int i = 0; i < lvls; i++) {
-						int curLvl = player.experienceLevel + i;
-						// only factor in current progress for the first level
-						if (i == 0 && player.experienceProgress > 0) {
-							amount += PlrHelper.xpNeededToLevelUpFrom(curLvl) - player.experienceProgress * PlrHelper.xpNeededToLevelUpFrom(curLvl);
-						} else {
-							amount += PlrHelper.xpNeededToLevelUpFrom(curLvl);
-						}
-					}
-					PlrHelper.insertXp(player, extractXp(stack, amount));
-					player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
-					didDo = true;
-				}
-				break;
-				
-			case 2: // Watch (gravity attract / repel)
-				for ( LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(player.getBoundingBox().getCenter(), 24, 24, 24), ent -> !EntityHelper.isImmuneToGravityManipulation(ent)) ) {
-					if (ent.is(player)) continue; // Heres a funny joke: NaN
-					
-					double dX = player.getX() - ent.getX();
-					double dY = player.getY() - ent.getY();
-					double dZ = player.getZ() - ent.getZ();
-					double dist = Math.sqrt(dX * dX + dY * dY + dZ * dZ);
-					double vel = 5.0D - dist / 15.0D;
-					if (vel > 0.0D) {
-						didDo = true;
-						vel *= vel;
-						Vec3 addVec = new Vec3(dX / dist * vel * 0.1, dY / dist * vel * 0.1, dZ / dist * vel * 0.1);
-						if (player.isShiftKeyDown()) addVec = addVec.reverse();
-						if (ent instanceof ServerPlayer plr) {
-							NetworkInit.toClient(new ModifyPlayerVelocityPacket(addVec, (byte)1), plr);
-						} else {
-							ent.setDeltaMovement(ent.getDeltaMovement().add(addVec));
-						}
-					}
-				}
-				if (didDo) {
-					level.playSound(null, player.blockPosition(), player.isShiftKeyDown() ? EffectInit.WOFT_REPEL.get() : EffectInit.WOFT_ATTRACT.get(), SoundSource.PLAYERS, 1, 1);
-				}
-				break;
-				
-			case 4: // Liquid (void liquid)
-				didDo = ModItems.openBucket.use(level, player, InteractionHand.MAIN_HAND).getResult().equals(InteractionResult.CONSUME);
-				break;
-				
-			case 6: // Archangels (homing shotgun)
-				didDo = shootHomingVolley(player);
-				break;
-				
-			case 8: // Zero (high-velocity snowball shotgun)
-				for (int i = 0; i < 10; i++) {
-			        Snowball snowball = new Snowball(level, player);
-			        snowball.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 4F, 4.0F);
-			        level.addFreshEntity(snowball);
-			        level.playSound(null, player, SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
-			        if (!didDo) {
-			        	didDo = true;
-				        level.playSound(null, player, EffectInit.ZERO_FREEZE.get(), SoundSource.NEUTRAL, 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
-			        }
-				}
-				break;
-				
-			default:
-				break;
-			}
-			return didDo;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean onSwingBlock(PlayerInteractEvent.LeftClickBlock evt) {
-		if (evt.getUseItem() != Event.Result.DENY && !evt.getItemStack().isEmpty() && evt.getItemStack().getItem() == this) {
-			ItemStack stack = evt.getItemStack();
-			Player player = evt.getPlayer();
-			Level level = evt.getWorld();
-			// botania divining rod particles cool
-			if (GemJewelryBase.fullPristineSet(player) && getCharge(stack) == 1) {
-				boolean didDo = false;
-				if (player.level.isClientSide() && getMode(stack) == 5 && !player.getCooldowns().isOnCooldown(PEItems.HIGH_DIVINING_ROD.get())) {
-					long seedxor = level.random.nextLong();
-					for (BlockPos pos_ : WorldHelper.getPositionsFromBox(WorldHelper.getDeepBox(evt.getPos(), evt.getFace(), 128))) {
-						BlockState state = level.getBlockState(pos_);
-
-						Block block = state.getBlock();
-						if (state.is(IXplatAbstractions.INSTANCE.getOreTag())) {
-							Random rand = new Random(Registry.BLOCK.getKey(block).hashCode() ^ seedxor);
-							WispParticleData data = WispParticleData.wisp(0.25F, rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 8, false);
-							level.addParticle(data, true, pos_.getX() + level.random.nextFloat(), pos_.getY() + level.random.nextFloat(), pos_.getZ() + level.random.nextFloat(), 0, 0, 0);
-						}
-					}
-				} else switch (getMode(stack)) {
-				
-				case 1: // Mind (withdraw 1 / 10 levels)
-					if (getXp(stack) > 0 && PlrHelper.getXp(player) < Xp.VANILLA_MAX_POINTS) {
-						int lvls = player.isShiftKeyDown() ? 10 : 1;
-						long amount = 0;
-						for (int i = 0; i < lvls; i++) {
-							int curLvl = player.experienceLevel + i;
-							// only factor in current progress for the first level
-							if (i == 0 && player.experienceProgress > 0) {
-								amount += PlrHelper.xpNeededToLevelUpFrom(curLvl) - player.experienceProgress * PlrHelper.xpNeededToLevelUpFrom(curLvl);
-							} else {
-								amount += PlrHelper.xpNeededToLevelUpFrom(curLvl);
-							}
-						}
-						PlrHelper.insertXp(player, extractXp(stack, amount));
-						player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
-						didDo = true;
-					}
-					break;
-					
-				case 4: // Liquid (void liquid)
-					didDo = ModItems.openBucket.use(player.level, player, InteractionHand.MAIN_HAND).getResult().equals(InteractionResult.CONSUME);
-					break;
-					
-				case 5: // Philo (Divining rod)
-					if (player.getCooldowns().isOnCooldown(PEItems.HIGH_DIVINING_ROD.get())) break;
-					LongList emcValues = new LongArrayList();
-					long totalEmc = 0;
-					int numBlocks = 0;
-					int depth = 128;
-					//Lazily retrieve the values for the furnace recipes
-					NonNullLazy<List<SmeltingRecipe>> furnaceRecipes = NonNullLazy.of(() -> level.getRecipeManager().getAllRecipesFor(RecipeType.SMELTING));
-					for (BlockPos digPos : WorldHelper.getPositionsFromBox(WorldHelper.getDeepBox(evt.getPos(), evt.getFace(), depth))) {
-						if (level.isEmptyBlock(digPos)) {
-							continue;
-						}
-						BlockState state = level.getBlockState(digPos);
-						/*
-						Block block = state.getBlock();
-						if (state.is(IXplatAbstractions.INSTANCE.getOreTag())) {
-							Random rand = new Random(Registry.BLOCK.getKey(block).hashCode() ^ seedxor);
-							WispParticleData data = WispParticleData.wisp(0.25F, rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 8, false);
-							level.addParticle(data, true, digPos.getX() + level.random.nextFloat(), digPos.getY() + level.random.nextFloat(), digPos.getZ() + level.random.nextFloat(), 0, 0, 0);
-						}
-						*/
-						List<ItemStack> drops = Block.getDrops(state, (ServerLevel) level, digPos, WorldHelper.getBlockEntity(level, digPos), player, stack);
-						if (drops.isEmpty()) {
-							continue;
-						}
-						ItemStack blockStack = drops.get(0);
-						long blockEmc = EMCHelper.getEmcValue(blockStack);
-						if (blockEmc == 0) {
-							for (SmeltingRecipe furnaceRecipe : furnaceRecipes.get()) {
-								if (furnaceRecipe.getIngredients().get(0).test(blockStack)) {
-									long currentValue = EMCHelper.getEmcValue(furnaceRecipe.getResultItem());
-									if (currentValue != 0) {
-										if (!emcValues.contains(currentValue)) {
-											emcValues.add(currentValue);
-										}
-										totalEmc += currentValue;
-										break;
-									}
-								}
-							}
-						} else {
-							if (!emcValues.contains(blockEmc)) {
-								emcValues.add(blockEmc);
-							}
-							totalEmc += blockEmc;
-						}
-						numBlocks++;
-					}
-
-					if (numBlocks == 0) {
-						didDo = false;
-						break;
-					}
-					player.sendMessage(PELang.DIVINING_AVG_EMC.translate(numBlocks, totalEmc / numBlocks), Util.NIL_UUID);
-					long[] maxValues = new long[3];
-					for (int i = 0; i < 3; i++) {
-						maxValues[i] = 1;
-					}
-					emcValues.sort(LongComparators.OPPOSITE_COMPARATOR);
-					int num = Math.min(emcValues.size(), 3);
-					for (int i = 0; i < num; i++) {
-						maxValues[i] = emcValues.getLong(i);
-					}
-					player.sendMessage(PELang.DIVINING_MAX_EMC.translate(maxValues[0]), Util.NIL_UUID);
-					player.sendMessage(PELang.DIVINING_SECOND_MAX.translate(maxValues[1]), Util.NIL_UUID);
-					player.sendMessage(PELang.DIVINING_THIRD_MAX.translate(maxValues[2]), Util.NIL_UUID);
-					player.getCooldowns().addCooldown(PEItems.HIGH_DIVINING_ROD.get(), 10);
-					didDo = true;
-					level.playSound(null, player, EffectInit.PHILO_XRAY.get(), SoundSource.PLAYERS, 1, 2);
-					break;
-					
-				case 6: // Archangels
-					didDo = shootHomingVolley(player);
-					break;
-					
-				default:
-					break;
-				}
-				return didDo;
-			}
-		}
-		return false;
-		//return shootHomingVolley(evt.getPlayer());
-	}
-
-	@Override
-	public boolean onLeftClickEntity(ItemStack stack, Player player, Entity entity) {
-		if (!player.level.isClientSide() && GemJewelryBase.fullPristineSet(player) && getCharge(stack) == 1) {
-			boolean didDo = false;
-			long plrEmc = EmcHelper.getAvaliableEmc(player);
-			switch (getMode(stack)) {
-			
-			case 1: // Mind (withdraw 1 / 10 levels)
-				if (getXp(stack) > 0 && PlrHelper.getXp(player) < Xp.VANILLA_MAX_POINTS) {
-					int lvls = player.isShiftKeyDown() ? 10 : 1;
-					long amount = 0;
-					for (int i = 0; i < lvls; i++) {
-						int curLvl = player.experienceLevel + i;
-						// only factor in current progress for the first level
-						if (i == 0 && player.experienceProgress > 0) {
-							amount += PlrHelper.xpNeededToLevelUpFrom(curLvl) - player.experienceProgress * PlrHelper.xpNeededToLevelUpFrom(curLvl);
-						} else {
-							amount += PlrHelper.xpNeededToLevelUpFrom(curLvl);
-						}
-					}
-					PlrHelper.insertXp(player, extractXp(stack, amount));
-					player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
-					didDo = true;
-				}
-				break;
-				
-			case 5: // Philo (transmutation punch)
-				if ( plrEmc >= 1024 && !player.getCooldowns().isOnCooldown(PEItems.PHILOSOPHERS_STONE.get())
-						&& player.getAttackStrengthScale(0.5f) > 0.9
-						&& entity instanceof LivingEntity lEnt
-						&& !lEnt.isDeadOrDying()
-						&& !lEnt.isInvulnerableTo(MGTKDmgSrc.TRANSMUTATION_POTION)
-						&& !(lEnt instanceof Player plr && ArmorHandler.isInfinite(plr))
-				) {
-					if (player.isShiftKeyDown() && plrEmc >= 131072) {
-						int cdTime = (int) lEnt.getHealth()*7;
-						if (entityItemizer(lEnt, player, null)) {
-							didDo = true;
-							player.level.playSound(null, player, EffectInit.PHILO_ITEMIZE.get(), SoundSource.PLAYERS, 1, 2);
-							player.getCooldowns().addCooldown(PEItems.PHILOSOPHERS_STONE.get(), cdTime);
-							EmcHelper.consumeAvaliableEmc(player, 131072);
-							break;
-						}
-					}
-					lEnt.setLastHurtByPlayer(player);
-					if (lEnt instanceof NeutralMob mob) {
-						mob.setPersistentAngerTarget(player.getUUID());
-					}
-					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_2, lEnt.getMaxHealth()/2f);
-					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 3, 2), player);
-					EmcHelper.consumeAvaliableEmc(player, 1024);
-					player.level.playSound(null, player, EffectInit.PHILO_ATTACK.get(), SoundSource.PLAYERS, 1, 2);
-					didDo = true;
-				}
-				break;
-			
-			case 6: // Archangels (homing shotgun)
-				didDo = shootHomingVolley(player);
-				break;
-				
-			//case 9:
-			//	if (!entity.fireImmune() && !entity.isOnFire() && !entity.isInWaterRainOrBubble() && !player.isInWaterRainOrBubble()) {
-			//		
-			//	}
-			//	break;
-				
-			default:
-				break;
-			}
-			return didDo;
-		}
-		return super.onLeftClickEntity(stack, player, entity);
-	}
-
-	@NotNull
-	@Override
-	public InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
-		if (!level.isClientSide() && GemJewelryBase.fullPristineSet(player) && getCharge(player.getItemInHand(hand)) == 1) {
-			boolean didDo = false;
-			ItemStack stack = player.getItemInHand(hand);
-			long plrEmc = EmcHelper.getAvaliableEmc(player);
-			switch (getMode(stack)) {
-			
-			case 1: // Mind (deposit 1 lvl / 10 lvl)
-				if (PlrHelper.getXp(player) > 0 && getXp(stack) < Long.MAX_VALUE) {
-					int lvls = player.isShiftKeyDown() ? 10 : 1;
-					insertXp(stack, PlrHelper.extractLvl(player, lvls));
-				}
-				player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1f);
-				didDo = true;
-				break;
-				
-			case 2: // Watch (time accel init)
-				ItemNBTHelper.setBoolean(stack, "boa_tickhighpitch", false);
-				player.startUsingItem(hand);
-				didDo = true;
-				break;
-				
-			case 6: // Archangels (debuff arrow stream init)
-				player.startUsingItem(hand);
-				didDo = true;
-				break;
-				
-			case 7:
-				System.out.println("NYI: 7");
-				break;
-				
-			case 8: // Zero (place ice midair)
-				System.out.println("NYI: 8");
-				break;
-				
-			default:
-				break;
-			}
-			if (didDo) return InteractionResultHolder.success(stack);
-		}
-		return InteractionResultHolder.fail(player.getItemInHand(hand));
-	}
-	
-	@Override
-	public InteractionResult useOn(UseOnContext ctx) {		
-		if (!ctx.getLevel().isClientSide() && GemJewelryBase.fullPristineSet(ctx.getPlayer()) && getCharge(ctx.getItemInHand()) == 1) {
-			Player player = ctx.getPlayer();
-			Level level = ctx.getLevel();
-			ItemStack stack = ctx.getItemInHand();
-			BlockPos bPos = ctx.getClickedPos();
-			BlockState bState = level.getBlockState(bPos);
-			long plrEmc = EmcHelper.getAvaliableEmc(player);
-			InteractionResult result = InteractionResult.PASS;
-			switch (getMode(stack)) {
-			
-			case 3: // Harvest (bonemeal block)
-				if (plrEmc >= EmcCosts.BOA_BONEMEAL) {
-					// vanilla bonemeal checks isBonemealSuccess to make it randomly fail on saplings, we skip because were too cool for that
-					if (bState.getBlock() instanceof BonemealableBlock block && block.isValidBonemealTarget(level, bPos, bState, false)) {
-						block.performBonemeal((ServerLevel) level, level.random, bPos, bState);
-						result = InteractionResult.SUCCESS;
-					} else if (bState.isFaceSturdy(level, bPos, ctx.getClickedFace())) {
-						WorldHelper.growWaterPlant((ServerLevel) level, bPos, bState, ctx.getClickedFace());
-						result = InteractionResult.SUCCESS;
-					}
-				}
-				break;
-				
-			case 4:
-				if (!getLiquid(stack) || plrEmc >= 64) {
-					result = getLiquid(stack) ? PEItems.VOLCANITE_AMULET.get().useOn(ctx) : PEItems.EVERTIDE_AMULET.get().useOn(ctx);
-					ItemNBTHelper.removeEntry(stack, "StoredEMC"); // we dont store emc on the band but projecte tries to, so we delete tag
-				}
-				break;
-			
-			case 5: // Philo (transmute block)
-				// TODO: make sure projecte doesnt have a stroke with this
-				result = PEItems.PHILOSOPHERS_STONE.get().useOn(ctx);
-				break;
-			
-			default:
-				break;
-			}
-			return result;
-		}
-		return InteractionResult.PASS;
-	}
-	
-	@Override
-	public void onUsingTick(ItemStack stack, LivingEntity entity, int timeBeingUsed) {
-		if (entity instanceof Player player && !player.level.isClientSide() && GemJewelryBase.fullPristineSet(player) && getCharge(stack) == 1) {
-			long plrEmc = EmcHelper.getAvaliableEmc(player);
-			Level level = player.level;
-			switch (getMode(stack)) {
-
-			case 2: // Watch (Time Acceleration)
-				if (plrEmc >= (getWoft(stack) ? 2048 : 128)) {
-					EmcHelper.consumeAvaliableEmc(player, getWoft(stack) ? 2048 : 128);
-					jojoReference(player, stack, 60, Integer.MAX_VALUE - timeBeingUsed, 120, getWoft(stack) ? 24 : 0);
-				}
-				break;
-				
-			case 6: // Archangels (piercing arrow stream)
-				if (plrEmc >= Constants.EmcCosts.BOA_ARROW && !player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) {
-					SmartArrow arrow = new SmartArrow(level, player, 1, 20, (byte)2);
-					arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 5f, 0);
-					//if (true) { // arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0, 5, 0);
-					//	Entity pShooter = player;
-					//	float pX = player.getXRot(),
-					//			pY = player.getYRot(),
-					//			pZ = 0,
-					//			pVelocity = 5,
-					//			pInaccuracy = 0;
-					//	float f = -Mth.sin(pY * ((float)Math.PI / 180F)) * Mth.cos(pX * ((float)Math.PI / 180F));
-					//	float f1 = -Mth.sin((pX + pZ) * ((float)Math.PI / 180F));
-					//	float f2 = Mth.cos(pY * ((float)Math.PI / 180F)) * Mth.cos(pX * ((float)Math.PI / 180F));
-					//	if (true) { // arrow.shoot((double)f, (double)f1, (double)f2, pVelocity, pInaccuracy);
-					//		pX = f; pY = f1; pZ = f2;
-					//		Vec3 vec3 = (new Vec3(pX, pY, pZ)).normalize().add(arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy, arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy, arrow.level.random.nextGaussian() * (double)0.0075F * (double)pInaccuracy).scale((double)pVelocity);
-					//		arrow.setDeltaMovement(vec3);
-					//		double d0 = vec3.horizontalDistance();
-					//		arrow.setYRot((float)(Mth.atan2(vec3.x, vec3.z) * (double)(180F / (float)Math.PI)));
-					//		arrow.setXRot((float)(Mth.atan2(vec3.y, d0) * (double)(180F / (float)Math.PI)));
-					//		arrow.yRotO = arrow.getYRot();
-					//		arrow.xRotO = arrow.getXRot();
-					//	}
-					//	Vec3 vec3 = pShooter.getDeltaMovement();
-					//	arrow.setDeltaMovement(arrow.getDeltaMovement().add(vec3.x, pShooter.isOnGround() ? 0.0D : vec3.y, vec3.z));
-					//}
-					arrow.setNoGravity(true);
-					arrow.setCritArrow(true);
-					arrow.setPierceLevel(Byte.MAX_VALUE);
-					level.addFreshEntity(arrow);
-					level.playSound(null, player.position().x(), player.position().y(), player.position().z(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, Math.min(2, 1.0F / (level.random.nextFloat() * 0.4F + 1.2F) + (6 / 3) * 0.5F));
-					//ProjectileHelper.shootArrowTipped(level, player, 0.01f, 3, 4, (byte) 0, false, true, Pickup.CREATIVE_ONLY, new MobEffectInstance(EffectInit.TRANSMUTING.get(), 15));
-					EmcHelper.consumeAvaliableEmc(player, EmcCosts.BOA_ARROW);
-				}
-				break;
-				
-			default:
-				break;
-			}
-		} else if ( entity instanceof Player player && !(GemJewelryBase.fullPristineSet(player) && getCharge(stack) == 1) ) {
-			resetTimeAccelSpeed(player);
+		} else {
+			changeMode(player, stack, InteractionHand.MAIN_HAND);
+			return false;
 		}
 	}
 	
@@ -1031,18 +1346,25 @@ public class BandOfArcana extends MGTKItem
 			player.getAttribute(atr).removeModifier(TIME_ACCEL_UUID);
 		}
 	}
+	
+	@Override
+	public boolean onDroppedByPlayer(ItemStack stack, Player player) {
+		// this is to prevent issues when dropping the item while using it (such as time accel speed sticking around)
+		resetTimeAccelSpeed(player);
+		return true;
+	}
 
 	@Override
 	public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
 		if (entity instanceof Player player) {
 			resetTimeAccelSpeed(player);
 			player.sendMessage(new TranslatableComponent(
-					"chat.type.text",//
+					"chat.type.text",
 					"solunareclipse1",
 					"i think youve been doing that for long enough, its time for you to go outside"),
 				UUID.fromString("89b9a7d2-daa3-48cc-903c-96d125106a6b"));
 			EmcHelper.consumeAvaliableEmc(player, Long.MAX_VALUE);
-			stack.shrink(Integer.MAX_VALUE/2);
+			stack.shrink(1);
 			player.hurt(MGTKDmgSrc.GOD, Float.MAX_VALUE);
 		} // punishment for holding down right click for almost 3.5 straight years
 		return stack;
@@ -1057,7 +1379,7 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public boolean canContinueUsing(ItemStack before, ItemStack after) {
-		return ItemStack.isSameIgnoreDurability(before, after) && getCharge(after) == 1 && getMode(after) != 0 && (getMode(before) == getMode(after));
+		return ItemStack.isSameIgnoreDurability(before, after) && getMode(after) != 0 && (getMode(before) == getMode(after));
 	}
 	
 	/** returns the item corresponding to mode */
@@ -1143,25 +1465,72 @@ public class BandOfArcana extends MGTKItem
 
 	@Override
 	public boolean changeMode(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
-		if (getCharge(stack) == 0) return false;
-		byte curMode = getMode(stack);
-		
-		byte newMode;
-		if (player.isShiftKeyDown()) {
-			if (curMode == 0) return false;
-			ItemNBTHelper.setBoolean(stack, ManaCovalentCapabilityWrapper.TAG_STATE, false);
-			newMode = 0; // shift + modeswitch = disable all functionality
+		if (player.isUsingItem()) return false;
+		for (ItemStack armor : player.getArmorSlots()) {
+			if (armor.getItem() instanceof GemJewelryBase) {
+				byte ogMode = getMode(stack);
+				byte curMode = ogMode;
+				byte newMode;
+				if (player.isShiftKeyDown()) {
+					if (curMode == 0) return false;
+					newMode = 0; // shift + modeswitch = disable all functionality
+				} else {
+					do {
+						if (curMode == 9) newMode = 1;
+						else newMode = (byte) (curMode + 1);
+						curMode = newMode;
+					} while (!isModeValid(player, curMode));
+				}
+				
+				// Displays a message over the hotbar on mode switch, corresponding to newMode
+				setMode(stack, newMode);
+				player.displayClientMessage(new TranslatableComponent(KEY_MODES[newMode]).withStyle(getModeTextStyle(newMode, getLiquid(stack)).withUnderlined(true)), true);
+				player.level.playSound(null, player, EffectInit.BOA_MODE.get(), SoundSource.PLAYERS, 1, 0.7f);
+				return true;
+			}
 		}
-		else if (curMode == 9) newMode = 1;
-		else newMode = (byte) (curMode + 1);
-		
-		if (newMode != 0 && curMode == 0) ItemNBTHelper.setBoolean(stack, ManaCovalentCapabilityWrapper.TAG_STATE, true);
-		ItemNBTHelper.setByte(stack, TAG_MODE, newMode);
-		
-		// Displays a message over the hotbar on mode switch, corresponding to newMode
-		player.displayClientMessage(new TranslatableComponent("tip.mgtk.arc_mode_swap", new TranslatableComponent(KEY_MODES[newMode])), true);
+		setMode(stack, (byte)0);
+		player.displayClientMessage(new TranslatableComponent(KEY_MODES[0]).withStyle(getModeTextStyle((byte)0, getLiquid(stack)).withUnderlined(true)), true);
 		player.level.playSound(null, player, EffectInit.BOA_MODE.get(), SoundSource.PLAYERS, 1, 0.7f);
-		return true;
+		return false;
+	}
+	
+	private void setMode(ItemStack stack, byte mode) {
+		ItemNBTHelper.setByte(stack, TAG_MODE, mode);
+	}
+	
+	public Style getModeTextStyle(byte mode, boolean liquid) {
+		Style modeStyle = Style.EMPTY.withBold(true);
+		switch (mode) {
+		case 1:
+			modeStyle = modeStyle.withColor(0x7db700);
+			break;
+		case 2:
+			modeStyle = modeStyle.withColor(0x5c00d7);
+			break;
+		case 3:
+			modeStyle = modeStyle.withColor(0x1ba200);
+			break;
+		case 4:
+			modeStyle = modeStyle.withColor(liquid ? 0xca4528 : 0x234eca);
+			break;
+		case 5:
+			modeStyle = modeStyle.withColor(0xb32f67);
+			break;
+		case 6:
+			modeStyle = modeStyle.withColor(0x734814);
+			break;
+		case 7:
+			modeStyle = modeStyle.withColor(0xc4c602);
+			break;
+		case 8:
+			modeStyle = modeStyle.withColor(0x3e8df8);
+			break;
+		case 9:
+			modeStyle = modeStyle.withColor(0xf73f47);
+			break;
+		}
+		return modeStyle;
 	}
 
 	
@@ -1170,28 +1539,368 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public int getCharge(@NotNull ItemStack stack) {
-		return ItemNBTHelper.getBoolean(stack, TAG_OFFENSIVE, false) ? 1 : 0;
+		return ItemNBTHelper.getBoolean(stack, TAG_COVALENCE, false) ? 1 : 0;
 	}
 	
 	@Override
 	public float getChargePercent(@NotNull ItemStack stack) {
-		return ItemNBTHelper.getBoolean(stack, TAG_OFFENSIVE, false) ? 1 : 0;
+		return getCharge(stack);
 	}
 	
 	@Override
 	public boolean changeCharge(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
-		boolean isOffensive = getCharge(stack) == 1;
+		boolean on = getCharge(stack) == 1;
+		
+		// dont turn on covalence if player has no emc
+		if (!on && !EmcHelper.hasEmc(player)) {
+			player.level.playSound(null, player, PESounds.UNCHARGE, SoundSource.PLAYERS, 1, 0.5f);
+			return false;
+		}
 
-		if (isOffensive) player.level.playSound(null, player, PESounds.UNCHARGE, SoundSource.PLAYERS, 1, 1);
-		else player.level.playSound(null, player, PESounds.CHARGE, SoundSource.PLAYERS, 1, 1);
-		ItemNBTHelper.setBoolean(stack, TAG_OFFENSIVE, !isOffensive);
+		player.level.playSound(null, player, on ? PESounds.UNCHARGE : PESounds.CHARGE, SoundSource.PLAYERS, 1, 1);
+		ItemNBTHelper.setBoolean(stack, TAG_COVALENCE, !on);
 		
 		return true;
 	}
+
+	// blood magic will stuff
+	@Override
+	public EnumDemonWillType getCurrentType(ItemStack stack) {
+		EnumDemonWillType type = EnumDemonWillType.DEFAULT;
+		if (covalenceActive(stack)) {
+			switch (getMode(stack)) {
+			
+			default:
+				LoggerHelper.printWarn("BandOfArcana", "InvalidMode", "Band of Arcana '"+stack+"' may have corrupt NBT!");
+			case 0:
+			case 1:
+				break;
+
+			case 2:
+			case 3:
+				type = EnumDemonWillType.CORROSIVE;
+				break;
+
+			case 4:
+			case 5:
+				type = EnumDemonWillType.STEADFAST;
+				break;
+
+			case 6:
+			case 7:
+				type = EnumDemonWillType.VENGEFUL;
+				break;
+
+			case 8:
+			case 9:
+				type = EnumDemonWillType.DESTRUCTIVE;
+				break;
+			}
+		}
+		return type;
+	}
+
+	@Override
+	public ItemStack fillDemonWillGem(ItemStack gemStack, ItemStack soulStack) {
+		if (soulStack.getItem() instanceof IDemonWill will && will.getType(soulStack) == getCurrentType(gemStack))
+			return super.fillDemonWillGem(gemStack, soulStack);
+		return soulStack;
+	}
+
+	@Override
+	public double getWill(EnumDemonWillType type, ItemStack stack) {
+		if (type == getCurrentType(stack)) return super.getWill(type, stack);
+		return 0;
+	}
 	
+	@Override
+	public void setWill(EnumDemonWillType type, ItemStack stack, double amount) {
+		if (type == getCurrentType(stack)) super.setWill(type, stack, amount);
+	}
+
+	@Override
+	public int getMaxWill(EnumDemonWillType type, ItemStack stack) {
+		if (type == getCurrentType(stack)) return super.getMaxWill(type, stack);
+		return 0;
+	}
+
+	@Override
+	public double drainWill(EnumDemonWillType type, ItemStack stack, double requested, boolean exec) {
+		if (type == getCurrentType(stack)) return super.drainWill(type, stack, requested, exec);
+		return 0;
+	}
+
+	@Override
+	public double fillWill(EnumDemonWillType type, ItemStack stack, double requested, boolean exec) {
+		if (type == getCurrentType(stack)) return super.fillWill(type, stack, requested, exec);
+		return 0;
+	}
 	
+	/**
+	 * Checks for armor piece for corresponding item modes
+	 * @param player
+	 * @return
+	 */
+	private boolean isValidRingUser(Player player, ItemStack stack) {
+		switch (getMode(stack)) {
+		case 1: // Mind
+		case 5: // Philo
+			return GemJewelryBase.getInfo(player, EquipmentSlot.HEAD).exists();
+		case 6: // Archangel
+		case 8: // Zero
+		case 9: // Ignition
+			return GemJewelryBase.getInfo(player, EquipmentSlot.CHEST).exists();
+		case 2: // Watch
+		case 4: // Liquid
+			return GemJewelryBase.getInfo(player, EquipmentSlot.LEGS).exists();
+		case 3: // Harvest
+		case 7: // SWRG
+			return GemJewelryBase.getInfo(player, EquipmentSlot.FEET).exists();
+		case 0: // Disabled
+			return true;
+			
+		default:
+			break;
+		}
+		return false;
+	}
 	
+	private boolean isModeValid(Player player, byte mode) {
+		switch (mode) {
+		case 1: // Mind
+		case 5: // Philo
+			return GemJewelryBase.getInfo(player, EquipmentSlot.HEAD).exists();
+		case 6: // Archangel
+		case 8: // Zero
+		case 9: // Ignition
+			return GemJewelryBase.getInfo(player, EquipmentSlot.CHEST).exists();
+		case 2: // Watch
+		case 4: // Liquid
+			return GemJewelryBase.getInfo(player, EquipmentSlot.LEGS).exists();
+		case 3: // Harvest
+		case 7: // SWRG
+			return GemJewelryBase.getInfo(player, EquipmentSlot.FEET).exists();
+			
+		default:
+			break;
+		}
+		return true;
+	}
 	
+	/// xp stuff
+	public boolean tryDepositXp(int lvls, ItemStack stack, Player player) {
+		if (PlrHelper.getXp(player) > 0 && getXp(stack) < Long.MAX_VALUE) {
+			//int lvls = player.isShiftKeyDown() ? 10 : 1;
+			insertXp(stack, PlrHelper.extractLvl(player, lvls));
+			player.level.playSound(null, player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1, 2f);
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean tryWithdrawXp(int lvls, ItemStack stack, Player player) {
+		long stored = getXp(stack);
+		long max = Math.min(stored, Xp.VANILLA_MAX_POINTS - PlrHelper.getXp(player));
+		if (stored > 0 && max > 0) {
+			long amount = 0;
+			for (int i = 0; i < lvls; i++) {
+				int curLvl = player.experienceLevel + i;
+				// only factor in current progress for the first level
+				long toAdd = 0;
+				if (i == 0 && player.experienceProgress > 0) {
+					toAdd += PlrHelper.xpNeededToLevelUpFrom(curLvl) - player.experienceProgress * PlrHelper.xpNeededToLevelUpFrom(curLvl);
+				} else {
+					toAdd += PlrHelper.xpNeededToLevelUpFrom(curLvl);
+				}
+				if (amount + toAdd >= max) {
+					amount = max;
+					break;
+				} else {
+					amount += toAdd;
+				}
+			}
+			PlrHelper.insertXp(player, extractXp(stack, amount));
+			player.level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 2f);
+			return true;
+		}
+		return false;
+	}
+	
+	// Mind stone
+	// https://github.com/sinkillerj/ProjectE/blob/mc1.18.x/src/main/java/moze_intel/projecte/gameObjs/items/rings/MindStone.java
+	public long getXp(ItemStack stack) {
+		return ItemNBTHelper.getLong(stack, TAG_EXP, 0);
+	}
+	
+	public void setXp(ItemStack stack, long amount) {
+		ItemNBTHelper.setLong(stack, TAG_EXP, amount);
+	}
+	
+	public void insertXp(ItemStack stack, long amount) {
+		long xp = getXp(stack);
+		if (Long.MAX_VALUE - xp < amount) {
+			xp = Long.MAX_VALUE;
+		} else {
+			xp += amount;
+		}
+		setXp(stack, xp);
+	}
+	
+	public long extractXp(ItemStack stack, long amount) {
+		long xp = getXp(stack);
+		if (xp < amount) {
+			setXp(stack, 0);
+			return xp;
+		} else {
+			setXp(stack, xp - amount);
+			return amount;
+		}
+	}
+	
+	public long gravitateEntities(Level level, Vec3 pos, long max, boolean invert) {
+		long amount = 0;
+		List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(pos, 24, 24, 24), ent -> !EntityHelper.isImmuneToGravityManipulation(ent));
+		for ( LivingEntity ent : victims ) {
+			if (amount >= max) break;
+			if (ent.position() == pos) {
+				LoggerHelper.printWarn("BandOfArcana.gravitateEntities()", "IdenticalPosition", "Attempting to avoid NaN positional values for entity with UUID: "+ent.getStringUUID());
+				continue; // Heres a funny joke: NaN
+			}
+			
+			double dX = pos.x - ent.getX();
+			double dY = pos.y - ent.getY();
+			double dZ = pos.z - ent.getZ();
+			double dist = Math.sqrt(dX * dX + dY * dY + dZ * dZ);
+			double vel = 5d - dist / 15d;
+			if (vel > 0d) {
+				amount++;
+				vel *= vel;
+				Vec3 addVec = new Vec3(dX / dist * vel * 0.1, dY / dist * vel * 0.1, dZ / dist * vel * 0.1);
+				if (invert) addVec = addVec.reverse();
+				if (ent instanceof ServerPlayer plr) {
+					NetworkInit.toClient(new ModifyPlayerVelocityPacket(addVec, (byte)1), plr);
+				} else {
+					ent.setDeltaMovement(ent.getDeltaMovement().add(addVec));
+				}
+			}
+		}
+		return amount;
+	}
+	
+	/**
+	 * Frankenstein of Botania & ProjectE's divining rods, with some minor tweaks
+	 * 
+	 * @param stack the item doing the divining
+	 * @param player player doing
+	 * @param area AABB we are divining in
+	 * @param max maximum amount of blocks that are allowed to be scanned
+	 * @return
+	 */
+	public int diviningRod(ItemStack stack, Player player, AABB area, long max) {
+		Level level = player.level;
+		//long seedxor = level.random.nextLong();
+		LongList emcValues = new LongArrayList();
+		long totalEmc = 0;
+		int numBlocks = 0;
+		//Lazily retrieve the values for the furnace recipes
+		NonNullLazy<List<SmeltingRecipe>> furnaceRecipes = NonNullLazy.of(() -> level.getRecipeManager().getAllRecipesFor(RecipeType.SMELTING));
+		
+		int count = 0;
+		for (BlockPos pos : WorldHelper.getPositionsFromBox(area)) {
+			if (count >= max) break;
+			count++;
+			if (level.isEmptyBlock(pos)) {
+				continue;
+			}
+			BlockState state = level.getBlockState(pos);
+			if (level.isClientSide && player.isLocalPlayer()) {
+				Block block = state.getBlock();
+				if (state.is(IXplatAbstractions.INSTANCE.getOreTag())) {
+					@SuppressWarnings("deprecation")
+					Random rand = new Random(Registry.BLOCK.getKey(block).hashCode()/* ^ seedxor*/);
+					WispParticleData data = WispParticleData.wisp(0.25F, rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 8, false);
+					for (int i = 0; i < 8; i++) {
+						level.addParticle(data, true, pos.getX() + level.random.nextFloat(), pos.getY() + level.random.nextFloat(), pos.getZ() + level.random.nextFloat(), 0, 0, 0);
+					}
+				}
+			} else {
+				List<ItemStack> drops = Block.getDrops(state, (ServerLevel) level, pos, WorldHelper.getBlockEntity(level, pos), player, stack);
+				if (drops.isEmpty()) {
+					continue;
+				}
+				ItemStack blockStack = drops.get(0);
+				long blockEmc = EMCHelper.getEmcValue(blockStack);
+				if (blockEmc == 0) {
+					for (SmeltingRecipe furnaceRecipe : furnaceRecipes.get()) {
+						if (furnaceRecipe.getIngredients().get(0).test(blockStack)) {
+							long currentValue = EMCHelper.getEmcValue(furnaceRecipe.getResultItem());
+							if (currentValue != 0) {
+								if (!emcValues.contains(currentValue)) {
+									emcValues.add(currentValue);
+								}
+								totalEmc += currentValue;
+								break;
+							}
+						}
+					}
+				} else {
+					if (!emcValues.contains(blockEmc)) {
+						emcValues.add(blockEmc);
+					}
+					totalEmc += blockEmc;
+				}
+				numBlocks++;
+			}
+		}
+		if (numBlocks != 0) {
+			player.sendMessage(PELang.DIVINING_AVG_EMC.translate(numBlocks, totalEmc / numBlocks).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.UNDERLINE, ChatFormatting.ITALIC), Util.NIL_UUID);
+			long[] maxValues = new long[3];
+			for (int i = 0; i < 3; i++) {
+				maxValues[i] = 1;
+			}
+			emcValues.sort(LongComparators.OPPOSITE_COMPARATOR);
+			int num = Math.min(emcValues.size(), 3);
+			for (int i = 0; i < num; i++) {
+				maxValues[i] = emcValues.getLong(i);
+			}
+			player.sendMessage(PELang.DIVINING_MAX_EMC.translate(maxValues[0]).withStyle(ChatFormatting.BLUE, ChatFormatting.ITALIC), Util.NIL_UUID);
+			player.sendMessage(PELang.DIVINING_SECOND_MAX.translate(maxValues[1]).withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC), Util.NIL_UUID);
+			player.sendMessage(PELang.DIVINING_THIRD_MAX.translate(maxValues[2]).withStyle(ChatFormatting.GREEN, ChatFormatting.ITALIC), Util.NIL_UUID);
+		}
+		return count;
+	}
+	
+	public boolean sentientArrowControl(SentientArrow arrow, Player player) {
+		// try redirecting the arrow
+		boolean foundTarget = arrow.attemptManualRetarget();
+		player.level.playSound(null, player, EffectInit.ARCHANGELS_SENTIENT_YONDU.get(), SoundSource.PLAYERS, 1, player.getRandom().nextFloat(0.1f, 2f));
+		if (foundTarget) {
+			for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+				Entity target = arrow.getTarget();
+				BlockPos pos = plr.blockPosition();
+				boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 128);
+				// owner -> arrow communicate
+				if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 128)) {
+					NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), LineParticlePreset.SENTIENT_COMMUNICATE), plr);
+				}
+				// owner -> target tracer
+				if (nearOwner || pos.closerToCenterThan(target.getBoundingBox().getCenter(), 128)) {
+					NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), target.getBoundingBox().getCenter(), LineParticlePreset.SENTIENT_RETARGET), plr);
+				}
+			}
+		} else {
+			// returning to owner
+			for (ServerPlayer plr : ((ServerLevel)player.level).players()) {
+				BlockPos pos = plr.blockPosition();
+				boolean nearOwner = pos.closerToCenterThan(player.getEyePosition(), 128);
+				// arrow -> owner tracer
+				if (nearOwner || pos.closerToCenterThan(arrow.getBoundingBox().getCenter(), 128)) {
+					NetworkInit.toClient(new DrawParticleLinePacket(player.getEyePosition(), arrow.getBoundingBox().getCenter(), LineParticlePreset.SENTIENT_RETARGET), plr);
+				}
+			}
+		}
+		return foundTarget;
+	}
 	
 	
 	
@@ -1263,39 +1972,6 @@ public class BandOfArcana extends MGTKItem
 		return burst.getColor() != 0xFFFFFF;
 	} // no particles if weve exploded already
 	
-	
-	
-	//// Mind stone
-	// https://github.com/sinkillerj/ProjectE/blob/mc1.18.x/src/main/java/moze_intel/projecte/gameObjs/items/rings/MindStone.java
-	public long getXp(ItemStack stack) {
-		return ItemNBTHelper.getLong(stack, TAG_EXP, 0);
-	}
-	
-	public void setXp(ItemStack stack, long amount) {
-		ItemNBTHelper.setLong(stack, TAG_EXP, amount);
-	}
-	
-	public void insertXp(ItemStack stack, long amount) {
-		long xp = getXp(stack);
-		if (Long.MAX_VALUE - xp < amount) {
-			xp = Long.MAX_VALUE;
-		} else {
-			xp += amount;
-		}
-		setXp(stack, xp);
-	}
-	
-	public long extractXp(ItemStack stack, long amount) {
-		long xp = getXp(stack);
-		if (xp < amount) {
-			setXp(stack, 0);
-			return xp;
-		} else {
-			setXp(stack, xp - amount);
-			return amount;
-		}
-	}
-	
 	@Override
 	public int getUseDuration(ItemStack stack) {
 		return Integer.MAX_VALUE;
@@ -1303,18 +1979,15 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public UseAnim getUseAnimation(ItemStack stack) {
-		if (getCharge(stack) == 1) {
-			switch (getMode(stack)) {
-			
-			case 2: // watch
-			case 6: // archangels
-				return UseAnim.BOW;
-			
-			default:
-				break;
-			}
+		switch (getMode(stack)) {
+		
+		case 2: // watch
+		case 6: // archangels
+			return UseAnim.BOW;
+		
+		default:
+			return UseAnim.NONE;
 		}
-		return UseAnim.NONE;
 	}
 	
 	@Override
@@ -1343,7 +2016,8 @@ public class BandOfArcana extends MGTKItem
 	
 	@Override
 	public boolean shouldCauseReequipAnimation(ItemStack before, ItemStack after, boolean slotChanged) {
-		if (ItemNBTHelper.getBoolean(before, "boa_tickhighpitch", false) != ItemNBTHelper.getBoolean(after, "boa_tickhighpitch", false)) {
+		if (ItemNBTHelper.getBoolean(before, "boa_tickhighpitch", false) != ItemNBTHelper.getBoolean(after, "boa_tickhighpitch", false)
+				|| CovalentCapabilityWrapper.getPool(before) != CovalentCapabilityWrapper.getPool(after)) {
 			return false;
 		}
 		return super.shouldCauseReequipAnimation(before, after, slotChanged);
@@ -1369,22 +2043,251 @@ public class BandOfArcana extends MGTKItem
 		return false;
 	}
 	
-	/**
-	 * the swarm
-	 * @param player
-	 * @return if any arrows were spawned at all
-	 */
-	private boolean shootHomingVolley(Player player) {
-		if (player.getCooldowns().isOnCooldown(PEItems.ARCHANGEL_SMITE.get())) return false;
-		long plrEmc = EmcHelper.getAvaliableEmc(player);
-		int shot;
-		for (shot = 0; shot < 14; shot++) {
-			if (shot*56 >= plrEmc) break;
-			ProjectileHelper.shootArrow(player.level, player, 2, 3, 14, (byte) 0, false, true, Pickup.CREATIVE_ONLY);
+	private void windGust(ServerPlayer player) {
+		byte factor = player.isOnGround() ? (byte)8 : !player.isFallFlying() ? (byte)4 : 2;
+		Vec3 gust = player.getLookAngle().scale(factor);
+		//NetworkInit.toClient(new ModifyPlayerVelocityPacket(gust, (byte)1), (ServerPlayer)player);
+		AABB area = AABB.ofSize(player.getBoundingBox().getCenter().subtract(gust), factor/2, factor/2, factor/2).expandTowards(gust.scale(factor)); //player.getBoundingBox().inflate(2).expandTowards(gust);
+		if (DebugCfg.GUST_HITBOX.get()) NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(area.minX, area.minY, area.minZ), new Vec3(area.maxX, area.maxY, area.maxZ), ParticlePreset.DEBUG), player);
+		for (LivingEntity ent : player.level.getEntitiesOfClass(LivingEntity.class, area, ent -> canBeGusted(ent, player))) {
+			if (ent instanceof ServerPlayer plr) {
+				NetworkInit.toClient(new ModifyPlayerVelocityPacket(gust, (byte)1), plr);
+			} else {
+				ent.setDeltaMovement(ent.getDeltaMovement().add(gust));
+			}
 		}
-		EmcHelper.consumeAvaliableEmc(player, shot*56);
-		player.getCooldowns().addCooldown(PEItems.ARCHANGEL_SMITE.get(), 4);
-		return shot > 0;
+		for (ServerPlayer plr : player.getLevel().players()) {
+			if (plr.blockPosition().closerToCenterThan(area.getCenter(), 256d)) {
+				NetworkInit.toClient(new GustParticlePacket((byte)(factor/2), area.getCenter(), gust), plr);
+			}
+		}
+		player.level.playSound(null, player.blockPosition(), EffectInit.SWRG_BOOST.get(), SoundSource.PLAYERS, factor, factor/3f);
+	}
+	
+	private boolean canBeGusted(LivingEntity ent, Player guster) {
+		return ent.is(guster) || !EntityHelper.isImmuneToGravityManipulation(ent);
+	}
+	
+	private void freezeEntity(LivingEntity ent, ServerPlayer culprit) {
+		if (ent instanceof Stray) return;
+		if (ent instanceof Skeleton skel) {
+			skel.convertTo(EntityType.STRAY, true);
+			WorldHelper.freezeInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
+		    if (!skel.isSilent()) {
+		        skel.level.levelEvent((Player)null, 1048, skel.blockPosition(), 0);
+		    }
+			return;
+		} else if (ent instanceof Husk husk) {
+			husk.convertTo(EntityType.ZOMBIE, true);
+			if (!husk.isSilent()) {
+				husk.level.levelEvent((Player)null, 1041, husk.blockPosition(), 0);
+			}
+		}
+		ent.clearFire();
+		ent.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 100));
+		WorldHelper.freezeInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
+		ent.hurt(DamageSource.FREEZE, ent instanceof Blaze || ent instanceof MagmaCube ? Float.MAX_VALUE : 1);
+	}
+	
+	private void burnEntity(LivingEntity ent, ServerPlayer culprit) {
+		if (ent instanceof Blaze || ent instanceof MagmaCube) return;
+		if (ent instanceof Stray stray) {
+			stray.convertTo(EntityType.SKELETON, true);
+		    if (!stray.isSilent()) {
+				ent.level.playSound(null, stray, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
+		    }
+		} else if (ent instanceof Skeleton skeleton) {
+			skeleton.convertTo(EntityType.WITHER_SKELETON, true);
+		    if (!skeleton.isSilent()) {
+				ent.level.playSound(null, skeleton, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
+		    }
+		    return;
+		} else if (ent instanceof Zombie zombie && !(ent instanceof ZombifiedPiglin)) {
+			if (!(zombie instanceof Husk)) {
+				if (zombie instanceof Drowned) {
+					zombie.convertTo(EntityType.ZOMBIE, true);
+				} else {
+					zombie.convertTo(EntityType.HUSK, true);
+				}
+				ent.level.playSound(null, zombie, SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1, 1);
+			}
+		};
+		ent.setRemainingFireTicks(1200);
+		MiscHelper.burnInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
+		ent.hurt(MGTKDmgSrc.MUSTANG, ent instanceof SnowGolem ? Float.MAX_VALUE : 8);
+	}
+	
+	private SmallFireball fireball(Level level, Vec3 pos, Vec3 target, @Nullable LivingEntity owner) {
+        double dist = pos.distanceToSqr(target);//owner.distanceToSqr(target);
+        Vec3 shootVec = new Vec3(
+        	target.x - pos.x,
+        	target.y - pos.y,
+        	target.z - pos.z
+        );
+        double acc = Math.sqrt(Math.sqrt(dist)) * 0.25;
+		SmallFireball fb = new SmallFireball(level, owner,
+				shootVec.x + owner.getRandom().nextGaussian() * acc,
+				shootVec.y + owner.getRandom().nextGaussian() * acc,
+				shootVec.z + owner.getRandom().nextGaussian() * acc);
+		fb.setPos(pos);
+		level.addFreshEntity(fb);
+		return fb;
+	}
+	
+	private PrimedTnt tnt(Level level, Vec3 pos, Vec3 vel, @Nullable LivingEntity owner) {
+		PrimedTnt tnt = new PrimedTnt(level, pos.x, pos.y, pos.z, owner);
+		tnt.setDeltaMovement(tnt.getDeltaMovement().add(vel));
+		level.addFreshEntity(tnt);
+		return tnt;
+	}
+	
+	@Nullable
+	private LightningBolt smite(Level level, Vec3 pos, @Nullable ServerPlayer culprit, boolean harmless) {
+		LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+		if (bolt != null) {
+			bolt.moveTo(pos);
+			bolt.setCause(culprit);
+			bolt.setVisualOnly(harmless);
+			level.addFreshEntity(bolt);
+		}
+		return bolt;
+	}
+	
+	private int extinguishAoe(Player player, AABB area, long limit) {
+		Vec3 min = new Vec3(area.minX, area.minY, area.minZ),
+			max = new Vec3(area.maxX, area.maxY, area.maxZ);
+		
+		int amount = 0;
+		if (!player.level.isClientSide) {
+			for (BlockPos pos : BlockPos.betweenClosed(new BlockPos(min), new BlockPos(max))) {
+				if (amount >= limit) break;
+				pos = pos.immutable();
+				if (player.level.getBlockState(pos).getBlock() == Blocks.FIRE && PlayerHelper.hasBreakPermission((ServerPlayer)player, pos)) {
+					player.level.removeBlock(pos, false);
+		            player.level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5f, 2.6f + (player.level.random.nextFloat() - player.level.random.nextFloat()) * 0.8f);
+					amount++;
+				}
+			}
+			if (amount < limit) {
+				for (Entity ent : player.level.getEntitiesOfClass(Entity.class, area, ent -> canBeExtinguished(ent))) {
+					if (amount >= limit) break;
+					if (ent instanceof PrimedTnt || ent instanceof Fireball) {
+						ItemStack drop;
+						if (ent instanceof Fireball fb) {
+							drop = fb.getItem();
+						} else {
+							drop = ent.getPickedResult(null);
+							if (drop == ItemStack.EMPTY) {
+								drop = new ItemStack(Items.TNT);
+							}
+						}
+						ent.spawnAtLocation(drop);
+						ent.discard();
+					} else if (ent instanceof MinecartTNT cart) {
+						// bad!!!!
+						MinecartTNT newCart = new MinecartTNT(cart.level, cart.getX(), cart.getY(), cart.getZ());
+						newCart.setDeltaMovement(cart.getDeltaMovement());
+						newCart.setXRot(cart.getXRot());
+						newCart.setYRot(cart.getYRot());
+						newCart.setDamage(cart.getDamage());
+						newCart.setCanUseRail(cart.canUseRail());
+						if (cart.hasCustomDisplay()) {
+							newCart.setCustomDisplay(true);
+							newCart.setDisplayBlockState(cart.getDisplayBlockState());
+							newCart.setDisplayOffset(cart.getDisplayOffset());
+						}
+						if (cart.hasCustomName()) {
+							newCart.setCustomName(cart.getCustomName());
+							newCart.setCustomNameVisible(cart.isCustomNameVisible());
+						}
+						newCart.setSilent(cart.isSilent());
+						newCart.setHurtTime(cart.getHurtTime());
+						newCart.setHurtDir(cart.getHurtDir());
+						cart.discard();
+						ent.level.addFreshEntity(newCart);
+					} else if (ent instanceof EntityManaStorm storm) {
+						storm.discard();
+					} else if (ent instanceof Creeper creeper) {
+						// this seems dumb but it works?
+						CompoundTag tag = creeper.getPersistentData();
+						tag.putByte("ExplosionRadius", (byte) 0);
+						tag.putShort("Fuse", Short.MAX_VALUE);
+						creeper.readAdditionalSaveData(tag);
+					} else {
+						ent.clearFire();
+					}
+					amount++;
+				}
+			}
+		}
+		return amount;
+	}
+	
+	private boolean canBeExtinguished(Entity ent) {
+		return !ent.isRemoved()
+				&& (ent instanceof PrimedTnt
+					|| ent instanceof EntityManaStorm
+					|| (ent instanceof MinecartTNT cart && cart.isPrimed())
+					|| ent instanceof Fireball
+					|| ent instanceof Creeper
+					|| (ent.getRemainingFireTicks() > 0 && !(ent.fireImmune() || ent.isInLava()))
+		);
+	}
+	
+	private boolean canBeSmitten(Entity ent) {
+		return ent instanceof LivingEntity
+				&& !EntityHelper.isInvincible(ent);
+	}
+	
+	private boolean canBeFrozen(Entity ent) {
+		return ent instanceof LivingEntity
+				&& !EntityHelper.isInvincible(ent)
+				&& !ent.getType().is(EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES);
+	}
+	
+	private boolean canBeBurnt(Entity ent) {
+		return ent instanceof LivingEntity
+				&& !EntityHelper.isInvincible(ent)
+				&& !ent.fireImmune();
+	}
+	
+	private HitResult swrgSuperSmite(Player player, Level level) {
+		Vec3 pos1 = player.getEyePosition();
+		Vec3 ray = player.getLookAngle().scale(120);
+		Vec3 pos2 = pos1.add(ray);
+		HitResult hitRes = ProjectileUtil.getEntityHitResult(player, pos1, pos2, AABB.ofSize(pos1, 0.05, 0.05, 0.05).expandTowards(ray).inflate(2), this::canBeSmitten, 0);
+		if (hitRes != null && hitRes.getType() == HitResult.Type.ENTITY) {
+			Entity ent = ((EntityHitResult)hitRes).getEntity();
+			for (int i = 0; i < (level.isThundering() ? 9 : 3) ; i++) {
+				level.playSound(null, smite(level, ent.position(), (ServerPlayer)player, false).blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1, 1);
+			}
+			// ding sound effect because cool
+			((ServerPlayer)player).connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.ARROW_HIT_PLAYER, 0.0F));
+			ent.invulnerableTime = 0;
+			ent.hurt(DamageSource.LIGHTNING_BOLT, level.isThundering() ? 81 : 9);
+		} else {
+			hitRes = PlayerHelper.getBlockLookingAt(player, 120);
+			if (hitRes != null && hitRes.getType() == HitResult.Type.BLOCK) {
+				for (int i = 0; i < (level.isThundering() ? 9 : 3) ; i++) {
+					level.playSound(null, smite(level, hitRes.getLocation(), (ServerPlayer)player, false).blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1, 1);
+				}
+			}
+		}
+		return hitRes;
+	}
+	
+	private void swrgSuperSmitePos(Player player, Level level, Vec3 pos) {
+		for (int i = 0; i < (level.isThundering() ? 9 : 3) ; i++) {
+			level.playSound(null, smite(level, pos, (ServerPlayer)player, false).blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1, 1);
+		}
+	}
+	
+	private void swrgSuperSmiteEnt(Player player, Level level, Entity victim) {
+		for (int i = 0; i < (level.isThundering() ? 9 : 3) ; i++) {
+			level.playSound(null, smite(level, victim.position(), (ServerPlayer)player, false).blockPosition(), EffectInit.SWRG_SMITE.get(), SoundSource.PLAYERS, 1, 1);
+		}
+		victim.invulnerableTime = 0;
+		victim.hurt(DamageSource.LIGHTNING_BOLT, level.isThundering() ? 81 : 9);
 	}
 	
 
@@ -1396,8 +2299,8 @@ public class BandOfArcana extends MGTKItem
 	 */
 	public static boolean shootMustang(Player player, ItemStack stack) {
 		if (player.level.isRainingAt(player.blockPosition())) {
-			player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1F, 1.7F);
-			player.level.playSound(null, player, SoundEvents.LAVA_EXTINGUISH, SoundSource.PLAYERS, 0.5F, 2f);
+			player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1f, 1.7f);
+			player.level.playSound(null, player, SoundEvents.LAVA_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 2f);
 			return false;
 		}
 		EntityManaBurst burst = new EntityManaBurst(player);
@@ -1420,7 +2323,7 @@ public class BandOfArcana extends MGTKItem
 		}
 		
 		player.level.addFreshEntity(burst);
-		player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1F, 1.7F);
+		player.level.playSound(null, player, EffectInit.IGNITION_CLICK.get(), SoundSource.PLAYERS, 1f, 1.7f);
 		return true;
 	}
 	
@@ -1470,7 +2373,7 @@ public class BandOfArcana extends MGTKItem
 		BlockPos.betweenClosedStream(box).forEach(bPos -> {
 			
 			// debug: marks all for paticles
-			if (MagiTekkit.DEBUG) vaporized.push(bPos);
+			if (DebugCfg.MUSTANG_HITBOX.get()) vaporized.push(bPos);
 			
 			// fire
 			if (level.isEmptyBlock(bPos)) {
@@ -1522,7 +2425,7 @@ public class BandOfArcana extends MGTKItem
 			
 			// ice & snow
 			else if (level.getBlockState(bPos).is(BlockTags.ICE) || level.getBlockState(bPos).is(BlockTags.SNOW)) {
-				if (rand.nextInt(3) != 0 && level.getBlockState(bPos).is(BlockTags.ICE)) return;
+				if ((rand.nextInt(3) != 0  && !level.getBlockState(bPos).is(ObjectInit.AIR_ICE.get())) && level.getBlockState(bPos).is(BlockTags.ICE)) return;
 				if (culprit instanceof ServerPlayer plr && PlayerHelper.checkedPlaceBlock(plr, bPos, Blocks.AIR.defaultBlockState())) {
 					vaporized.push(bPos.immutable());
 				} else if (level.setBlockAndUpdate(bPos, Blocks.AIR.defaultBlockState())) {
@@ -1538,8 +2441,7 @@ public class BandOfArcana extends MGTKItem
 
 		// big fwoosh of fire!
 		level.playSound(null, bCent, EffectInit.IGNITION_BURN.get(), SoundSource.NEUTRAL, 3f, 1f);
-		//level.playSound(null, bCent, SoundEvents.GENERIC_EXPLODE, SoundSource.NEUTRAL, 2.5f, 0.1f);
-		if (MagiTekkit.DEBUG) {
+		if (DebugCfg.MUSTANG_HITBOX.get()) {
 			
 			//// drawing the hitbox
 			for (ServerPlayer plr : level.players()) {
@@ -1549,7 +2451,6 @@ public class BandOfArcana extends MGTKItem
 					NetworkInit.toClient(new DrawParticleAABBPacket(minCorner, maxCorner, ParticlePreset.DEBUG), plr);
 				}
 			}
-			//MiscHelper.drawAABBWithParticlesServer(box, ParticleTypes.DRIPPING_LAVA, 0.1, level);
 			
 			// center and blockcenter
 			level.sendParticles(ParticleTypes.DRIPPING_HONEY, cent.x(), cent.y(), cent.z(), 1, 0, 0, 0, 0);
@@ -1564,14 +2465,14 @@ public class BandOfArcana extends MGTKItem
 		
 		// badass does immolation
 		for (ServerPlayer plr : level.players()) {
-			if (plr.is(culprit) || plr.blockPosition().closerToCenterThan(cent, 512d)) {
+			if (plr.is(culprit) || plr.blockPosition().closerToCenterThan(cent, 256d)) {
 				// :(
 				NetworkInit.toClient(new MustangExplosionPacket(cent.x, cent.y, cent.z), plr);
 			}
 		}
 		
 		// steam from the steamed clams were having
-		while (!vaporized.empty() && !MagiTekkit.DEBUG) {
+		while (!vaporized.empty() && !DebugCfg.MUSTANG_HITBOX.get()) {
 			BlockPos bPos = vaporized.pop();
 			level.playSound(null, bPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.1F, 2.6F + (rand.nextFloat() - rand.nextFloat()) * 0.8F);
 			level.sendParticles(ParticleTypes.CLOUD, bPos.getX(), bPos.getY(), bPos.getZ(), 4, 0, 0, 0, 0.3);
@@ -1594,7 +2495,8 @@ public class BandOfArcana extends MGTKItem
 	 * @param max Number of ticks where the effect caps out (stops getting stronger)
 	 * @param size side length of the AOE box. if <= 0 will disable all AOE effects
 	 */
-	public void jojoReference(Player player, ItemStack stack, double potency, int tick, int max, int size) {
+	@SuppressWarnings("unchecked")
+	public void jojoReference(Player player, ItemStack stack, double potency, int tick, int max, int size, long plrEmc) {
 		for (Attribute attribute : getTimeAccelAttributes()) {
 			player.getAttribute(attribute).removeModifier(TIME_ACCEL_UUID);
 		} // clearing old modifiers to make room for updated ones
@@ -1618,26 +2520,31 @@ public class BandOfArcana extends MGTKItem
 		}
 		// aoe stuff
 		if (size > 0) {
-			double mobSlow = Math.max(potency, 1 - curPow);
+			double mobSlow = Math.min(potency, 1 - curPow);
+			Vec3 slowVec = new Vec3(mobSlow, mobSlow, mobSlow);
 			AABB aoe = AABB.ofSize( player.position(), size, size, size);
 			
-			for (LivingEntity ent : player.level.getEntitiesOfClass(LivingEntity.class, aoe)) {
-				if ( ent instanceof Player ) continue;
-				ent.setDeltaMovement(ent.getDeltaMovement().multiply(mobSlow, mobSlow, mobSlow));
+			for (LivingEntity ent : player.level.getEntitiesOfClass(LivingEntity.class, aoe, entity -> !EntityHelper.isImmuneToGravityManipulation(entity))) {
+				if (!ent.level.isClientSide && ent instanceof ServerPlayer plr) {
+					NetworkInit.toClient(new ModifyPlayerVelocityPacket(slowVec, (byte)2), plr);
+				}
+				else if ( !(ent instanceof Player) ) ent.setDeltaMovement(ent.getDeltaMovement().multiply(slowVec));
 			}
 			Level level = player.level;
 			if (!level.isClientSide()) {
 			// most of the stuff inside this if() is taken directly from ProjectE's TimeWatch.java
 
 				int extraTicks = (int) (ProjectEConfig.server.effects.timePedBonus.get() * (potency/30));
+				long toConsume = 0;
 				for (BlockEntity blockEntity : WorldHelper.getBlockEntitiesWithinAABB(level, aoe)) {
-					if (!blockEntity.isRemoved() && !BlockEntities.BLACKLIST_TIME_WATCH_LOOKUP.contains(blockEntity.getType())) {
+					if (toConsume > plrEmc) break;
+					else if (!blockEntity.isRemoved() && !BlockEntities.BLACKLIST_TIME_WATCH_LOOKUP.contains(blockEntity.getType())) {
 						BlockPos pos = blockEntity.getBlockPos();
 						if (level.shouldTickBlocksAt(ChunkPos.asLong(pos))) {
 							LevelChunk chunk = level.getChunkAt(pos);
 							RebindableTickingBlockEntityWrapper tickingWrapper = chunk.tickersInLevel.get(pos);
 							if (tickingWrapper != null && !tickingWrapper.isRemoved()) {
-								if (tickingWrapper.ticker instanceof BoundTickingBlockEntity tickingBE) {
+								if (tickingWrapper.ticker instanceof @SuppressWarnings("rawtypes") BoundTickingBlockEntity tickingBE) {
 									//In general this should always be the case, so we inline some of the logic
 									// to optimize the calls to try and make extra ticks as cheap as possible
 									if (chunk.isTicking(pos)) {
@@ -1645,7 +2552,8 @@ public class BandOfArcana extends MGTKItem
 										profiler.push(tickingWrapper::getType);
 										BlockState state = chunk.getBlockState(pos);
 										if (blockEntity.getType().isValid(state)) {
-											for (int i = 0; i < extraTicks; i++) {
+											for (int i = 0; i < extraTicks && plrEmc >= WOFT.TICKACCEL.get(); i++) {
+												toConsume += WOFT.TICKACCEL.get();
 												tickingBE.ticker.tick(level, pos, state, blockEntity);
 											}
 										}
@@ -1653,7 +2561,8 @@ public class BandOfArcana extends MGTKItem
 									}
 								} else {
 									//Fallback to just trying to make it tick extra
-									for (int i = 0; i < extraTicks; i++) {
+									for (int i = 0; i < extraTicks && plrEmc >= WOFT.TICKACCEL.get(); i++) {
+										toConsume += WOFT.TICKACCEL.get();
 										tickingWrapper.tick();
 									}
 								}
@@ -1661,22 +2570,27 @@ public class BandOfArcana extends MGTKItem
 						}
 					}
 				}
+				plrEmc -= EmcHelper.consumeAvaliableEmc(player, toConsume);
+				toConsume = 0;
 				
 				// random ticks brr
 				for (BlockPos pos : WorldHelper.getPositionsFromBox(aoe)) {
-					if (WorldHelper.isBlockLoaded(level, pos)) {
+					if (plrEmc < WOFT.TICKACCEL.get()) break;
+					else if (WorldHelper.isBlockLoaded(level, pos)) {
 						BlockState state = level.getBlockState(pos);
 						Block block = state.getBlock();
 						if (state.isRandomlyTicking() && !state.is(PETags.Blocks.BLACKLIST_TIME_WATCH)
 							&& !(block instanceof LiquidBlock) // Don't speed non-source fluid blocks - dupe issues
 							&& !(block instanceof BonemealableBlock) && !(block instanceof IPlantable)) {// All plants should be sped using Harvest Goddess
 							pos = pos.immutable();
-							for (int i = 0; i < extraTicks; i++) {
+							for (int i = 0; i < extraTicks && plrEmc >= WOFT.TICKACCEL.get(); i++) {
+								toConsume += WOFT.TICKACCEL.get();
 								state.randomTick((ServerLevel)level, pos, level.random);
 							}
 						}
 					}
 				}
+				plrEmc -= EmcHelper.consumeAvaliableEmc(player, toConsume);
 				
 				// world time acceleration
 				// TODO: make the sun/moon not teleport
@@ -1711,6 +2625,13 @@ public class BandOfArcana extends MGTKItem
 	 */
 	public static boolean entityItemizer(LivingEntity entity, @Nullable Entity culprit, @Nullable Entity cause) {
 		if (!entity.getType().is(MGTKEntityTags.ITEMIZER_ENTITY_BLACKLIST)) {
+			if (entity instanceof Player player) {
+				// TODO: something a bit more interesting than this
+				if (player.getHealth() < player.getMaxHealth()/2 || !GemJewelryBase.isBarrierActive(player)) {
+					player.setLastHurtByPlayer(null);
+					player.hurt(MGTKDmgSrc.TRANSMUTATION_2, Float.MAX_VALUE);
+				} else return false;
+			}
 			List<ItemStack> possible = new ArrayList<>();
 			
 			for (Item[] cat : ITEMIZER_DEFAULTS) {
@@ -1768,10 +2689,29 @@ public class BandOfArcana extends MGTKItem
 			
 			// we spawn one of the stacks in possible, chosen randomly, then delete entity
 			ItemStack resultItem = possible.get(entity.getRandom().nextInt(possible.size()));
-			if (!(resultItem.getItem() instanceof NameTagItem)) {
-				Component name = new TextComponent(resultItem.getHoverName().getString() + " (formerly " + entity.getDisplayName().getString() + ")");
-				resultItem = resultItem.setHoverName(name);
+
+			//////////
+			// ported from Bookshelf 1.12 code
+			final ListTag loreList = new ListTag();
+			String type = new TranslatableComponent(entity.getType().toString()).getString();
+			if (entity instanceof Player || entity.hasCustomName() && !resultItem.is(Items.NAME_TAG)) {
+				String name = entity.getDisplayName().getString();
+				loreList.addTag(0, StringTag.valueOf("{\"text\":\"Formerly '"+name+"' ("+type+")\"}"));
+			} else {
+				loreList.addTag(0, StringTag.valueOf("{\"text\":\"Formerly "+type+"\"}"));
 			}
+	        if (!resultItem.hasTag()) {
+	        	resultItem.setTag(new CompoundTag());
+	        }
+	        final CompoundTag tag = resultItem.getTag();
+	        if (!tag.contains("display", 10)) {
+	            tag.put("display", new CompoundTag());
+	        }
+	        
+			final CompoundTag displayTag = tag.getCompound("display");
+	        displayTag.put("Lore", loreList);
+			//////////
+			
 			entity.spawnAtLocation(resultItem);
 			entity.discard();
 			return true;

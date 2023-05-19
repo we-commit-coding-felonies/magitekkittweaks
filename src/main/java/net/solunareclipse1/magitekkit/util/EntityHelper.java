@@ -1,8 +1,5 @@
 package net.solunareclipse1.magitekkit.util;
 
-import java.util.List;
-import java.util.UUID;
-
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;

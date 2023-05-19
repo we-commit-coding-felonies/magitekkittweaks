@@ -9,7 +9,6 @@ import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
-import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -22,7 +21,6 @@ import moze_intel.projecte.api.capabilities.PECapabilities;
 import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.api.capabilities.item.IItemEmcHolder;
 import moze_intel.projecte.emc.FuelMapper;
-import moze_intel.projecte.gameObjs.PETags;
 import moze_intel.projecte.utils.EMCHelper;
 import moze_intel.projecte.utils.PlayerHelper;
 

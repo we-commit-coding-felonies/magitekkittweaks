@@ -1,6 +1,5 @@
 package net.solunareclipse1.magitekkit.common.item.armor;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -13,7 +12,6 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -29,16 +27,11 @@ import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-import moze_intel.projecte.gameObjs.registries.PESoundEvents;
-import moze_intel.projecte.utils.WorldHelper;
-
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IBurnoutItem;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.util.ColorsHelper;
-import net.solunareclipse1.magitekkit.util.LoggerHelper;
-
 import vazkii.botania.common.helper.ItemNBTHelper;
 
 public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {

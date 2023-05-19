@@ -57,3 +57,9 @@ Custom code mod for the MagiTekkit modpack
 	versionRange="*"
 	ordering="AFTER"
 	side="BOTH"
+[[dependencies.magitekkit]]
+	modId="bloodmagic"
+	mandatory=true
+	versionRange="*"
+	ordering="AFTER"
+	side="BOTH"

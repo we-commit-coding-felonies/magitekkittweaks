@@ -2,14 +2,11 @@ package net.solunareclipse1.magitekkit.network.packet.client;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Random;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
@@ -25,7 +22,19 @@ import net.solunareclipse1.magitekkit.util.MiscHelper;
 import vazkii.botania.client.fx.SparkleParticleData;
 import vazkii.botania.client.fx.WispParticleData;
 
-public record DrawParticleLinePacket(Vec3 start, Vec3 end, int preset) {	
+public record DrawParticleLinePacket(Vec3 start, Vec3 end, LineParticlePreset preset) {
+	
+	public enum LineParticlePreset {
+		DEBUG,
+		DEBUG_2,
+		DEBUG_3,
+		ARROW_TARGET_LOCK,
+		SENTIENT_RETARGET,
+		SENTIENT_COMMUNICATE,
+		SENTIENT_TRACER,
+		VINE,
+		SMITE
+	}
 	
 	public void enc(FriendlyByteBuf buffer) {
 		buffer.writeDouble(start.x); //
@@ -36,55 +45,61 @@ public record DrawParticleLinePacket(Vec3 start, Vec3 end, int preset) {
 		buffer.writeDouble(end.y); // end point
 		buffer.writeDouble(end.z); //
 		
-		buffer.writeInt(preset); // particle preset
+		buffer.writeEnum(preset); // particle preset
 	}
 
 	public static DrawParticleLinePacket dec(FriendlyByteBuf buffer) {
 		return new DrawParticleLinePacket(
 				new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble()), // start point
 				new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble()), // end point
-				buffer.readInt() // particle preset
+				buffer.readEnum(LineParticlePreset.class) // particle preset
 		);
 	}
 	
 	public boolean handle(Supplier<NetworkEvent.Context> sup) {
         NetworkEvent.Context ctx = sup.get();
         ctx.enqueueWork(() -> {
-        	ClientLevel level = Minecraft.getInstance().level;
+        	@SuppressWarnings("resource")
+			ClientLevel level = Minecraft.getInstance().level;
         	/** particle, stepSize */
         	Map<ParticleOptions, Double> particles = new HashMap<>();
         	switch (preset) {
         	
-        	case -2: // debug
+        	case DEBUG: // debug
         		particles.put(ParticleTypes.FALLING_SPORE_BLOSSOM, 0.1);
         		break;
         	
-        	case -1: // debug
+        	case DEBUG_2: // debug
         		particles.put(ParticleTypes.DRIPPING_HONEY, 0.1);
         		break;
         	
-        	case 0: // debug
+        	case DEBUG_3: // debug
         		particles.put(ParticleTypes.DRIPPING_OBSIDIAN_TEAR, 0.1);
         		break;
         		
-        	case 1: // smart arrow target-lock
+        	case ARROW_TARGET_LOCK: // smart arrow target-lock
         		particles.put(SparkleParticleData.noClip(1, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 1), 0.1);
         		break;
         		
-        	case 2: // sentient arrow retarget
+        	case SENTIENT_RETARGET: // sentient arrow retarget
         		particles.put(SparkleParticleData.corrupt(2, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 20), 0.1);
         		break;
         		
-        	case 3: // sentient arrow communicate
+        	case SENTIENT_COMMUNICATE: // sentient arrow communicate
         		particles.put(ParticleTypes.ENCHANT, 0.1);
         		break;
         		
-        	case 4: // sentient arrow tracer
+        	case SENTIENT_TRACER: // sentient arrow tracer
         		particles.put(WispParticleData.wisp(0.5f, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 1), 0.1);
         		break;
         		
-        	case 5: // ignition aoe
-        		particles.put(WispParticleData.wisp(0.1f, 1, 0.2f, 0), 0.08);
+        	case VINE: // vine
+        		particles.put(WispParticleData.wisp(0.5f, 0.35f, 0.5f, 0, 1.5f), 0.1);
+        		break;
+        		
+        	case SMITE:
+        		particles.put(ParticleTypes.ELECTRIC_SPARK, 0.1);
+        		particles.put(ParticleTypes.ENCHANTED_HIT, 0.1);
         		break;
         	
         	default: // invalid

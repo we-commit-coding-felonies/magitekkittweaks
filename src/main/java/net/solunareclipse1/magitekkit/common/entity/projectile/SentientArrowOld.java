@@ -25,8 +25,6 @@ import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Node;
@@ -47,16 +45,15 @@ import net.solunareclipse1.magitekkit.data.MGTKBlockTags;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
-import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
-import vazkii.botania.client.fx.WispParticleData;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityPixie;
 
 /** @deprecated in favor of the rewrite: SentientArrow */
+@Deprecated
 public class SentientArrowOld extends Arrow {
 	private static final boolean DEBUG = false;
 	/** 0 = searching, 1 = found & currently chasing, 2 = target lost */
@@ -453,17 +450,17 @@ public class SentientArrowOld extends Arrow {
 				i = j;
 				thisNode = nextNode;
 			}
-			if (lastNode == null) {
-				NetworkInit.toClient(
-						new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
-								Vec3.atCenterOf(thisNode.asBlockPos()), 0),
-						(ServerPlayer) this.getOwner());
-			} else {
-				NetworkInit.toClient(
-						new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()),
-								Vec3.atCenterOf(thisNode.asBlockPos()), 0),
-						(ServerPlayer) this.getOwner());
-			}
+			//if (lastNode == null) {
+			//	NetworkInit.toClient(
+			//			new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
+			//					Vec3.atCenterOf(thisNode.asBlockPos()), 0),
+			//			(ServerPlayer) this.getOwner());
+			//} else {
+			//	NetworkInit.toClient(
+			//			new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()),
+			//					Vec3.atCenterOf(thisNode.asBlockPos()), 0),
+			//			(ServerPlayer) this.getOwner());
+			//}
 		}
 	}
 	protected Path findPathToTarget(LivingEntity target) {
@@ -580,8 +577,8 @@ public class SentientArrowOld extends Arrow {
 		for (ServerPlayer plr : ((ServerLevel) level).players()) {
 			BlockPos pos = plr.blockPosition();
 			if (pos.closerToCenterThan(target.position(), 64d) || pos.closerToCenterThan(this.position(), 64d)) {
-				NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
-						target.getBoundingBox().getCenter(), 2), plr);
+				//NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(),
+				//		target.getBoundingBox().getCenter(), 2), plr);
 			}
 		}
 	}

@@ -5,13 +5,18 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Stack;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
+
+import com.google.common.collect.Lists;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -51,20 +56,20 @@ import moze_intel.projecte.utils.WorldHelper;
 import net.solunareclipse1.magitekkit.common.entity.ai.ArrowPathNavigation;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.config.DebugCfg;
 import net.solunareclipse1.magitekkit.data.MGTKBlockTags;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
-import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
-import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket.LineParticlePreset;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
-import vazkii.botania.client.fx.SparkleParticleData;
 import vazkii.botania.client.fx.WispParticleData;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityPixie;
@@ -80,15 +85,15 @@ public class SentientArrow extends AbstractArrow {
 	/** when tickCount > this, arrow dies */
 	private final int maxLife;
 	
-	/**
-	 * current "state" of the arrow <br>
-	 * 0 = searching for target <br>
-	 * 1 = chasing target directly <br>
-	 * 2 = pathfinding to obstructed target <br>
-	 * 3 = no target / inert
-	 */
-	private byte state = 0;
-	
+	private enum ArrowState {
+		SEARCHING, // Looking for a target
+		DIRECT,    // Has direct line of sight to target
+		PATHING,   // Following path to to target
+		INERT
+	}
+	private static final EntityDataAccessor<Byte> AI_STATE = SynchedEntityData.defineId(SentientArrow.class, EntityDataSerializers.BYTE);
+	private static final EntityDataAccessor<Integer> TARGET_ID = SynchedEntityData.defineId(SentientArrow.class, EntityDataSerializers.INT);
+	private ArrowState state = ArrowState.SEARCHING;
 	/** the integer entity id of our current tracked target */
 	private int victimId = -1;
 	
@@ -126,20 +131,34 @@ public class SentientArrow extends AbstractArrow {
 		super(ObjectInit.SENTIENT_ARROW.get(), shooter, level);
 		maxLife = 200;
 	}
+
+	@Override
+	public void defineSynchedData() {
+		super.defineSynchedData();
+		entityData.define(AI_STATE, (byte) 0);
+		entityData.define(TARGET_ID, -1);
+	}
 	
 	@Override
 	public void tick() {
-		this.hasImpulse = true;
-		if ( tickCount > maxLife || owner() == null ) this.kill();
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "Tick");
+		if ( tickCount > maxLife || owner() == null ) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "OldOrBadOwner");
+			this.kill();
+		}
 		else if (tickCount < 5) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "YoungArrow");
 			this.setPos(position().add(this.getDeltaMovement()));
 		}
 		else {
 			if (isLookingForTarget()) {
+				if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "LookingForTarget");
 				if (searchTime < 10) {
 					searchTime++;
 					if (!attemptAutoRetarget() && searchTime >= 10) {
-						if (tickCount == searchTime) becomeInert();
+						if (tickCount == searchTime) {
+							becomeInert();
+						}
 						else {
 							isReturningToOwner = true;
 						}
@@ -150,28 +169,35 @@ public class SentientArrow extends AbstractArrow {
 			}
 			// TRAJECTORY MODIFICATION
 			if (isHoming()) {
+				if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "Homing");
 				Entity target = isReturningToOwner ? owner() : getTarget();
 				if (isReturningToOwner || this.shouldContinueHomingTowards(target)) {
 					boolean lineOfSight = canSee(target);
 					if (lineOfSight) {
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "LineOfSight");
 						// BEELINE
 						forgetPaths();
 						targetPos = target.getBoundingBox().getCenter();
-						if (state != 1) {
+						if (getState() != ArrowState.DIRECT) {
 							//particles(0);
-							state = 1; // target visible
+							setState(ArrowState.DIRECT); // target visible
 						}
 					} else {
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "Obstructed");
 						// PATHFIND
-						state = 2; // target obstructed
+						setState(ArrowState.PATHING); // target obstructed
 						pathTo(target);
 					}
 					if (!isInert() && targetPos != null) {
-						shootAt(targetPos, 5);
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "Redirecting");
+						if (!level.isClientSide) {
+							shootAt(targetPos, 3f);
+						}
 					}
 				} else {
+					if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "InvalidTarget");
 					resetTarget();
-					state = 0; // searching for target
+					setState(ArrowState.SEARCHING); // searching for target
 				}
 			}
 			// MOVEMENT & COLLISION
@@ -182,23 +208,23 @@ public class SentientArrow extends AbstractArrow {
 	
 	@Override
 	protected void onHitBlock(BlockHitResult hitRes) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "OnHitBlock");
 		BlockPos pos = hitRes.getBlockPos();
 		BlockState hit = level.getBlockState(hitRes.getBlockPos());
 		if (!hit.isAir()) {
 			if (hit.is(MGTKBlockTags.ARROW_ANNIHILATE)) {
 				if (transmuteBlockIntoCovDust(pos)) {
-					/*if (level instanceof ClientLevel lvl) {
-						MiscHelper.drawAABBWithParticles(
-								AABB.unitCubeFromLowerCorner(Vec3.atLowerCornerOf(pos)),
-								ParticleTypes.WHITE_ASH, 0.1, (ClientLevel) level, false);
-					}*/
 					level.playSound(null, pos, EffectInit.ARCHANGELS_SENTIENT_HIT.get(), this.getSoundSource(), 1, 2);
 					return; // dont need to process collision on something that doesnt exist
 				}
+			} else if (hit.is(MGTKBlockTags.ARROW_NOCLIP)) {
+				return;
 			}
 		}
 		if (isLookingForTarget()) {
-			if (!attemptAutoRetarget()) becomeInert();
+			if (!attemptAutoRetarget()) {
+				becomeInert();
+			}
 		}
 		if (isInert()) {
 			super.onHitBlock(hitRes);
@@ -207,6 +233,7 @@ public class SentientArrow extends AbstractArrow {
 	
 	@Override
 	protected void onHitEntity(EntityHitResult hitRes) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "OnHitEntity");
 		Entity hit = hitRes.getEntity();
 		if (isReturningToOwner && hit.is(owner())) {
 			isReturningToOwner = false;
@@ -226,11 +253,12 @@ public class SentientArrow extends AbstractArrow {
 	 */
 	private void moveAndCollide() {
 		projectileTick();
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "MoveAndCollide");
 		boolean noClip = !isInert() || this.isNoPhysics();
 		Vec3 curPos = this.position();
 		Vec3 motion = getDeltaMovement();
 		double horizVel = motion.horizontalDistance();
-		if (this.xRotO == 0.0F && this.yRotO == 0.0F) {
+		if (!level.isClientSide && this.xRotO == 0.0F && this.yRotO == 0.0F) {
 			this.setXRot((float)(Mth.atan2(motion.y, horizVel) * (double)(180F / (float)Math.PI)));
 			this.setYRot((float)(Mth.atan2(motion.x, motion.z) * (double)(180F / (float)Math.PI)));
 			this.xRotO = this.getXRot();
@@ -250,6 +278,7 @@ public class SentientArrow extends AbstractArrow {
 				if (!blockShape.isEmpty()) {
 
 					for(AABB aabb : blockShape.toAabbs()) {
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "BlockAABBCollisionLoop");
 						if (aabb.move(curBlockPos).contains(curPos)) {
 							this.inGround = true;
 							break;
@@ -280,13 +309,14 @@ public class SentientArrow extends AbstractArrow {
 			Vec3 nextPos = curPos.add(motion);
 			HitResult hitRes = this.level.clip(new ClipContext(curPos, nextPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
 			if (hitRes.getType() != HitResult.Type.MISS) {
-				if ( !noClip || !level.getBlockState(new BlockPos(hitRes.getLocation())).is(MGTKBlockTags.ARROW_NOCLIP) ) {
+				if ( !noClip && !level.getBlockState(new BlockPos(hitRes.getLocation())).is(MGTKBlockTags.ARROW_NOCLIP) ) {
 					nextPos = hitRes.getLocation();
 				}
 			}
 
 			boolean didHit = false;
 			while(!this.isRemoved()) {
+				if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "EntCollisionLoop");
 				EntityHitResult entHitRes = this.findHitEntity(curPos, nextPos);
 				if (entHitRes != null) {
 					hitRes = entHitRes;
@@ -308,6 +338,7 @@ public class SentientArrow extends AbstractArrow {
 				}
 
 				// game hangs without the pierce level check
+				// NOTE TO SELF: do not ever give this a pierce value
 				if (entHitRes == null || this.getPierceLevel() <= 0) {
 					break;
 				}
@@ -325,29 +356,25 @@ public class SentientArrow extends AbstractArrow {
 			double velY = motion.y;
 			double velZ = motion.z;
 			if (level instanceof ServerLevel lvl) {
+				//ParticleOptions particle = WispParticleData.wisp(0.5f, Color.PHILOSOPHERS.R/255f, Color.PHILOSOPHERS.G/255f, Color.PHILOSOPHERS.B/255f, 1);
+				//MiscHelper.drawVectorWithParticles(position(), position().add(getDeltaMovement()), particle, 0.1, lvl);
+				//for(int i = 0; i < 24; ++i) {
+				//	this.level.addParticle(particle, this.getX() + velX * (double)i / 4.0D, this.getY() + velY * (double)i / 4.0D, this.getZ() + velZ * (double)i / 4.0D, 0,0,0);//-velX, -velY + 0.2D, -velZ);
+				//}
 				// TODO: fix clientside jank because doing this every tick is bad juju
 				for (ServerPlayer plr : lvl.players()) {
 					BlockPos pos = plr.blockPosition();
-					if (pos.closerToCenterThan(this.position(), 64d)) {
-						NetworkInit.toClient(new DrawParticleLinePacket(position().add(getDeltaMovement()), position(), 4), plr);
+					if (pos.closerToCenterThan(this.position(), 96d)) {
+						NetworkInit.toClient(new DrawParticleLinePacket(position().add(getDeltaMovement()), position(), LineParticlePreset.SENTIENT_TRACER), plr);
 					}
 				}
-				//MiscHelper.drawVectorWithParticles(position().subtract(getDeltaMovement()), position(), particle, 0.1, (ClientLevel)level);
-				//for(int i = 0; i < 4; ++i) {
-				//	this.level.addParticle(particle, this.getX() + velX * (double)i / 4.0D, this.getY() + velY * (double)i / 4.0D, this.getZ() + velZ * (double)i / 4.0D, -velX, -velY + 0.2D, -velZ);
-				//}
 			}
 
 			double nextX = this.getX() + velX;
 			double nextY = this.getY() + velY;
 			double nextZ = this.getZ() + velZ;
 			//double horizVel = vel.horizontalDistance();
-			if (noClip) {
-				this.setYRot((float)(Mth.atan2(-velX, -velZ) * (double)(180F / (float)Math.PI)));
-			} else {
-				this.setYRot((float)(Mth.atan2(velX, velZ) * (double)(180F / (float)Math.PI)));
-			}
-
+			this.setYRot((float)(Mth.atan2(velX, velZ) * (double)(180F / (float)Math.PI)));
 			this.setXRot((float)(Mth.atan2(velY, horizVel) * (double)(180F / (float)Math.PI)));
 			this.setXRot(lerpRotation(this.xRotO, this.getXRot()));
 			this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
@@ -355,6 +382,7 @@ public class SentientArrow extends AbstractArrow {
 			//float f1 = 0.05F;
 			if (this.isInWater()) {
 				for(int j = 0; j < 4; ++j) {
+					if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "InWaterLoop");
 					//float f2 = 0.25F;
 					this.level.addParticle(ParticleTypes.BUBBLE, nextX - velX * 0.25D, nextY - velY * 0.25D, nextZ - velZ * 0.25D, velX, velY, velZ);
 				}
@@ -374,136 +402,11 @@ public class SentientArrow extends AbstractArrow {
 		}
 	}
 	
-	/* here for reference
-	private void abstractArrowTick() {
-		projectileTick();
-		boolean noPhys = this.isNoPhysics();
-		Vec3 vel = this.getDeltaMovement();
-		if (this.xRotO == 0.0F && this.yRotO == 0.0F) {
-			double horizVel = vel.horizontalDistance();
-			this.setYRot((float)(Mth.atan2(vel.x, vel.z) * (double)(180F / (float)Math.PI)));
-			this.setXRot((float)(Mth.atan2(vel.y, horizVel) * (double)(180F / (float)Math.PI)));
-			this.yRotO = this.getYRot();
-			this.xRotO = this.getXRot();
-		}
-
-		BlockPos curBlockPos = this.blockPosition();
-		BlockState blockInside = this.level.getBlockState(curBlockPos);
-		if (!blockInside.isAir() && !noPhys) {
-			VoxelShape blockShape = blockInside.getCollisionShape(this.level, curBlockPos);
-			if (!blockShape.isEmpty()) {
-				Vec3 curPos = this.position();
-
-				for(AABB aabb : blockShape.toAabbs()) {
-					if (aabb.move(curBlockPos).contains(curPos)) {
-						this.inGround = true;
-						break;
-					}
-				}
-			}
-		}
-
-		if (this.shakeTime > 0) {
-			--this.shakeTime;
-		}
-
-		if (this.isInWaterOrRain() || blockInside.is(Blocks.POWDER_SNOW)) {
-			this.clearFire();
-		}
-
-		if (this.inGround && !noPhys) {
-			if (this.lastState != blockInside && this.shouldFall()) {
-				this.startFalling();
-			} else if (!this.level.isClientSide) {
-				this.tickDespawn();
-			}
-
-			++this.inGroundTime;
-		} else {
-			this.inGroundTime = 0;
-			Vec3 curPos = this.position();
-			Vec3 nextPos = curPos.add(vel);
-			HitResult hitRes = this.level.clip(new ClipContext(curPos, nextPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
-			if (hitRes.getType() != HitResult.Type.MISS) {
-				nextPos = hitRes.getLocation();
-			}
-
-			while(!this.isRemoved()) {
-				EntityHitResult entityhitresult = this.findHitEntity(curPos, nextPos);
-				if (entityhitresult != null) {
-					hitRes = entityhitresult;
-				}
-
-				if (hitRes != null && hitRes.getType() == HitResult.Type.ENTITY) {
-					Entity entity = ((EntityHitResult)hitRes).getEntity();
-					Entity entity1 = this.getOwner();
-					if (entity instanceof Player && entity1 instanceof Player && !((Player)entity1).canHarmPlayer((Player)entity)) {
-						hitRes = null;
-						entityhitresult = null;
-					}
-				}
-
-				if (hitRes != null && hitRes.getType() != HitResult.Type.MISS && !noPhys && !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, hitRes)) {
-					this.onHit(hitRes);
-					this.hasImpulse = true;
-				}
-
-				if (entityhitresult == null || this.getPierceLevel() <= 0) {
-					break;
-				}
-
-				hitRes = null;
-			}
-
-			vel = this.getDeltaMovement();
-			double velX = vel.x;
-			double velY = vel.y;
-			double velZ = vel.z;
-			if (this.isCritArrow()) {
-				for(int i = 0; i < 4; ++i) {
-					this.level.addParticle(ParticleTypes.CRIT, this.getX() + velX * (double)i / 4.0D, this.getY() + velY * (double)i / 4.0D, this.getZ() + velZ * (double)i / 4.0D, -velX, -velY + 0.2D, -velZ);
-				}
-			}
-
-			double nextX = this.getX() + velX;
-			double nextY = this.getY() + velY;
-			double nextZ = this.getZ() + velZ;
-			double horizVel = vel.horizontalDistance();
-			if (noPhys) {
-				this.setYRot((float)(Mth.atan2(-velX, -velZ) * (double)(180F / (float)Math.PI)));
-			} else {
-				this.setYRot((float)(Mth.atan2(velX, velZ) * (double)(180F / (float)Math.PI)));
-			}
-
-			this.setXRot((float)(Mth.atan2(velY, horizVel) * (double)(180F / (float)Math.PI)));
-			this.setXRot(lerpRotation(this.xRotO, this.getXRot()));
-			this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
-			float f = 0.99F;
-			float f1 = 0.05F;
-			if (this.isInWater()) {
-				for(int j = 0; j < 4; ++j) {
-					float f2 = 0.25F;
-					this.level.addParticle(ParticleTypes.BUBBLE, nextX - velX * 0.25D, nextY - velY * 0.25D, nextZ - velZ * 0.25D, velX, velY, velZ);
-				}
-
-				f = this.getWaterInertia();
-			}
-
-			this.setDeltaMovement(vel.scale((double)f));
-			if (!this.isNoGravity() && !noPhys) {
-				Vec3 vec34 = this.getDeltaMovement();
-				this.setDeltaMovement(vec34.x, vec34.y - (double)0.05F, vec34.z);
-			}
-
-			this.setPos(nextX, nextY, nextZ);
-			this.checkInsideBlocks();
-		}
-	}*/
-	
 	/**
 	 * identical to Projectile.tick()
 	 */
 	private void projectileTick() {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "ProjectileTick");
 		if (!this.hasBeenShot) {
 			this.gameEvent(GameEvent.PROJECTILE_SHOOT, this.getOwner(), this.blockPosition());
 			this.hasBeenShot = true;
@@ -520,6 +423,7 @@ public class SentientArrow extends AbstractArrow {
 	 * identical to Entity.tick()
 	 */
 	private void entityTick() {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "EntityTick");
 		this.level.getProfiler().push("entityBaseTick");
 		this.feetBlockState = null;
 		if (this.isPassenger() && this.getVehicle().isRemoved()) {
@@ -591,13 +495,18 @@ public class SentientArrow extends AbstractArrow {
 	// FUNCTIONS //
 	///////////////
 	public void becomeInert() {
-		state = 3;
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "BecomingInert");
+		this.setState(ArrowState.INERT);
 		resetTarget();
 	}
+	
 	@Override
 	public void kill() {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "EndOfLife");
 		playSound(EffectInit.ARCHANGELS_EXPIRE.get(), 1, 1);
-		level.playSound(null, getOwner().blockPosition(), EffectInit.ARCHANGELS_EXPIRE.get(), SoundSource.PLAYERS, 1, 0.1f);
+		if (getOwner() != null) {
+			level.playSound(null, getOwner().blockPosition(), EffectInit.ARCHANGELS_EXPIRE.get(), SoundSource.PLAYERS, 1, 0.1f);
+		}
 		discard();
 	}
 	
@@ -619,13 +528,15 @@ public class SentientArrow extends AbstractArrow {
 		}
 		return true;
 	}
-
+	
+	@SuppressWarnings("unused")
 	private void shootAt(Entity ent) {
 		shootAt(ent, 1);
 	}
 	private void shootAt(Entity ent, float vel) {
 		shootAt(ent.getBoundingBox().getCenter(), vel);
 	}
+	@SuppressWarnings("unused")
 	private void shootAt(Vec3 pos) {
 		shootAt(pos, 1);
 	}
@@ -638,16 +549,33 @@ public class SentientArrow extends AbstractArrow {
 		Vec3 motion = heading.scale(vel);
 		shoot(heading.x, heading.y, heading.z, (float) motion.length(), 0);
 	}
-	private Path findPathTo(Entity ent) {
+	@Nullable
+	private Path findPathTo(@NotNull Entity ent) {
 		return findPathTo(ent.getBoundingBox().getCenter());
 	}
+	@Nullable
 	private Path findPathTo(Vec3 pos) {
 		return nav.createPath(pos, 0);
 	}
+	
+	private Path trimNodes(Path path) {
+		List<Node> nodes = Lists.newArrayList();
+		nodes.add(path.getNode(0));
+		for (int i = 1; i < path.getNodeCount() - 1; i++) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "NodeTrimLoop");
+			if (!isUnobstructed(nodes.get(nodes.size() - 1).asVec3(), path.getNode(i+1).asVec3())) {
+				nodes.add(path.getNode(i));
+			}
+		}
+		nodes.add(path.getEndNode());
+		return new Path(nodes, path.getTarget(), path.canReach());
+	}
+	
 	private boolean isPathInsane(Path path) {
 		boolean isInsane = path == null || path.sameAs(currentPath) || path.getNode(0) == path.getEndNode();
 		if (!isInsane) {
 			for (Path oldPath : previousPaths) {
+				if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "PathInsanityLoop");
 				if (path.sameAs(oldPath)) {
 					isInsane = true;
 					break;
@@ -661,7 +589,7 @@ public class SentientArrow extends AbstractArrow {
 			for (ServerPlayer plr : lvl.players()) {
 				BlockPos pos = plr.blockPosition();
 				if (pos.closerToCenterThan(newPos, 64d) || pos.closerToCenterThan(this.position(), 64d)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), newPos, 2), plr);
+					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), newPos, LineParticlePreset.ARROW_TARGET_LOCK), plr);
 				}
 			}
 		}
@@ -673,14 +601,25 @@ public class SentientArrow extends AbstractArrow {
 	 * @return if pathfinding was unsuccessfull
 	 */
 	private void pathTo(Entity ent) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "PathTo");
 		Entity target = ent;
+		Path lastMemorized = null;
 		while (!hasPath()) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "FindPathLoop");
 			// FIND PATH
-			if (currentPath != null) {
+			if (currentPath != null && !currentPath.sameAs(lastMemorized)) {
 				previousPaths.push(currentPath);
+				lastMemorized = currentPath;
 			}
 			Path newPath = findPathTo(target);
-			if (isPathInsane(newPath)) {
+			boolean insane;
+			if (newPath == null) {
+				insane = true;
+			} else {
+				newPath = trimNodes(newPath);
+				insane = isPathInsane(newPath);
+			}
+			if (insane) {
 				if (isReturningToOwner) {
 					isReturningToOwner = false;
 					becomeInert();
@@ -693,7 +632,9 @@ public class SentientArrow extends AbstractArrow {
 					}
 				}
 			}
-			//drawDebugPath(newPath);
+			if (DebugCfg.ARROW_PATHFIND.get()) {
+				drawDebugPath(newPath);
+			}
 			currentPath = newPath;
 			break;
 		}
@@ -704,13 +645,6 @@ public class SentientArrow extends AbstractArrow {
 				node = currentPath.getNode(0);
 			}
 			Node nextNode = currentPath.getNextNode();
-			/*while (isUnobstructed(node.asVec3(), nextNode.asVec3()) && !currentPath.isDone()) {
-				if (!level.isClientSide) {
-					NetworkInit.toClient(new DrawParticleLinePacket(node.asVec3(), nextNode.asVec3(), 7), (ServerPlayer)owner());
-				}
-				nextNode = currentPath.getNextNode();
-				currentPath.advance();
-			}*/
 			Vec3 nextTargetPos = Vec3.atCenterOf(nextNode.asBlockPos());
 			if (nextTargetPos != null) {
 				if (targetPos == null || !nextTargetPos.closerThan(targetPos, 0.5)) {
@@ -723,10 +657,6 @@ public class SentientArrow extends AbstractArrow {
 			if (targetPos != null && this.position().closerThan(targetPos, 0.5)) {
 				currentPath.advance();
 			}
-			// Remove true to make sure we're successfully following, but currently borked.
-			//if (node.asVec3().subtract(this.position()).length() < 1) {
-			//	currentPath.advance();
-			//}
 		}
 	}
 	private void particles(int type) {
@@ -737,7 +667,7 @@ public class SentientArrow extends AbstractArrow {
 			for (ServerPlayer plr : ((ServerLevel) level).players()) {
 				BlockPos pos = plr.blockPosition();
 				if (pos.closerToCenterThan(this.getBoundingBox().getCenter(), 64) || pos.closerToCenterThan(targetPos, 64)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), targetPos, 2), plr);
+					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), targetPos, LineParticlePreset.SENTIENT_RETARGET), plr);
 				}
 			}
 			break;
@@ -747,7 +677,7 @@ public class SentientArrow extends AbstractArrow {
 				Vec3 pos = plr.position();
 				Entity target = getTarget();
 				if (pos.closerThan(this.getBoundingBox().getCenter(), 128) || pos.closerThan(target.getBoundingBox().getCenter(), 128)) {
-					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), target.getBoundingBox().getCenter(), 2), plr);
+					NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), target.getBoundingBox().getCenter(), LineParticlePreset.SENTIENT_RETARGET), plr);
 				}
 			}
 			break;
@@ -764,6 +694,7 @@ public class SentientArrow extends AbstractArrow {
 	 */
 	@Nullable
 	private boolean transmuteBlockIntoCovDust(BlockPos blockPos) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "BlockToCovDust");
 		if (this.level.isClientSide) return false;
 		else {
 			ServerLevel lvl = (ServerLevel) level;
@@ -773,6 +704,7 @@ public class SentientArrow extends AbstractArrow {
 				long dropEmc = 0;
 				if (!drops.isEmpty()) {
 					for (ItemStack drop : drops) {
+						if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "DropsEmcLoop");
 						if (EMCHelper.doesItemHaveEmc(drop)) {
 							dropEmc += EMCHelper.getEmcValue(drop);
 						} else {
@@ -783,6 +715,7 @@ public class SentientArrow extends AbstractArrow {
 				if (dropEmc <= 0) dropEmc = 1;
 				Vec3 pos = Vec3.atCenterOf(blockPos);
 				for (Entry<Item, Long> dust : EmcHelper.emcToCovalenceDust(dropEmc).entrySet()) {
+					if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "DustCreationLoop");
 					int count = dust.getValue().intValue();
 					if (count > 0) {
 						ItemEntity itemEnt = new ItemEntity(this.level, pos.x, pos.y, pos.z, new ItemStack(dust.getKey(), count));
@@ -796,6 +729,7 @@ public class SentientArrow extends AbstractArrow {
 		}
 	}
 	private void attemptToTransmuteEntity(LivingEntity entity) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "AttemptTransmuteEntity");
 		Player owner = owner();
 		int oldInvuln = entity.invulnerableTime;
 		entity.invulnerableTime = 0;
@@ -824,25 +758,18 @@ public class SentientArrow extends AbstractArrow {
 	}
 	
 	protected void drawDebugPath(Path path) {
+		if (this.level.isClientSide) return;
 		Node lastNode = null;
 		Node thisNode = null;
 		for (int i = 0; i < path.getNodeCount() - 1; i++) {
+			if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "DebugPathLoop");
 			Node node = path.getNode(i);
 			lastNode = thisNode;
 			thisNode = node;
-			Node nextNode = path.getNode(i+1);
-			/*if (!whole) {
-				int j = i + 1;
-				while (hasLineOfSight(thisNode.asVec3(),nextNode.asVec3()) && j < this.targetPath.getNodeCount()) {
-					nextNode = this.targetPath.getNode(j++);
-				}
-				i = j;
-				thisNode = nextNode;
-			}*/
 			if (lastNode == null) {
-				NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), Vec3.atCenterOf(thisNode.asBlockPos()), 0), (ServerPlayer) this.getOwner());
+				NetworkInit.toClient(new DrawParticleLinePacket(this.getBoundingBox().getCenter(), Vec3.atCenterOf(thisNode.asBlockPos()), LineParticlePreset.DEBUG), (ServerPlayer) this.getOwner());
 			} else {
-				NetworkInit.toClient(new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()), Vec3.atCenterOf(thisNode.asBlockPos()), 0), (ServerPlayer) this.getOwner());
+				NetworkInit.toClient(new DrawParticleLinePacket(Vec3.atCenterOf(lastNode.asBlockPos()), Vec3.atCenterOf(thisNode.asBlockPos()), LineParticlePreset.DEBUG_2), (ServerPlayer) this.getOwner());
 			}
 		}
 	}
@@ -852,6 +779,7 @@ public class SentientArrow extends AbstractArrow {
 	// TARGET SELECTION //
 	//////////////////////
 	private LivingEntity findTargetNear(Vec3 pos) {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "FindTargetNear");
 		if (!level.isClientSide()) {
 			List<LivingEntity> validTargets = level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(pos, 128, 128, 128), SentientArrow.this::isValidHomingTargetForAutomatic);
 			if (!validTargets.isEmpty()) {
@@ -874,10 +802,11 @@ public class SentientArrow extends AbstractArrow {
 		return null;
 	}
 	private boolean attemptAutoRetarget() {
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "AutoTargetAttempt");
 		LivingEntity newTarget = findTargetNear(this.getBoundingBox().getCenter());
 		if (newTarget != null && !newTarget.is(getTarget())) {
-			victimId = newTarget.getId();
-			state = 1; // target visible
+			setTarget(newTarget.getId());
+			setState(ArrowState.DIRECT); // target visible
 			searchTime = 0;
 			particles(1);
 			return true;
@@ -885,7 +814,8 @@ public class SentientArrow extends AbstractArrow {
 		return false;
 	}
 	public boolean attemptManualRetarget() {
-		if (isInert()) state = 1;
+		if (DebugCfg.ARROW_LOG.get()) LoggerHelper.printDebug("SentientArrow", "ManualTargetAttempt");
+		if (isInert()) setState(ArrowState.DIRECT);
 		Entity owner = getOwner();
 		if (owner == null) return false;
 		if (this.inGround) {
@@ -914,20 +844,11 @@ public class SentientArrow extends AbstractArrow {
 		resetTarget();
 		isReturningToOwner = true;
 		return false;
-		/*Vec3 oldPos = this.position();
-		setPos(owner.getEyePosition());
-		boolean did = attemptAutoRetarget();
-		setPos(oldPos); // lol, lmao
-		if (!did) {
-			doParticles();
-			return false;
-		}
-		return true;*/
 	}
 	private boolean trySwappingTargetTo(Entity newTarget) {
 		if (newTarget != null && !newTarget.is(getTarget())) {
-			victimId = newTarget.getId();
-			state = 1;
+			setTarget(newTarget.getId());
+			setState(ArrowState.DIRECT);
 			searchTime = 0;
 			return true;
 		}
@@ -995,17 +916,45 @@ public class SentientArrow extends AbstractArrow {
 	////////////////////////
 	// DATA / STATE STUFF //
 	////////////////////////
+	public ArrowState getState() {
+		switch (entityData.get(AI_STATE)) {
+		case 0:
+			return ArrowState.SEARCHING;
+		case 1:
+			return ArrowState.DIRECT;
+		case 2:
+			return ArrowState.PATHING;
+		default:
+			return ArrowState.INERT;
+		}
+	}
+	private void setState(ArrowState newState) {
+		switch (newState) {
+		case SEARCHING:
+			entityData.set(AI_STATE, (byte)0);
+			break;
+		case DIRECT:
+			entityData.set(AI_STATE, (byte)1);
+			break;
+		case PATHING:
+			entityData.set(AI_STATE, (byte)2);
+			break;
+		case INERT:
+			entityData.set(AI_STATE, (byte)3);
+			break;
+		}
+	}
 	public boolean isLookingForTarget() {
-		return state == 0;
+		return getState() == ArrowState.SEARCHING;
 	}
 	public boolean isHoming() {
 		return isReturningToOwner || hasTarget();
 	}
 	public boolean hasTarget() {
-		return (state == 1 || state == 2) && victimId != -1;
+		return (getState() == ArrowState.DIRECT || getState() == ArrowState.PATHING) && getTargetId() != -1;
 	}
 	public boolean isInert() {
-		return state == 3;
+		return getState() == ArrowState.INERT;
 	}
 	
 	public Player owner() {
@@ -1017,11 +966,17 @@ public class SentientArrow extends AbstractArrow {
 	
 	@Nullable
 	public Entity getTarget() {
-		return level.getEntity(victimId);
+		return level.getEntity(getTargetId());
+	}
+	public int getTargetId() {
+		return entityData.get(TARGET_ID);
+	}
+	public void setTarget(int targetId) {
+		entityData.set(TARGET_ID, targetId);
 	}
 	private void resetTarget() {
 		searchTime = 0;
-		victimId = -1;
+		setTarget(-1);
 		targetPos = null;
 		forgetPaths();
 	}
