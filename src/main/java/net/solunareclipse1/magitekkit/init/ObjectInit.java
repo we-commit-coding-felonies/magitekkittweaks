@@ -35,6 +35,12 @@ import net.solunareclipse1.magitekkit.common.item.armor.gem.GemCirclet;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemTimepiece;
 import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet;
 import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
+import net.solunareclipse1.magitekkit.common.item.tool.MGTKToolTier;
+import net.solunareclipse1.magitekkit.common.item.tool.dark.VoidSword;
+import net.solunareclipse1.magitekkit.common.item.tool.dark.VoidAxe;
+import net.solunareclipse1.magitekkit.common.item.tool.dark.VoidHoe;
+import net.solunareclipse1.magitekkit.common.item.tool.dark.VoidPickaxe;
+import net.solunareclipse1.magitekkit.common.item.tool.dark.VoidShovel;
 
 public class ObjectInit {
 	private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MagiTekkit.MODID);
@@ -56,6 +62,7 @@ public class ObjectInit {
     public static final Item.Properties ITEM_PROPERTIES_GENERIC = new Item.Properties().tab(ModInit.ITEM_GROUP);
     public static final Item.Properties ITEM_PROPERTIES_UNBREAKABLE = new Item.Properties().tab(ModInit.ITEM_GROUP).durability(0);
     public static final Item.Properties ITEM_PROPERTIES_JEWELRY = new Item.Properties().tab(ModInit.ITEM_GROUP).defaultDurability(96).durability(96);
+    public static final Item.Properties ITEM_PROPERTIES_VOID = new Item.Properties().tab(ModInit.ITEM_GROUP).durability(0).fireResistant().stacksTo(1);
 
     
     
@@ -76,10 +83,16 @@ public class ObjectInit {
     // Equipment
     public static final RegistryObject<CovalenceBracelet> COVALENCE_BRACELET = ITEMS.register("covalence_bracelet", () -> new CovalenceBracelet(ITEM_PROPERTIES_GENERIC.stacksTo(1)));
     
-    public static final RegistryObject<VoidArmorBase> VOID_HELM = ITEMS.register("void_helm", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.HEAD, ITEM_PROPERTIES_UNBREAKABLE, 0.15f));
-    public static final RegistryObject<VoidArmorBase> VOID_CHEST = ITEMS.register("void_chest", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.CHEST, ITEM_PROPERTIES_UNBREAKABLE, 0.36f));
-    public static final RegistryObject<VoidArmorBase> VOID_LEGS = ITEMS.register("void_legs", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.LEGS, ITEM_PROPERTIES_UNBREAKABLE, 0.27f));
-    public static final RegistryObject<VoidArmorBase> VOID_BOOTS = ITEMS.register("void_boots", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.FEET, ITEM_PROPERTIES_UNBREAKABLE, 0.12f));
+
+    public static final RegistryObject<VoidSword> VOID_SWORD = ITEMS.register("void_sword", () -> new VoidSword(MGTKToolTier.VOID, 3, -2, ITEM_PROPERTIES_VOID));
+    public static final RegistryObject<VoidPickaxe> VOID_PICKAXE = ITEMS.register("void_pickaxe", () -> new VoidPickaxe(MGTKToolTier.VOID, 1, -2.8f, ITEM_PROPERTIES_VOID));
+    public static final RegistryObject<VoidShovel> VOID_SHOVEL = ITEMS.register("void_shovel", () -> new VoidShovel(MGTKToolTier.VOID, 2, -3, ITEM_PROPERTIES_VOID));
+    public static final RegistryObject<VoidAxe> VOID_AXE = ITEMS.register("void_axe", () -> new VoidAxe(MGTKToolTier.VOID, 16, -3.5f, ITEM_PROPERTIES_VOID));
+    public static final RegistryObject<VoidHoe> VOID_HOE = ITEMS.register("void_hoe", () -> new VoidHoe(MGTKToolTier.VOID, -6, 5, ITEM_PROPERTIES_VOID));
+    public static final RegistryObject<VoidArmorBase> VOID_HELM = ITEMS.register("void_helm", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.HEAD, ITEM_PROPERTIES_VOID, 0.15f));
+    public static final RegistryObject<VoidArmorBase> VOID_CHEST = ITEMS.register("void_chest", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.CHEST, ITEM_PROPERTIES_VOID, 0.36f));
+    public static final RegistryObject<VoidArmorBase> VOID_LEGS = ITEMS.register("void_legs", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.LEGS, ITEM_PROPERTIES_VOID, 0.27f));
+    public static final RegistryObject<VoidArmorBase> VOID_BOOTS = ITEMS.register("void_boots", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.FEET, ITEM_PROPERTIES_VOID, 0.12f));
     
     public static final RegistryObject<CrimsonArmor> CRIMSON_HELM = ITEMS.register("crimson_helm", () -> new CrimsonArmor(CrimsonArmorMaterial.MAT, EquipmentSlot.HEAD, ITEM_PROPERTIES_UNBREAKABLE, 0.17f));
     public static final RegistryObject<CrimsonArmor> CRIMSON_CHEST = ITEMS.register("crimson_chest", () -> new CrimsonArmor(CrimsonArmorMaterial.MAT, EquipmentSlot.CHEST, ITEM_PROPERTIES_UNBREAKABLE, 0.40f));

@@ -3,22 +3,15 @@ package net.solunareclipse1.magitekkit.common.effect;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 import moze_intel.projecte.gameObjs.registries.PEItems;
-
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
-import net.solunareclipse1.magitekkit.init.EffectInit;
 
 public class IceShieldEffect extends MobEffect {
 	

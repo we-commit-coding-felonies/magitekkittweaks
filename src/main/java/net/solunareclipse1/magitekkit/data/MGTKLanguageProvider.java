@@ -18,7 +18,12 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.GANTIUM_BLOCK.get(), "Block of Gantium");
         
         add(ObjectInit.COVALENCE_BRACELET.get(), "Covalence Bracelet");
-        
+
+        add(ObjectInit.VOID_SWORD.get(), "Void Sword");
+        add(ObjectInit.VOID_PICKAXE.get(), "Void Pickaxe");
+        add(ObjectInit.VOID_SHOVEL.get(), "Void Shovel");
+        add(ObjectInit.VOID_AXE.get(), "Void Axe");
+        add(ObjectInit.VOID_HOE.get(), "Void Hoe");
         add(ObjectInit.VOID_HELM.get(), "Helmet of the Void");
         add(ObjectInit.VOID_CHEST.get(), "Chestplate of the Void");
         add(ObjectInit.VOID_LEGS.get(), "Leggings of the Void");
@@ -34,6 +39,9 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.GEM_TIMEPIECE.get(), "Gravity's Timepiece");
         add(ObjectInit.GEM_ANKLET.get(), "Hurricane Anklet");
         add(ObjectInit.GEM_BRACELET.get(), "Band of Arcana");
+
+        add("effect.magitekkit.transmuting", "Transmuting");
+        add("effect.magitekkit.ice_shield", "Frozen Solid");
         
         // tooltips
         add("tip.mgtk.arcana.1", "Channels the latent power of Gem Jewellery");
@@ -55,7 +63,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.arcana.guide.2.2", "Time acceleration");
         add("tip.mgtk.arcana.guide.2.2.alt", "Toggle global time acceleration");
         add("tip.mgtk.arcana.guide.2.3", "Blink");
-        add("tip.mgtk.arcana.guide.2.3.alt", "Recall");
+        add("tip.mgtk.arcana.guide.2.3.alt", "Blink");
         add("tip.mgtk.arcana.guide.2.4", "Ender Chest");
         add("tip.mgtk.arcana.guide.2.4.alt", "Anvil");
         add("tip.mgtk.arcana.guide.3.1", "Withering vine");
@@ -128,6 +136,12 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.arcana.charge.off", "Covalence disabled");
         add("tip.mgtk.arcana.liquid.water", "Aqua");
         add("tip.mgtk.arcana.liquid.lava", "Magma");
+        add("tip.mgtk.enchsynergy", "Grows stronger when enchanted");
+        add("tip.mgtk.enchbonus", "Current bonus: %s %s");
+        add("tip.mgtk.enchbonus.armor", "Damage Reduction");
+        add("tip.mgtk.enchbonus.weapon", "Attack Strength");
+        add("tip.mgtk.enchbonus.tool", "Faster Speed");
+        add("tip.mgtk.enchbonus.unknown", "Current bonus: %s Unknown. This is a bug!");
         add("tip.mgtk.dr", "Provides a %s% damage reduction");
         add("tip.mgtk.dyndr", "Currently providing a %s% damage reduction");
         add("tip.mgtk.burnout", "Burnout: %1$s / %2$s");

@@ -9,20 +9,16 @@ import com.mojang.logging.LogUtils;
 
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.ItemCombinerMenu;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import net.solunareclipse1.magitekkit.init.EffectInit;
@@ -30,19 +26,10 @@ import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 
 public class GravityAnvilMenu extends ItemCombinerMenu {
-	private static final Logger LOGGER = LogUtils.getLogger();
-	private static final boolean DEBUG_COST = false;
 	public static final int MAX_NAME_LENGTH = 50;
 	public int repairItemCountCost;
 	private String itemName;
 	private final DataSlot cost = DataSlot.standalone();
-	private static final int COST_FAIL = 0;
-	private static final int COST_BASE = 1;
-	private static final int COST_ADDED_BASE = 1;
-	private static final int COST_REPAIR_MATERIAL = 1;
-	private static final int COST_REPAIR_SACRIFICE = 2;
-	private static final int COST_INCOMPATIBLE_PENALTY = 1;
-	private static final int COST_RENAME = 1;
 
 	public GravityAnvilMenu(int containerId, Inventory inv) {
 		this(containerId, inv, ContainerLevelAccess.NULL);

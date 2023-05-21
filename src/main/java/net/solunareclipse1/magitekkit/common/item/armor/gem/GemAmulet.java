@@ -30,11 +30,12 @@ import moze_intel.projecte.capability.EmcHolderItemCapabilityWrapper;
 import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.utils.WorldHelper;
 
+import net.solunareclipse1.magitekkit.config.EmcCfg;
+import net.solunareclipse1.magitekkit.config.EmcCfg.Gem.Chest;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.util.ColorsHelper;
-import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.PlrHelper;
@@ -124,13 +125,13 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 				}
 				
 				// life stone
-				if (!player.hasEffect(EffectInit.TRANSMUTING.get()) && plrEmc >= Constants.EmcCosts.JEWELRY_REJUVENATE && level.getGameTime() % 7 == 0) {
+				if (!player.hasEffect(EffectInit.TRANSMUTING.get()) && plrEmc >= Chest.REJUVENATE.get() && level.getGameTime() % 7 == 0) {
 					if (tryHeal(player)) {
-						plrEmc -= Constants.EmcCosts.JEWELRY_REJUVENATE;
+						plrEmc -= EmcHelper.consumeAvaliableEmc(player, Chest.REJUVENATE.get());
 					}
 					// plrEmc might have changed, need to re-check
-					if (plrEmc >= Constants.EmcCosts.JEWELRY_REJUVENATE && tryFeed(player)) {
-						plrEmc -= Constants.EmcCosts.JEWELRY_REJUVENATE;
+					if (plrEmc >= Chest.REJUVENATE.get() && tryFeed(player)) {
+						plrEmc -= EmcHelper.consumeAvaliableEmc(player, Chest.REJUVENATE.get());
 					}
 				}
 				
@@ -206,26 +207,27 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 		Random rand = player.getRandom();
 		long consumed = 0;
 		AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), rand.nextInt(1,14), rand.nextInt(1,14), rand.nextInt(1,14));
-		switch (rand.nextInt(1,14)) {
+		boolean noRad = Chest.RADLEAK.get() == 0;
+		switch (rand.nextInt(1,noRad ? 13 : 14)) {
 		case 1:
 			MiscHelper.funnySound(rand, level, player.blockPosition());
 			consumed++;
 			break;
 		case 2:
 			WorldHelper.freezeInBoundingBox(level, area, player, true);
-			consumed += Constants.EmcCosts.BOA_TEMPERATURE;
+			consumed += EmcCfg.Arcana.Zero.FREEZE.get();
 			break;
 		case 3:
 			WorldHelper.extinguishNearby(level, player);
-			consumed += Constants.EmcCosts.BOA_TEMPERATURE;
+			consumed += EmcCfg.Arcana.Zero.EXTINGUISH.get();
 			break;
 		case 4:
 			MiscHelper.burnInBoundingBox(level, area, player, false);
-			consumed += Constants.EmcCosts.BOA_TEMPERATURE;
+			consumed += EmcCfg.Arcana.Ignition.BURN.get();
 			break;
 		case 5:
 			WorldHelper.growNearbyRandomly(rand.nextBoolean(), level, player.blockPosition(), player);
-			consumed += Constants.EmcCosts.BOA_BONEMEAL;
+			consumed += EmcCfg.Arcana.Harvest.AOEGROW.get();
 			break;
 		case 6:
 			for (int i = 0; i < rand.nextInt(1,14); i++) {
@@ -238,7 +240,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 			NetworkInit.toClient(pkt, (ServerPlayer)player);
 			break;
 		case 8:
-			consumed += Constants.EmcCosts.BOA_ARROW*ProjectileHelper.fiftyTwoCardPickup(rand, level, player, true);
+			consumed += ProjectileHelper.fiftyTwoCardPickup(rand, level, player, true)*EmcCfg.Arcana.Archangel.ARROW.get();
 			break;
 		case 9:
 			MiscHelper.pokeNearby(level, player, stack);
@@ -246,7 +248,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 		case 10:
 			if (player instanceof ServerPlayer) { // TODO: this check might be unneccessary
 				MiscHelper.smiteSelf(level, (ServerPlayer) player);
-				consumed += Constants.EmcCosts.BOA_LIGHTNING;
+				consumed += EmcCfg.Arcana.SWRG.SMITE.get();
 			} break;
 		case 11:
 			long oldXp = PlrHelper.getXp(player);
@@ -255,12 +257,15 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 			consumed += Math.max(0, diff);
 			break;
 		case 12:
-			player.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 100, 0));
+			player.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 60, 0));
 			break;
 		case 13:
-			consumed += rand.nextInt(1, 8193);
-			double sv = Math.pow(2d, (9d*consumed)/8192d );
-			MekanismAPI.getRadiationManager().radiate(new Coord4D(player), sv);
+			double maxRad = Chest.RADLEAK.get();
+			if (maxRad > 0) {
+				consumed += rand.nextLong(1, (long)(maxRad+1));
+				double sv = Math.pow(2d, (9d*consumed)/maxRad );
+				MekanismAPI.getRadiationManager().radiate(new Coord4D(player), sv);
+			}
 			break;
 		}
 		

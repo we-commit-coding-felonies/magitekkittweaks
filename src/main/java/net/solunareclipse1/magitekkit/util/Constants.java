@@ -5,30 +5,10 @@ package net.solunareclipse1.magitekkit.util;
  * @author solunareclipse1
  */
 public class Constants {
-	public class EmcCosts {
-		public static final int
-				//// Gem Armor
-				// Shield
-				ALCHSHIELD_MIN = 64,
-				// Helmet / Circlet
-				JEWELRY_BREATH = 24,
-				JEWELRY_XRAY = 42,
-				// Chestplate / Amulet
-				JEWELRY_REJUVENATE = 72,
-				// Boots / Anklet
-				JEWELRY_JESUS = 3,
-				//// Band of Arcana
-				// Harvest
-				BOA_BONEMEAL = 64,
-				BOA_ARROW = 384,
-				BOA_LIGHTNING = 2304,
-				BOA_TEMPERATURE = 768;
-	}
-	
-	public class Cooldowns {
-		public static final byte
-				BOA_TEMPERATURE_AOE = 30;
-	}
+	/**
+	 * Pre-calculated value of sqrt(pi+e)
+	 */
+	public static final double SQRT_PI_E = 2.42071776175d;
 	
 	public class Xp {
 		// beyond this, xp required for next level > Long.MAX_VALUE

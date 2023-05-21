@@ -8,9 +8,7 @@ import top.theillusivec4.curios.api.type.capability.ICurio;
 
 import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.CurioCovalentCapabilityWrapper;
-import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.common.item.MGTKCovalenceItem;
-import net.solunareclipse1.magitekkit.common.item.MGTKItem;
 
 public class CovalenceBracelet extends MGTKCovalenceItem implements ICurio {
 	

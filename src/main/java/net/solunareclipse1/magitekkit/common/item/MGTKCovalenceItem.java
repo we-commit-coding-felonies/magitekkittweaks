@@ -6,7 +6,6 @@ import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityW
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
 
 import wayoftime.bloodmagic.api.compat.EnumDemonWillType;
-import wayoftime.bloodmagic.api.compat.IDemonWill;
 import wayoftime.bloodmagic.api.compat.IDemonWillGem;
 
 /**

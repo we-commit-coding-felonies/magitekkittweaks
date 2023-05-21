@@ -34,7 +34,6 @@ import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.config.EmcCfg;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Gem;
-import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
 
 import mekanism.common.registries.MekanismDamageSource;
 
@@ -230,7 +229,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	
 	public long calcShieldingCost(Player player, float damage, DamageSource source, ItemStack stack) {
 		// ( dmg * mod ) ^ exp = emc
-		return (long) Math.max(EmcCosts.ALCHSHIELD_MIN, Math.pow(damage*getCostMultiplierForSource(source), Gem.SHIELD_EXP.get()));
+		return (long) Math.max(Gem.SHIELD_MIN.get(), Math.pow(damage*getCostMultiplierForSource(source), Gem.SHIELD_EXP.get()));
 	}
 	
 	public float calcAffordableDamage(Player player, float damage, DamageSource source, ItemStack stack, long emcHeld) {

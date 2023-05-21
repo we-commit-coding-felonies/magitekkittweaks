@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "magitekkit:item/armor/void/boots"
+    "layer0": "magitekkit:item/armor/void/feet"
   }
 }

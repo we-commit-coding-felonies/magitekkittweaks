@@ -119,7 +119,7 @@ public class VoidArmorBase extends MGTKArmorItem implements IDamageReducer {
 	@Override
 	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {
 		if (ench instanceof ProtectionEnchantment) return false;
-		return true;
+		return super.canApplyAtEnchantingTable(stack, ench);
 	}
 	
 	

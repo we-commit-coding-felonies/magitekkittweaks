@@ -14,8 +14,6 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 
-import vazkii.botania.common.lib.ModTags;
-
 public class MGTKBlockTags extends BlockTagsProvider {
 	public MGTKBlockTags(DataGenerator generator, ExistingFileHelper helper) {
         super(generator, MagiTekkit.MODID, helper);
