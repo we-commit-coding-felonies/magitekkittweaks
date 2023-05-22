@@ -2,7 +2,7 @@ package net.solunareclipse1.magitekkit.network.packet.client;
 
 import java.util.function.Supplier;
 
-import com.simibubi.create.content.contraptions.particle.AirParticleData;
+import com.simibubi.create.foundation.particle.AirParticleData;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;

@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllMovementBehaviours;
-import com.simibubi.create.content.contraptions.components.actors.HarvesterMovementBehaviour;
+import com.simibubi.create.content.contraptions.actors.harvester.HarvesterMovementBehaviour;
 import com.simibubi.create.foundation.utility.BlockHelper;
 
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -80,9 +80,7 @@ import net.solunareclipse1.magitekkit.init.EffectInit;
 public class MiscHelper {
 	private static final ItemStack HARVEST_HOE = getHarvestHoe();
 	private static ItemStack getHarvestHoe() {
-		ItemStack hoe = new ItemStack(Items.GOLDEN_HOE);
-		hoe.enchant(Enchantments.BLOCK_FORTUNE, 5);
-		return hoe;
+		return HARVEST_HOE.copy();
 	}
 	private static final SoundEvent[] soundsList = {SoundEvents.ZOMBIFIED_PIGLIN_ANGRY, SoundEvents.CREEPER_PRIMED, SoundEvents.ENDERMAN_STARE, SoundEvents.AMBIENT_CAVE, SoundEvents.DROWNED_SHOOT, SoundEvents.ELDER_GUARDIAN_CURSE, SoundEvents.END_PORTAL_SPAWN, SoundEvents.ENDER_DRAGON_DEATH, SoundEvents.ENDER_DRAGON_FLAP, SoundEvents.ENDER_DRAGON_GROWL, SoundEvents.GHAST_AMBIENT, SoundEvents.GHAST_HURT, SoundEvents.PHANTOM_SWOOP, SoundEvents.PORTAL_AMBIENT, SoundEvents.PORTAL_TRIGGER, SoundEvents.WANDERING_TRADER_AMBIENT,
 			PESoundEvents.CHARGE.get(), PESoundEvents.DESTRUCT.get(), PESoundEvents.HEAL.get(), PESoundEvents.POWER.get(), PESoundEvents.TRANSMUTE.get(), PESoundEvents.UNCHARGE.get(), PESoundEvents.WATER_MAGIC.get(), PESoundEvents.WIND_MAGIC.get(), EffectInit.EMC_WASTE.get(), EffectInit.ARMOR_BREAK.get(), EffectInit.SHIELD_FAIL.get()};
@@ -379,8 +377,7 @@ public class MiscHelper {
 			else return false;
 		}
 
-		ItemStack item = new ItemStack(Items.GOLDEN_HOE);
-		item.enchant(Enchantments.BLOCK_FORTUNE, 5);
+		ItemStack item = getHarvestHoe();
 		float effectChance = 1;
 
 		if (stateVisited.is(BlockTags.LEAVES)) {
