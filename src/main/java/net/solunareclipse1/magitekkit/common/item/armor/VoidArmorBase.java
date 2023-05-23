@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorMaterial;
@@ -122,7 +123,13 @@ public class VoidArmorBase extends MGTKArmorItem implements IDamageReducer {
 		return super.canApplyAtEnchantingTable(stack, ench);
 	}
 	
-	
+	// using projecte textures for texture pack compatability
+	@Override
+	public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
+		return slot != EquipmentSlot.LEGS ?
+			"projecte:textures/models/armor/dark_matter_layer_1.png":
+			"projecte:textures/models/armor/dark_matter_layer_2.png";
+	}
 	
 	
 	public static class VoidArmorMaterial implements ArmorMaterial {

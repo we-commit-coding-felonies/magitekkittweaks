@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorMaterial;
@@ -165,6 +166,14 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 	@Override
 	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {return false;}
 	
+	// using projecte textures for texture pack compatability
+	@Override
+	public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
+		return slot != EquipmentSlot.LEGS ?
+			"projecte:textures/models/armor/red_matter_layer_1.png":
+			"projecte:textures/models/armor/red_matter_layer_2.png";
+	}
+	
 	public static class CrimsonArmorMaterial implements ArmorMaterial {
 		public static final CrimsonArmorMaterial MAT = new CrimsonArmorMaterial();
 		@Override
@@ -194,7 +203,7 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 		public Ingredient getRepairIngredient() {return Ingredient.EMPTY;}
 		@NotNull
 		@Override
-		public String getName() {return new ResourceLocation(MagiTekkit.MODID, "crimson/").toString();}
+		public String getName() {return new ResourceLocation(MagiTekkit.MODID, "crimson_armor").toString();}
 		@Override
 		public float getToughness() {return 5;}
 		@Override

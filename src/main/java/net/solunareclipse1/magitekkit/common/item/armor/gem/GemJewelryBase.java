@@ -13,6 +13,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -244,7 +245,10 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	@Override
 	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {return false;}
 	
+
 	
+	@Override
+	public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {return null;}
 	// Material
 	public static class GemJewelryMaterial implements ArmorMaterial {
 		public static final GemJewelryMaterial MAT = new GemJewelryMaterial();

@@ -17,7 +17,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
 
-version = '0.1'
+version = '0.0.0.1'
 group = 'net.solunareclipse1.magitekkit'
 archivesBaseName = 'magitekkit'
 
@@ -25,7 +25,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
-	mappings channel: 'parchment', version: '2022.09.04-1.18.2'
+	mappings channel: 'parchment', version: '2022.11.06-1.18.2'
 	accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 	
     runs {
@@ -82,8 +82,9 @@ minecraft {
 
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.disableRefMap', 'true'
 
-            args '--mod', 'magitekkit', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', 'magitekkit', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/'), '--existing-mod', 'projecte'
 
             mods {
                 magitekkit {
@@ -100,10 +101,6 @@ repositories {
     maven {
     	name "Mekanism maven"
     	url 'https://modmaven.dev/'
-    }
-    maven {
-    	name "JEI maven"
-        url "https://dvs1.progwml6.com/files/maven"
     }
     maven {
     	name "CurseForge"
@@ -131,7 +128,7 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.2-40.2.0'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.2.4'
 
     implementation fg.deobf("curse.maven:projecte-226410:${projecte_version}-api")
     

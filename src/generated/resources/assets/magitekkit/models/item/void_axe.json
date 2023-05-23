@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/handheld",
   "textures": {
-    "layer0": "magitekkit:item/tool/void/axe"
+    "layer0": "projecte:item/dm_tools/axe"
   }
 }

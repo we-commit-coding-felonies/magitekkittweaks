@@ -25,15 +25,15 @@ public class MGTKItemModels extends ItemModelProvider {
 		withExistingParent(ObjectInit.GANTIUM_BLOCK_ITEM.getId().getPath(), modLoc("block/gantium_block"));
 		
 		// TODO: figure out how to reference other mods textures
-		tool(ObjectInit.VOID_SWORD, modLoc("item/tool/void/sword"));
-		tool(ObjectInit.VOID_PICKAXE, modLoc("item/tool/void/pickaxe"));
-		tool(ObjectInit.VOID_SHOVEL, modLoc("item/tool/void/shovel"));
-		tool(ObjectInit.VOID_AXE, modLoc("item/tool/void/axe"));
-		tool(ObjectInit.VOID_HOE, modLoc("item/tool/void/hoe"));
-		normal(ObjectInit.VOID_HELM, modLoc("item/armor/void/head"));
-		normal(ObjectInit.VOID_CHEST, modLoc("item/armor/void/chest"));
-		normal(ObjectInit.VOID_LEGS, modLoc("item/armor/void/legs"));
-		normal(ObjectInit.VOID_BOOTS, modLoc("item/armor/void/feet"));
+		tool(ObjectInit.VOID_SWORD, PECore.rl("item/dm_tools/sword"));
+		tool(ObjectInit.VOID_PICKAXE, PECore.rl("item/dm_tools/pickaxe"));
+		tool(ObjectInit.VOID_SHOVEL, PECore.rl("item/dm_tools/shovel"));
+		tool(ObjectInit.VOID_AXE, PECore.rl("item/dm_tools/axe"));
+		tool(ObjectInit.VOID_HOE, PECore.rl("item/dm_tools/hoe"));
+		normal(ObjectInit.VOID_HELM, PECore.rl("item/dm_armor/head"));
+		normal(ObjectInit.VOID_CHEST, PECore.rl("item/dm_armor/chest"));
+		normal(ObjectInit.VOID_LEGS, PECore.rl("item/dm_armor/legs"));
+		normal(ObjectInit.VOID_BOOTS, PECore.rl("item/dm_armor/feet"));
 		
 		normal(ObjectInit.GEM_CIRCLET, modLoc("item/armor/gem_jewelry/helm"));
 		normal(ObjectInit.GEM_AMULET, modLoc("item/armor/gem_jewelry/chest"));
