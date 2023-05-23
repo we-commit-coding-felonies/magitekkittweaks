@@ -16,7 +16,7 @@ import net.minecraft.world.item.Items;
 import moze_intel.projecte.gameObjs.registries.PEItems;
 
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemAmulet;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 public class TransmutingEffect extends MobEffect {

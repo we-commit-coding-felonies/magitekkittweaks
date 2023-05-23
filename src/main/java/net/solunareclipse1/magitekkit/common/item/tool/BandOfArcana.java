@@ -154,7 +154,7 @@ import net.solunareclipse1.magitekkit.common.inventory.container.GravityAnvilMen
 import net.solunareclipse1.magitekkit.common.inventory.container.PhiloEnchantmentMenu;
 import net.solunareclipse1.magitekkit.common.item.MGTKCovalenceItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.config.DebugCfg;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Arcana.*;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
@@ -564,7 +564,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 							break;
 						}
 					}
-					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_2, Math.max(1, lEnt.getMaxHealth()/2));
+					lEnt.hurt(MGTKDmgSrc.strongTransmutation(player), Math.max(1, lEnt.getMaxHealth()/2));
 					lEnt.setLastHurtByPlayer(player);
 					if (lEnt instanceof NeutralMob mob) {
 						mob.setPersistentAngerTarget(player.getUUID());
@@ -2093,7 +2093,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 		};
 		ent.setRemainingFireTicks(1200);
 		MiscHelper.burnInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
-		ent.hurt(MGTKDmgSrc.MUSTANG, ent instanceof SnowGolem ? Float.MAX_VALUE : 8);
+		ent.hurt(MGTKDmgSrc.mustang(culprit), ent instanceof SnowGolem ? Float.MAX_VALUE : 8);
 	}
 	
 	private SmallFireball fireball(Level level, Vec3 pos, Vec3 target, @Nullable LivingEntity owner) {
@@ -2340,7 +2340,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 						double seenPercent = (double)Explosion.getSeenPercent(cent, ent);
 						double invDist = (1.0D - distance) * seenPercent;
 						ent.setRemainingFireTicks(1200);
-						ent.hurt(MGTKDmgSrc.MUSTANG, (float) Math.pow(((int)((invDist * invDist + invDist) / 2.0D * 7.0D * 8d + 1.0D)), 2));
+						ent.hurt(MGTKDmgSrc.mustang(culprit), (float) Math.pow(((int)((invDist * invDist + invDist) / 2.0D * 7.0D * 8d + 1.0D)), 2));
 					}
 				}
 			}
@@ -2608,7 +2608,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 				// TODO: something a bit more interesting than this
 				if (player.getHealth() < player.getMaxHealth()/2 || !GemJewelryBase.isBarrierActive(player)) {
 					player.setLastHurtByPlayer(null);
-					player.hurt(MGTKDmgSrc.TRANSMUTATION_2, Float.MAX_VALUE);
+					player.hurt(MGTKDmgSrc.strongTransmutation(culprit), Float.MAX_VALUE);
 				} else return false;
 			}
 			List<ItemStack> possible = new ArrayList<>();

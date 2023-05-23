@@ -22,6 +22,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -71,7 +72,8 @@ import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKEntityDamageSource;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 
 /**
@@ -80,6 +82,11 @@ import net.solunareclipse1.magitekkit.init.EffectInit;
 public class MiscHelper {
 	private static final ItemStack HARVEST_HOE = getHarvestHoe();
 	private static ItemStack getHarvestHoe() {
+		if (HARVEST_HOE == null) {
+			ItemStack hoe = new ItemStack(Items.GOLDEN_HOE);
+			hoe.enchant(Enchantments.BLOCK_FORTUNE, 5);
+			return hoe;
+		}
 		return HARVEST_HOE.copy();
 	}
 	private static final SoundEvent[] soundsList = {SoundEvents.ZOMBIFIED_PIGLIN_ANGRY, SoundEvents.CREEPER_PRIMED, SoundEvents.ENDERMAN_STARE, SoundEvents.AMBIENT_CAVE, SoundEvents.DROWNED_SHOOT, SoundEvents.ELDER_GUARDIAN_CURSE, SoundEvents.END_PORTAL_SPAWN, SoundEvents.ENDER_DRAGON_DEATH, SoundEvents.ENDER_DRAGON_FLAP, SoundEvents.ENDER_DRAGON_GROWL, SoundEvents.GHAST_AMBIENT, SoundEvents.GHAST_HURT, SoundEvents.PHANTOM_SWOOP, SoundEvents.PORTAL_AMBIENT, SoundEvents.PORTAL_TRIGGER, SoundEvents.WANDERING_TRADER_AMBIENT,
@@ -173,7 +180,7 @@ public class MiscHelper {
 			ent.setRemainingFireTicks(costPer);
 			burnInBoundingBox(level, ent.getBoundingBox().inflate(1), culprit, false);
 			level.playSound(null, ent.blockPosition(), EffectInit.IGNITION_BURN.get(), SoundSource.PLAYERS, 1, 1);
-			ent.hurt(MGTKDmgSrc.MUSTANG, 10);
+			ent.hurt(MGTKDmgSrc.mustang(culprit), 10);
 			burnt++;
 		}
 		return costPer*burnt;
@@ -226,6 +233,16 @@ public class MiscHelper {
 		}
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 		return consumed;
+	}
+	
+	public static boolean attackRandomInRange(AABB area, Level level, Player culprit, ItemStack stack) {
+		List<Entity> validTargets = level.getEntities(culprit, area, ent -> !EntityHelper.isInvincible(ent));
+		MGTKEntityDamageSource src = MGTKDmgSrc.matterAoe(culprit);
+		Entity victim = validTargets.get(level.random.nextInt(validTargets.size()));
+		victim.invulnerableTime = 0;
+		victim.hurt(src, 50);
+		level.playSound(null, culprit.getX(), culprit.getY(), culprit.getZ(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+		return false;
 	}
 	
 	/**

@@ -26,7 +26,7 @@ import net.minecraftforge.network.NetworkHooks;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 
 // i am at my fucking limit i stg
@@ -108,7 +108,7 @@ public class FreeLavaProjectile extends ThrowableProjectile {
 			Entity ent = result.getEntity();
 			if (ent.fireImmune()) return;
 			ent.setSecondsOnFire(5);
-			ent.hurt(MGTKDmgSrc.MUSTANG, 512);
+			ent.hurt(MGTKDmgSrc.mustang(getOwner()), 512);
 		}
 	}
 

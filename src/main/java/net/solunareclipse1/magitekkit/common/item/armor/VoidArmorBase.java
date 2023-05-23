@@ -20,7 +20,8 @@ import net.minecraft.world.level.Level;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc.IMGTKDamageSource;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 
 import mekanism.common.registries.MekanismDamageSource;
@@ -88,7 +89,7 @@ public class VoidArmorBase extends MGTKArmorItem implements IDamageReducer {
 			|| EntityHelper.isDamageSourceInfinite(source)) {
 			return false;
 		}
-		if (source instanceof MGTKDmgSrc src && src.isBypassDr()) return false;
+		if (source instanceof IMGTKDamageSource src && src.isBypassDr()) return false;
 		
 		for (int i = 0; i < dmgSrcBlacklistDr.length; i++) {
 			if (source == dmgSrcBlacklistDr[i]) return false;
@@ -106,7 +107,7 @@ public class VoidArmorBase extends MGTKArmorItem implements IDamageReducer {
 		if (source.isBypassArmor()) dr *= 0.9;
 		if (source.isMagic() || source.isBypassMagic()) dr *= 0.75;
 		if (source.isFire()) dr *= 1.1;
-		if (source instanceof MGTKDmgSrc src) {
+		if (source instanceof IMGTKDamageSource src) {
 			if (src.isPlasma()) dr *= 1.1;
 			if (src.isAlchemy()) dr -= 0.2;
 		}

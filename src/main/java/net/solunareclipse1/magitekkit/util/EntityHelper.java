@@ -45,6 +45,14 @@ public class EntityHelper {
 		return invincible;
 	}
 	
+	/**
+	 * @param entity
+	 * @return false if entity isInvincible or has iframes
+	 */
+	public static boolean canCurrentlyHurt(Entity entity) {
+		return entity.invulnerableTime == 0 && !isInvincible(entity);
+	}
+	
 	public static boolean isImmuneToGravityManipulation(Entity entity) {
 		return (entity instanceof Player player && player.getItemBySlot(EquipmentSlot.LEGS).is(ObjectInit.GEM_TIMEPIECE.get())) || isInvincible(entity);
 	}

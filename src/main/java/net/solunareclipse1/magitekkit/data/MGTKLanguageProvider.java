@@ -149,6 +149,10 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.gem.ref.2", "I am become death, the destroyer of worlds");
         add("tip.mgtk.gem.ref.3", "2... 3... 5... 7... 11... 13...");
         add("tip.mgtk.gem.ref.4", "Not to be confused with Anklet of the Wind");
+        add("tip.mgtk.rm.sword.killall.0", "Autoslash: Hostile only");
+        add("tip.mgtk.rm.sword.killall.1", "Autoslash: Hostile + Players");
+        add("tip.mgtk.rm.sword.killall.2", "Autoslash: All except Players");
+        add("tip.mgtk.rm.sword.killall.3", "Autoslash: Everything");
         
 
         add("gui.mgtk.philo.enchanter.name", "Arcanum");

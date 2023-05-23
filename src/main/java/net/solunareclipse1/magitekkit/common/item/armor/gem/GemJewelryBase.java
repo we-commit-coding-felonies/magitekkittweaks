@@ -31,7 +31,8 @@ import net.solunareclipse1.magitekkit.api.capability.wrapper.HazmatCapabilityWra
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 import net.solunareclipse1.magitekkit.api.item.IHazmatItem;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc.IMGTKDamageSource;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.config.EmcCfg;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Gem;
@@ -194,7 +195,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 			|| EntityHelper.isDamageSourceInfinite(source)) {
 			return false;
 		}
-		if (source instanceof MGTKDmgSrc src && src.isBypassAlchShield()) return false;
+		if (source instanceof IMGTKDamageSource src && src.isBypassAlchShield()) return false;
 		
 		for (int i = 0; i < dmgSrcBlacklistAlchshield.length; i++) {
 			if (source == dmgSrcBlacklistAlchshield[i]) return false;
@@ -219,7 +220,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		float mult = 1f;
 		if (source.isBypassArmor()) mult = 1.1f;
 		if (source.isMagic() || source.isBypassMagic()) mult = 1.5f;
-		if (source instanceof MGTKDmgSrc src) {
+		if (source instanceof IMGTKDamageSource src) {
 			if (src.isBypassDr()) mult = 2f;
 			if (src.isDivine()) mult = 42f;
 			// adders, order doesnt matter
