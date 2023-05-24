@@ -2,6 +2,7 @@ package net.solunareclipse1.magitekkit.util;
 
 import java.util.List;
 import java.util.Random;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.Nullable;
@@ -15,12 +16,14 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -72,6 +75,7 @@ import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
+import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKEntityDamageSource;
 import net.solunareclipse1.magitekkit.init.EffectInit;
@@ -235,13 +239,39 @@ public class MiscHelper {
 		return consumed;
 	}
 	
-	public static boolean attackRandomInRange(AABB area, Level level, Player culprit, ItemStack stack) {
-		List<Entity> validTargets = level.getEntities(culprit, area, ent -> !EntityHelper.isInvincible(ent));
-		MGTKEntityDamageSource src = MGTKDmgSrc.matterAoe(culprit);
-		Entity victim = validTargets.get(level.random.nextInt(validTargets.size()));
-		victim.invulnerableTime = 0;
-		victim.hurt(src, 50);
-		level.playSound(null, culprit.getX(), culprit.getY(), culprit.getZ(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+	public static boolean attackRandomInRange(int power, AABB area, Level level, Player culprit, Predicate<LivingEntity> validator) {
+		List<LivingEntity> validTargets = level.getEntitiesOfClass(LivingEntity.class, area, validator);
+		if (!validTargets.isEmpty()) {
+			int limit = (int) Math.min(1.5*power, validTargets.size());
+			Random rand = level.random;
+			for (int i = 0; i < limit; i++) {
+				LivingEntity victim = validTargets.get(level.random.nextInt(validTargets.size()));
+				float damage = Math.min(8*power, victim.getMaxHealth()/5);
+				if (victim instanceof Player plr && GemJewelryBase.fullPristineSet(plr)) {
+					damage = 16*power;
+				}
+				int iFrames = victim.invulnerableTime;
+				victim.invulnerableTime = 0;
+				victim.hurt(MGTKDmgSrc.matterAoe(culprit), damage);
+				victim.invulnerableTime = iFrames;
+				if (level instanceof ClientLevel lvl) {
+					AABB box = victim.getBoundingBox();
+					lvl.addParticle(ParticleTypes.EXPLOSION,
+							rand.nextDouble(box.minX, box.maxX), rand.nextDouble(box.minY, box.maxY), rand.nextDouble(box.minZ, box.maxZ),
+							0, 0, 0);
+				}
+				level.playSound(null, victim.blockPosition(), PESoundEvents.DESTRUCT.get(), SoundSource.PLAYERS, 0.5f, 1.5f);
+			}
+			if (level instanceof ClientLevel lvl) {
+				double rot1 = (double)(-Mth.sin(culprit.getYRot() * ((float)Math.PI / 180f)));
+				double rot2 = (double)Mth.cos(culprit.getYRot() * ((float)Math.PI / 180f));
+				lvl.addParticle(ParticleTypes.SWEEP_ATTACK,
+						culprit.getX()+rot1, culprit.getY(0.5), culprit.getZ()+rot2,
+						0, 0, 0);
+			}
+			level.playSound(null, culprit.blockPosition(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 0.5f, 1.0F);
+			return true;
+		}
 		return false;
 	}
 	

@@ -565,10 +565,10 @@ public class BandOfArcana extends MGTKCovalenceItem
 						}
 					}
 					lEnt.hurt(MGTKDmgSrc.strongTransmutation(player), Math.max(1, lEnt.getMaxHealth()/2));
-					lEnt.setLastHurtByPlayer(player);
-					if (lEnt instanceof NeutralMob mob) {
-						mob.setPersistentAngerTarget(player.getUUID());
-					}
+					//lEnt.setLastHurtByPlayer(player);
+					//if (lEnt instanceof NeutralMob mob) {
+					//	mob.setPersistentAngerTarget(player.getUUID());
+					//}
 					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 3, 2), player);
 					EmcHelper.consumeAvaliableEmc(player, Philo.TRANSMUTE.get());
 					level.playSound(null, player, EffectInit.PHILO_ATTACK.get(), SoundSource.PLAYERS, 1, 2);

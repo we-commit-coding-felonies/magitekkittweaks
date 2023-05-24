@@ -96,6 +96,12 @@ public class EmcCfg {
 				MUSTANG;
 		}
 	}
+	//public class Crimson {
+	//	public class Sword {
+	//		public static LongValue
+	//			AUTOSLASH;
+	//	}
+	//}
 	
 	public static void registerServerConfig(Builder cfg) {
 		cfg.comment("Here you can change the EMC values of various things");
@@ -248,6 +254,7 @@ public class EmcCfg {
 		Arcana.Ignition.MUSTANG = cfg
 				.comment("Cost of the Alchemical Flameburst projectile")
 				.defineInRange("arcanaIgnitionMustang", 20340, 0, Long.MAX_VALUE);
+		cfg.pop();
 	}
 	
 	// Common

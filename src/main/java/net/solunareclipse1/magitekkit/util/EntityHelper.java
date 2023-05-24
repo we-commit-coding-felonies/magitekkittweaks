@@ -1,5 +1,7 @@
 package net.solunareclipse1.magitekkit.util;
 
+import java.util.UUID;
+
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -69,8 +71,16 @@ public class EntityHelper {
 	 * player-specific
 	 */
 	public static boolean isTamedBy(Entity entity, Player player) {
-		return entity instanceof TamableAnimal animal && animal.isOwnedBy(player)
-				|| entity instanceof AbstractHorse horse && horse.isTamed() && horse.getOwnerUUID().equals(player.getUUID());
+		if (entity instanceof TamableAnimal animal) {
+			return animal.isOwnedBy(player);
+		}
+		if (entity instanceof AbstractHorse horse && horse.isTamed()) {
+			UUID ownerUUID = horse.getOwnerUUID();
+			if (ownerUUID != null) {
+				return ownerUUID.equals(player.getUUID());
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -107,11 +117,12 @@ public class EntityHelper {
 	 * @return
 	 */
 	public static boolean isDamageSourceInfinite(DamageSource src) {
-		//ItemInfinitySword
 		return src instanceof InfinityDamageSource
 				|| src.getDirectEntity() instanceof InfinityArrowEntity
 				|| (!src.isProjectile()
 						&& src.getEntity() instanceof LivingEntity lEnt
 						&& lEnt.getMainHandItem().getItem() == AvaritiaModContent.INFINITY_SWORD.get());
 	}
+	
+	
 }

@@ -33,6 +33,7 @@
   "item.magitekkit.crimson_chest": "Crimson Chestplate",
   "item.magitekkit.crimson_helm": "Crimson Helmet",
   "item.magitekkit.crimson_legs": "Crimson Leggings",
+  "item.magitekkit.crimson_sword": "Crimson Sword",
   "item.magitekkit.gem_amulet": "Infernal Amulet",
   "item.magitekkit.gem_anklet": "Hurricane Anklet",
   "item.magitekkit.gem_bracelet": "Band of Arcana",
@@ -189,5 +190,9 @@
   "tip.mgtk.gem.ref.1": "One shudders to imagine what inhuman thoughts lie within",
   "tip.mgtk.gem.ref.2": "I am become death, the destroyer of worlds",
   "tip.mgtk.gem.ref.3": "2... 3... 5... 7... 11... 13...",
-  "tip.mgtk.gem.ref.4": "Not to be confused with Anklet of the Wind"
+  "tip.mgtk.gem.ref.4": "Not to be confused with Anklet of the Wind",
+  "tip.mgtk.rm.sword.killall.0": "Autoslash: Hostile only",
+  "tip.mgtk.rm.sword.killall.1": "Autoslash: Hostile + Players",
+  "tip.mgtk.rm.sword.killall.2": "Autoslash: All except Players",
+  "tip.mgtk.rm.sword.killall.3": "Autoslash: Everything"
 }

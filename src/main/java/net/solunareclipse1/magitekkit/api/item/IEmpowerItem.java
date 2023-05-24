@@ -27,6 +27,14 @@ public interface IEmpowerItem extends IItemCharge {
 	
 	@Override
 	default int getNumCharges(@NotNull ItemStack stack) {
+		return getMaxStages();
+	}
+	
+	/**
+	 * the highest amount of stages this item can have
+	 * @return
+	 */
+	default int getMaxStages() {
 		return 4;
 	}
 	
@@ -52,36 +60,46 @@ public interface IEmpowerItem extends IItemCharge {
 	
 	@Override
 	default float getChargePercent(@NotNull ItemStack stack) {
-		return getCharge(stack) / getMaxChargePower(stack);
+		return (float)getCharge(stack) / (float)getMaxChargePower(stack);
 	}
 	
 	@Override
 	default boolean changeCharge(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
 		boolean sneaking = player.isShiftKeyDown();
 		int charge = getCharge(stack);
-		int maxCharge = getMaxChargePower(stack);
-		boolean shouldTry = (sneaking && charge > 0) || (!sneaking && charge < maxCharge);
+		int currentStage = getStage(stack);
+		int stages = getNumCharges(stack);
+		boolean shouldTry = (sneaking && charge > 0) || (!sneaking && currentStage < stages);
 		if (shouldTry) {
 			// plrEmc doesnt matter if were reducing charge, so we do this to prevent unnecessary inventory scanning
 			long plrEmc = sneaking ? 0 : EmcHelper.getAvaliableEmc(player);
-			int stages = getNumCharges(stack);
-			int limit = maxCharge / stages;
+			long toConsume = 0;
+			int desiredCharge = getTotalChargeForStage(stack, sneaking ? currentStage-1 : currentStage+1);
 			int newCharge = charge;
 			if (sneaking) {
-				newCharge = Math.max(0, charge-limit);
+				newCharge = desiredCharge;
 			} else if (plrEmc > 0) {
-				int toAdd = (int) Math.min(limit, plrEmc);
-				newCharge = Math.min(maxCharge, charge+toAdd);
+				toConsume = 8*(desiredCharge-charge);
+				if (plrEmc >= toConsume) {
+					newCharge = desiredCharge;
+				} else {
+					newCharge = (int) (charge + plrEmc/8);
+					toConsume = 8*(newCharge-charge);
+				}
 			}
 			if (newCharge != charge) {
 				if (!sneaking) {
-					EmcHelper.consumeAvaliableEmc(player, newCharge-charge);
+					EmcHelper.consumeAvaliableEmc(player, toConsume);
 				}
-				player.level.playSound(null, player, sneaking ? EffectInit.EMC_WASTE.get() : PESounds.CHARGE, SoundSource.PLAYERS, 1, 0.5f + 0.5f / stages * getStage(stack));
+				player.level.playSound(null, player, sneaking ? EffectInit.EMC_WASTE.get() : PESounds.CHARGE, SoundSource.PLAYERS, 0.8f, 0.5f + 0.5f / stages * currentStage);
 				setCharge(stack, newCharge);
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	default int getTotalChargeForStage(ItemStack stack, int stage) {
+		return stage * (getMaxChargePower(stack)/getNumCharges(stack));
 	}
 }

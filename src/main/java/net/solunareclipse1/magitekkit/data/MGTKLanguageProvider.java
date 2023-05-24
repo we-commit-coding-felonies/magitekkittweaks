@@ -29,6 +29,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.VOID_LEGS.get(), "Leggings of the Void");
         add(ObjectInit.VOID_BOOTS.get(), "Boots of the Void");
         
+        add(ObjectInit.CRIMSON_SWORD.get(), "Crimson Sword");
         add(ObjectInit.CRIMSON_HELM.get(), "Crimson Helmet");
         add(ObjectInit.CRIMSON_CHEST.get(), "Crimson Chestplate");
         add(ObjectInit.CRIMSON_LEGS.get(), "Crimson Leggings");

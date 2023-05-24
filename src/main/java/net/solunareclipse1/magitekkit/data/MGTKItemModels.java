@@ -11,6 +11,7 @@ import net.minecraftforge.registries.RegistryObject;
 import moze_intel.projecte.PECore;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
+import net.solunareclipse1.magitekkit.api.item.IEmpowerItem;
 import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
 import net.solunareclipse1.magitekkit.init.ClientInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
@@ -24,7 +25,6 @@ public class MGTKItemModels extends ItemModelProvider {
 	protected void registerModels() {
 		withExistingParent(ObjectInit.GANTIUM_BLOCK_ITEM.getId().getPath(), modLoc("block/gantium_block"));
 		
-		// TODO: figure out how to reference other mods textures
 		tool(ObjectInit.VOID_SWORD, PECore.rl("item/dm_tools/sword"));
 		tool(ObjectInit.VOID_PICKAXE, PECore.rl("item/dm_tools/pickaxe"));
 		tool(ObjectInit.VOID_SHOVEL, PECore.rl("item/dm_tools/shovel"));
@@ -34,6 +34,16 @@ public class MGTKItemModels extends ItemModelProvider {
 		normal(ObjectInit.VOID_CHEST, PECore.rl("item/dm_armor/chest"));
 		normal(ObjectInit.VOID_LEGS, PECore.rl("item/dm_armor/legs"));
 		normal(ObjectInit.VOID_BOOTS, PECore.rl("item/dm_armor/feet"));
+
+		empowerItem(ObjectInit.CRIMSON_SWORD, "item/tool/crimson/sword/", "item/handheld");
+		//tool(ObjectInit.CRIMSON_PICKAXE, modLoc("item/rm_tools/pickaxe"));
+		//tool(ObjectInit.CRIMSON_SHOVEL, modLoc("item/rm_tools/shovel"));
+		//tool(ObjectInit.CRIMSON_AXE, modLoc("item/rm_tools/axe"));
+		//tool(ObjectInit.CRIMSON_HOE, modLoc("item/rm_tools/hoe"));
+		normal(ObjectInit.CRIMSON_HELM, PECore.rl("item/rm_armor/head"));
+		normal(ObjectInit.CRIMSON_CHEST, PECore.rl("item/rm_armor/chest"));
+		normal(ObjectInit.CRIMSON_LEGS, PECore.rl("item/rm_armor/legs"));
+		normal(ObjectInit.CRIMSON_BOOTS, PECore.rl("item/rm_armor/feet"));
 		
 		normal(ObjectInit.GEM_CIRCLET, modLoc("item/armor/gem_jewelry/helm"));
 		normal(ObjectInit.GEM_AMULET, modLoc("item/armor/gem_jewelry/chest"));
@@ -47,13 +57,14 @@ public class MGTKItemModels extends ItemModelProvider {
 			for (int j = 0; j < 2; j++) {
         		for (int k = 0; k < 2; k++) {
         			for (int l = 0; l < 2; l++) {
+        				String name = String.format("item/tool/band_of_arcana/mode%1$s_cov%2$s_liquid%3$s_woft%4$s", i, j, k, l);
         				builder.override()
         				.predicate(ClientInit.BOA_MODE, i)
         				.predicate(ClientInit.BOA_COVALENCE, j)
         				.predicate(ClientInit.BOA_LIQUID, k)
                    		.predicate(ClientInit.BOA_WOFT, l)
-                   		.model(withExistingParent(String.format("item/tool/band_of_arcana/mode%1$s_cov%2$s_liquid%3$s_woft%4$s", i, j, k, l), "item/generated")
-                   				.texture("layer0", modLoc(String.format("item/tool/band_of_arcana/mode%1$s_cov%2$s_liquid%3$s_woft%4$s", i, j, k, l))))
+                   		.model(withExistingParent(name, "item/generated")
+                   				.texture("layer0", modLoc(name)))
                    		.end();
         			}
         		}
@@ -67,5 +78,19 @@ public class MGTKItemModels extends ItemModelProvider {
 
 	protected ItemModelBuilder tool(RegistryObject<? extends Item> item, ResourceLocation texture) {
 		return withExistingParent(item.getId().getPath(), "item/handheld").texture("layer0", texture);
+	}
+	
+	protected ItemModelBuilder empowerItem(RegistryObject<? extends IEmpowerItem> reg, String folder, String parent) {
+		ItemModelBuilder builder = getBuilder(reg.getId().getPath());
+		IEmpowerItem item = reg.get();
+		for (int i = 0; i <= item.getMaxStages(); i++) {
+			String name = String.format(folder+"stage%1$s", i);
+			builder.override()
+			.predicate(ClientInit.EMPOWER_CHARGE, i)
+			.model(withExistingParent(name, parent)
+					.texture("layer0", modLoc(name)))
+			.end();
+		}
+		return builder;
 	}
 }

@@ -23,7 +23,7 @@ import net.solunareclipse1.magitekkit.api.capability.MGTKCapabilityProvider;
  * @author solunareclipse1
  *
  */
-public interface IMagitekkitItem extends IForgeItem {
+public interface IMGTKItem extends IForgeItem {
 	
 	/**
 	 * dont directly modify this, use addItemCapability instead
