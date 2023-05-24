@@ -11,6 +11,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -20,13 +21,14 @@ import net.minecraft.world.level.Level;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
+import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc.IMGTKDamageSource;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 
 import mekanism.common.registries.MekanismDamageSource;
 
-public class VoidArmorBase extends MGTKArmorItem implements IDamageReducer {
+public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReducer {
 	private float baseDr;
 	
 	/** Damage sources with corresponging DR multipliers. 0.5 would mean 1/2 DR */

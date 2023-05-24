@@ -26,8 +26,9 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 
 import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
+import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
 
-public class VoidSword extends SwordItem implements IEnchantmentSynergizer {
+public class VoidSword extends SwordItem implements IMGTKItem, IEnchantmentSynergizer {
 	public VoidSword(Tier tier, int damage, float speed, Properties props) {
 		super(tier, damage, speed, props);
 	}

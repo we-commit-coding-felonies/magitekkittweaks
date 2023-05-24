@@ -27,8 +27,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
+import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
 
-public class VoidShovel extends ShovelItem implements IEnchantmentSynergizer {
+public class VoidShovel extends ShovelItem implements IMGTKItem, IEnchantmentSynergizer {
 	public VoidShovel(Tier tier, int damage, float speed, Properties props) {
 		super(tier, damage, speed, props);
 	}

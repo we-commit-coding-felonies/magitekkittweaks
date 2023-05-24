@@ -1,9 +1,11 @@
 package net.solunareclipse1.magitekkit.common.item;
 
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
+import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
 
 import wayoftime.bloodmagic.api.compat.EnumDemonWillType;
 import wayoftime.bloodmagic.api.compat.IDemonWillGem;
@@ -12,8 +14,8 @@ import wayoftime.bloodmagic.api.compat.IDemonWillGem;
  * this entire system is a mess
  * @author solunareclipse1
  */
-public class MGTKCovalenceItem extends MGTKItem implements IDemonWillGem {
-	public MGTKCovalenceItem(Properties props) {
+public class CovalenceItem extends Item implements IMGTKItem, IDemonWillGem {
+	public CovalenceItem(Properties props) {
 		super(props);
 		addItemCapability(ManaCovalentCapabilityWrapper::new);
 	}

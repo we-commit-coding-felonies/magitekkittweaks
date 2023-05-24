@@ -152,7 +152,7 @@ import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
 import net.solunareclipse1.magitekkit.common.inventory.container.GravityAnvilMenu;
 import net.solunareclipse1.magitekkit.common.inventory.container.PhiloEnchantmentMenu;
-import net.solunareclipse1.magitekkit.common.item.MGTKCovalenceItem;
+import net.solunareclipse1.magitekkit.common.item.CovalenceItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.config.DebugCfg;
@@ -196,7 +196,7 @@ import wayoftime.bloodmagic.api.compat.EnumDemonWillType;
 import wayoftime.bloodmagic.api.compat.IDemonWill;
 import wayoftime.bloodmagic.api.compat.IMultiWillTool;
 
-public class BandOfArcana extends MGTKCovalenceItem
+public class BandOfArcana extends CovalenceItem
 	implements IModeChanger, IItemCharge, IProjectileShooter, IExtraFunction, ISwingItem, ILensEffect, CustomArmPoseItem, IMultiWillTool {
 
 	//////////////////////////////////////////////

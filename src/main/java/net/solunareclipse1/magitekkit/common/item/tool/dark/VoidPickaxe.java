@@ -27,8 +27,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
+import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
 
-public class VoidPickaxe extends PickaxeItem implements IEnchantmentSynergizer {
+public class VoidPickaxe extends PickaxeItem implements IMGTKItem, IEnchantmentSynergizer {
 	public VoidPickaxe(Tier tier, int damage, float speed, Properties props) {
 		super(tier, damage, speed, props);
 	}
