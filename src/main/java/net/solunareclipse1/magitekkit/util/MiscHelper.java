@@ -12,7 +12,10 @@ import com.simibubi.create.AllMovementBehaviours;
 import com.simibubi.create.content.contraptions.actors.harvester.HarvesterMovementBehaviour;
 import com.simibubi.create.foundation.utility.BlockHelper;
 
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleOptions;
@@ -242,11 +245,10 @@ public class MiscHelper {
 	public static boolean attackRandomInRange(int power, AABB area, Level level, Player culprit, Predicate<LivingEntity> validator) {
 		List<LivingEntity> validTargets = level.getEntitiesOfClass(LivingEntity.class, area, validator);
 		if (!validTargets.isEmpty()) {
-			int limit = (int) Math.min(1.5*power, validTargets.size());
-			Random rand = level.random;
+			int limit = power;// + validTargets.size()/2;
 			for (int i = 0; i < limit; i++) {
 				LivingEntity victim = validTargets.get(level.random.nextInt(validTargets.size()));
-				float damage = Math.min(8*power, victim.getMaxHealth()/5);
+				float damage = Mth.clamp(victim.getMaxHealth()/10, 1, 10);
 				if (victim instanceof Player plr && GemJewelryBase.fullPristineSet(plr)) {
 					damage = 16*power;
 				}
@@ -255,10 +257,10 @@ public class MiscHelper {
 				victim.hurt(MGTKDmgSrc.matterAoe(culprit), damage);
 				victim.invulnerableTime = iFrames;
 				if (level instanceof ClientLevel lvl) {
-					AABB box = victim.getBoundingBox();
-					lvl.addParticle(ParticleTypes.EXPLOSION,
-							rand.nextDouble(box.minX, box.maxX), rand.nextDouble(box.minY, box.maxY), rand.nextDouble(box.minZ, box.maxZ),
-							0, 0, 0);
+					AABB box = BoxHelper.growToCube(victim.getBoundingBox());
+					Vec3 start = BoxHelper.randomPointInBox(box, level.random);
+					Vec3 end = BoxHelper.randomPointInBox(box, level.random);
+					lvl.addParticle(EffectInit.CUT_PARTICLE.get(), start.x,start.y,start.z, end.x,end.y,end.z);
 				}
 				level.playSound(null, victim.blockPosition(), PESoundEvents.DESTRUCT.get(), SoundSource.PLAYERS, 0.5f, 1.5f);
 			}
@@ -273,52 +275,6 @@ public class MiscHelper {
 			return true;
 		}
 		return false;
-	}
-	
-	/**
-	 * Draws an AABB with particles
-	 * 
-	 * @param box the AABB to draw
-	 * @param particle the particle to use
-	 * @param stepSize lower = more particles
-	 * @param level the level to put particles in
-	 * @param fill if true, draws a solid box (filled with particles), instead of just an outline
-	 */
-	public static void drawAABBWithParticles(AABB box, ParticleOptions particle, double stepSize, ClientLevel level, boolean fill, boolean infRange) {
-		if (fill) {
-    		for (double i = box.minX; i < box.maxX; i += stepSize) {
-        		for (double j = box.minY; j < box.maxY; j += stepSize) {
-            		for (double k = box.minZ; k < box.maxZ; k += stepSize) {
-                		level.addParticle(particle, infRange, i, j, k, 0, 0, 0);
-            		}
-        		}
-    		}
-		}
-		
-		for (double i = box.minX; i < box.maxX; i += stepSize) {
-			level.addParticle(particle, infRange, i, box.minY, box.minZ, 0, 0, 0);
-			level.addParticle(particle, infRange, i, box.minY, box.maxZ, 0, 0, 0);
-		}
-		for (double i = box.minY; i < box.maxY; i += stepSize) {
-			level.addParticle(particle, infRange, box.minX, i, box.minZ, 0, 0, 0);
-			level.addParticle(particle, infRange, box.minX, i, box.maxZ, 0, 0, 0);
-		}
-		for (double i = box.minZ; i < box.maxZ; i += stepSize) {
-			level.addParticle(particle, infRange, box.minX, box.minY, i, 0, 0, 0);
-			level.addParticle(particle, infRange, box.minX, box.maxY, i, 0, 0, 0);
-		}
-		for (double i = box.maxX; i > box.minX; i -= stepSize) {
-			level.addParticle(particle, infRange, i, box.maxY, box.maxZ, 0, 0, 0);
-			level.addParticle(particle, infRange, i, box.maxY, box.minZ, 0, 0, 0);
-		}
-		for (double i = box.maxY; i > box.minY; i -= stepSize) {
-			level.addParticle(particle, infRange, box.maxX, i, box.maxZ, 0, 0, 0);
-			level.addParticle(particle, infRange, box.maxX, i, box.minZ, 0, 0, 0);
-		}
-		for (double i = box.maxZ; i > box.minZ; i -= stepSize) {
-			level.addParticle(particle, infRange, box.maxX, box.maxY, i, 0, 0, 0);
-			level.addParticle(particle, infRange, box.maxX, box.minY, i, 0, 0, 0);
-		}
 	}
 	
 	/**

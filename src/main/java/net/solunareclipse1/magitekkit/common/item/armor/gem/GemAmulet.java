@@ -1,7 +1,10 @@
 package net.solunareclipse1.magitekkit.common.item.armor.gem;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Supplier;
+
 import javax.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +30,7 @@ import net.minecraft.world.phys.Vec3;
 import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.api.capabilities.item.IItemEmcHolder;
 import moze_intel.projecte.capability.EmcHolderItemCapabilityWrapper;
+import moze_intel.projecte.capability.ItemCapability;
 import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.utils.WorldHelper;
 
@@ -420,6 +424,11 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	public @Range(from = 0, to = Long.MAX_VALUE) long getStoredEmc(@NotNull ItemStack stack) {
 		return ItemPE.getEmc(stack);
 	}
+	@Override
+	public @NotNull List<Supplier<ItemCapability<?>>> getSupportedCaps() {
+		return supportedCapabilities;
+	}
+	private static final List<Supplier<ItemCapability<?>>> supportedCapabilities = new ArrayList<>();
 	
 	
 	

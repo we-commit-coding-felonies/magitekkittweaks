@@ -1,7 +1,15 @@
 package net.solunareclipse1.magitekkit.common.item;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.NotNull;
+
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+
+import moze_intel.projecte.capability.ItemCapability;
 
 import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
@@ -89,5 +97,10 @@ public class CovalenceItem extends Item implements IMGTKItem, IDemonWillGem {
 		//}
 		return 0;
 	}
+	@Override
+	public @NotNull List<Supplier<ItemCapability<?>>> getSupportedCaps() {
+		return supportedCapabilities;
+	}
+	private static final List<Supplier<ItemCapability<?>>> supportedCapabilities = new ArrayList<>();
 
 }

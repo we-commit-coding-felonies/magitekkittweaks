@@ -1,16 +1,25 @@
 package net.solunareclipse1.magitekkit.api.item;
 
+import java.util.List;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
 import moze_intel.projecte.api.PESounds;
 import moze_intel.projecte.api.capabilities.item.IItemCharge;
+import moze_intel.projecte.utils.ClientKeyHelper;
+import moze_intel.projecte.utils.PEKeybind;
 
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
@@ -65,11 +74,12 @@ public interface IEmpowerItem extends IItemCharge {
 	
 	@Override
 	default boolean changeCharge(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
-		boolean sneaking = player.isShiftKeyDown();
+		// TODO: figure out if manual charge reduction should be allowed
+		boolean sneaking = false;//player.isShiftKeyDown();
 		int charge = getCharge(stack);
 		int currentStage = getStage(stack);
 		int stages = getNumCharges(stack);
-		boolean shouldTry = (sneaking && charge > 0) || (!sneaking && currentStage < stages);
+		boolean shouldTry = !player.getCooldowns().isOnCooldown(stack.getItem()) && ( (sneaking && charge > 0) || (!sneaking && currentStage < stages) );
 		if (shouldTry) {
 			// plrEmc doesnt matter if were reducing charge, so we do this to prevent unnecessary inventory scanning
 			long plrEmc = sneaking ? 0 : EmcHelper.getAvaliableEmc(player);
@@ -101,5 +111,11 @@ public interface IEmpowerItem extends IItemCharge {
 	
 	default int getTotalChargeForStage(ItemStack stack, int stage) {
 		return stage * (getMaxChargePower(stack)/getNumCharges(stack));
+	}
+	
+	default void appendEmpowerTooltip(ItemStack stack, Level level, List<Component> tips, TooltipFlag flags) {
+		Component empowerKeyText = ClientKeyHelper.getKeyName(PEKeybind.CHARGE).copy().withStyle(ChatFormatting.AQUA);
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.empower.1")); // Info
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.empower.2", empowerKeyText)); // Mode
 	}
 }

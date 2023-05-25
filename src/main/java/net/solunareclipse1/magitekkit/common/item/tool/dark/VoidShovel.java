@@ -1,10 +1,13 @@
 package net.solunareclipse1.magitekkit.common.item.tool.dark;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableMultimap;
@@ -25,6 +28,8 @@ import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+
+import moze_intel.projecte.capability.ItemCapability;
 
 import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
 import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
@@ -107,5 +112,10 @@ public class VoidShovel extends ShovelItem implements IMGTKItem, IEnchantmentSyn
 	public BonusType getBonusType(ItemStack stack) {
 		return BonusType.TOOL;
 	}
+	@Override
+	public @NotNull List<Supplier<ItemCapability<?>>> getSupportedCaps() {
+		return supportedCapabilities;
+	}
+	private static final List<Supplier<ItemCapability<?>>> supportedCapabilities = new ArrayList<>();
 
 }

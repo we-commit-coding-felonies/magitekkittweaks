@@ -14,8 +14,8 @@ import net.minecraft.world.phys.Vec3;
 
 import net.minecraftforge.network.NetworkEvent;
 
+import net.solunareclipse1.magitekkit.util.BoxHelper;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
-import net.solunareclipse1.magitekkit.util.MiscHelper;
 
 public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, ParticlePreset preset) {
 	
@@ -75,7 +75,7 @@ public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, ParticlePreset preset
         	switch (preset) {
         	
         	case DEBUG_FILL: // debug fill
-        		MiscHelper.drawAABBWithParticles(box, ParticleTypes.DRIPPING_WATER, stepSize, level, true, true);
+        		BoxHelper.drawAABBWithParticles(box, ParticleTypes.DRIPPING_WATER, stepSize, level, true, true);
         	case DEBUG: // debug outline
         		particle = ParticleTypes.DRIPPING_LAVA;
         		infRange = true;
@@ -90,11 +90,11 @@ public record DrawParticleAABBPacket(Vec3 cMin, Vec3 cMax, ParticlePreset preset
 				LoggerHelper.printWarn("DrawParticleAABBPacket", "InvalidPreset", "AABB particles preset " + preset + " is undefined!");
         		level.playSound(null, cent.x, cent.y, cent.z, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.MASTER, 100, 2);
         		level.addAlwaysVisibleParticle(ParticleTypes.ELDER_GUARDIAN, cent.x, cent.y, cent.z, 0, 0, 0);
-        		MiscHelper.drawAABBWithParticles(box, ParticleTypes.DRAGON_BREATH, stepSize, level, true, true);
+        		BoxHelper.drawAABBWithParticles(box, ParticleTypes.DRAGON_BREATH, stepSize, level, true, true);
         		particle = ParticleTypes.CAMPFIRE_SIGNAL_SMOKE;
         		break;
         	}
-        	MiscHelper.drawAABBWithParticles(box, particle, stepSize, level, false, infRange);
+        	BoxHelper.drawAABBWithParticles(box, particle, stepSize, level, false, infRange);
         });
         return true;
     }

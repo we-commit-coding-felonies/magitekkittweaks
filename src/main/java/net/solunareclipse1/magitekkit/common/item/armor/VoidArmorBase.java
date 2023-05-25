@@ -1,7 +1,11 @@
 package net.solunareclipse1.magitekkit.common.item.armor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.resources.ResourceLocation;
@@ -18,6 +22,8 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ProtectionEnchantment;
 import net.minecraft.world.level.Level;
+
+import moze_intel.projecte.capability.ItemCapability;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
@@ -170,4 +176,11 @@ public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReduce
 		@Override
 		public float getKnockbackResistance() {return 0.25F;}
 	}
+
+
+	@Override
+	public @NotNull List<Supplier<ItemCapability<?>>> getSupportedCaps() {
+		return supportedCapabilities;
+	}
+	private static final List<Supplier<ItemCapability<?>>> supportedCapabilities = new ArrayList<>();
 }

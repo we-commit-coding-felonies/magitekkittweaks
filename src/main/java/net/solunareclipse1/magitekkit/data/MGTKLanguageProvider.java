@@ -150,10 +150,16 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.gem.ref.2", "I am become death, the destroyer of worlds");
         add("tip.mgtk.gem.ref.3", "2... 3... 5... 7... 11... 13...");
         add("tip.mgtk.gem.ref.4", "Not to be confused with Anklet of the Wind");
-        add("tip.mgtk.rm.sword.killall.0", "Autoslash: Hostile only");
-        add("tip.mgtk.rm.sword.killall.1", "Autoslash: Hostile + Players");
-        add("tip.mgtk.rm.sword.killall.2", "Autoslash: All except Players");
-        add("tip.mgtk.rm.sword.killall.3", "Autoslash: Everything");
+        add("tip.mgtk.crimson.empower.1", "Abilities require empowerment.");
+        add("tip.mgtk.crimson.empower.2", "Press %s to empower with EMC");
+        add("tip.mgtk.crimson.sword.autoslash", "Decimates foes with the powerful Autoslash");
+        add("tip.mgtk.crimson.sword.autoslash.1", "Press %s to rend nearby creatures, %s to change mode");
+        add("tip.mgtk.crimson.sword.autoslash.2", "Currently targeting: %s");
+        add("tip.mgtk.crimson.sword.autoslash.hud", "Autoslash: %s");
+        add("tip.mgtk.crimson.sword.killall.0", "Hostile only");
+        add("tip.mgtk.crimson.sword.killall.1", "Hostile + Players");
+        add("tip.mgtk.crimson.sword.killall.2", "All except Players");
+        add("tip.mgtk.crimson.sword.killall.3", "Everything");
         
 
         add("gui.mgtk.philo.enchanter.name", "Arcanum");
@@ -217,20 +223,18 @@ public class MGTKLanguageProvider extends LanguageProvider {
         
         
         // death messages
-        add("death.attack.aoe", "%s rests in pieces");
-        add("death.attack.aoe.player", "%s was butchered by %s");
-        add("death.attack.aoe2", "%s was rended asunder");
-        add("death.attack.aoe2.player", "%s was decimated by %s");
+        add("death.attack.matter_aoe", "%s was decimated by %s");
+        add("death.attack.matter_aoe.item", "%s was butchered by %s's %s");
         add("death.attack.transmutation", "%s turned into an unspeakable horror");
         add("death.attack.transmutation.player", "%s was horrifically disfigured by %s");
         add("death.attack.transmutation.strong", "%s experienced the law of equivalent exchange");
         add("death.attack.transmutation.strong.player", "%s's carbon was transmuted by %s");
         add("death.attack.transmutation.potion", "%s was converted into EMC");
         add("death.attack.transmutation.potion.player", "%s is now a mere statistic thanks to %s");
-        add("death.attack.mustang", "%s phlogistonated");
-        add("death.attack.mustang.player", "%s was immolated by %s");
+        add("death.attack.mustang", "%s got phlogistonated by %s");
+        add("death.attack.mustang.item", "%s was immolated by %s using %s");
         add("death.attack.emcnuke", "%s was atomized by a catastrophic energy release");
-        add("death.attack.emcnuke.player", "%s underwent fission because of %s");
+        add("death.attack.emcnuke.player", "%s underwent fission in an attempt to destroy %s");
         add("death.attack.god", "%s is a work of fiction");
         add("death.attack.god.player", "%s was retconned by %s");
         // since avaritia cant do it themselves, apparently

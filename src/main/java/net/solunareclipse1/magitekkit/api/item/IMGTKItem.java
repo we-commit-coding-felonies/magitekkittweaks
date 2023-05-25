@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.nbt.CompoundTag;
@@ -24,11 +25,13 @@ import net.solunareclipse1.magitekkit.api.capability.MGTKCapabilityProvider;
  *
  */
 public interface IMGTKItem extends IForgeItem {
-	
+
 	/**
-	 * dont directly modify this, use addItemCapability instead
+	 * used to store supported capabilities during initialization <br>
+	 * @return a List of ItemCapability Suppliers
 	 */
-	final List<Supplier<ItemCapability<?>>> supportedCapabilities = new ArrayList<>();
+	@NotNull
+	public List<Supplier<ItemCapability<?>>> getSupportedCaps();
 
 	/**
 	 * adds capability to this item,
@@ -36,7 +39,7 @@ public interface IMGTKItem extends IForgeItem {
 	 * @param capabilitySupplier
 	 */
 	default void addItemCapability(Supplier<ItemCapability<?>> capabilitySupplier) {
-		supportedCapabilities.add(capabilitySupplier);
+		getSupportedCaps().add(capabilitySupplier);
 	}
 	
 	/**
@@ -46,12 +49,13 @@ public interface IMGTKItem extends IForgeItem {
 	 */
 	default void addItemCapability(String modid, Supplier<Supplier<ItemCapability<?>>> capabilitySupplier) {
 		if (ModList.get().isLoaded(modid)) {
-			supportedCapabilities.add(capabilitySupplier.get());
+			getSupportedCaps().add(capabilitySupplier.get());
 		}
 	}
 
 	@Override
 	default ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag nbt) {
+		List<Supplier<ItemCapability<?>>> supportedCapabilities = getSupportedCaps();
 		if (supportedCapabilities.isEmpty()) {
 			return null;
 		}

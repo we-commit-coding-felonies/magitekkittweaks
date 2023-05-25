@@ -1,16 +1,22 @@
 package net.solunareclipse1.magitekkit.init;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -22,6 +28,7 @@ import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IEmpowerItem;
 import net.solunareclipse1.magitekkit.client.gui.GravityAnvilScreen;
 import net.solunareclipse1.magitekkit.client.gui.PhiloEnchantmentScreen;
+import net.solunareclipse1.magitekkit.client.particle.CutParticle;
 import net.solunareclipse1.magitekkit.client.render.LayerHalo;
 import net.solunareclipse1.magitekkit.client.render.SentientArrowRenderer;
 import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
@@ -63,8 +70,15 @@ public class ClientInit {
 		event.registerEntityRenderer(ObjectInit.SENTIENT_ARROW.get(), context -> new SentientArrowRenderer(context));
 		event.registerEntityRenderer(ObjectInit.WITHER_VINE.get(), context -> new NoopRenderer<WitherVineProjectile>(context));
 	}
+	
+    @SubscribeEvent
+    public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
+    	registerParticleProvider(EffectInit.CUT_PARTICLE.get(), CutParticle.Provider::new);
+    }
     
-
+    private static <T extends ParticleOptions> void registerParticleProvider(ParticleType<T> type, ParticleEngine.SpriteParticleRegistration<T> provider) {
+    	Minecraft.getInstance().particleEngine.register(type, provider);
+    }
 
 	@SubscribeEvent
 	public static void addLayers(EntityRenderersEvent.AddLayers event) {

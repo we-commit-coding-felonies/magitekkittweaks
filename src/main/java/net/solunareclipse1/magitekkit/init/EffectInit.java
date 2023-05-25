@@ -1,5 +1,7 @@
 package net.solunareclipse1.magitekkit.init;
 
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffect;
@@ -16,11 +18,13 @@ import net.solunareclipse1.magitekkit.common.effect.TransmutingEffect;
 public class EffectInit {
 	private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MagiTekkit.MODID);
     private static final DeferredRegister<MobEffect> MOB_EFFECTS = DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, MagiTekkit.MODID);
+    private static final DeferredRegister<ParticleType<?>> PARTICLES = DeferredRegister.create(ForgeRegistries.PARTICLE_TYPES, MagiTekkit.MODID);
 
     public static void init() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         SOUNDS.register(bus);
         MOB_EFFECTS.register(bus);
+        PARTICLES.register(bus);
     }
 
     ////// Sounds
@@ -79,8 +83,8 @@ public class EffectInit {
     public static final RegistryObject<SoundEvent> IGNITION_BURN = registerSound("item.ignition.burn");
     
     
-    
-    
+    //// Particles
+    public static final RegistryObject<SimpleParticleType> CUT_PARTICLE = PARTICLES.register("cut_particle", () -> new SimpleParticleType(true));
     
     
     

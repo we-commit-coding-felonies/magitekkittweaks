@@ -1,14 +1,17 @@
 package net.solunareclipse1.magitekkit.common.item.tool;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
 import java.util.UUID;
 
+import org.abego.treelayout.internal.util.java.util.ListUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.google.common.collect.Lists;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.item.CustomArmPoseItem;
 
@@ -1108,15 +1111,17 @@ public class BandOfArcana extends CovalenceItem
 					long costPer = SWRG.SMITE.get();
 					int smitten = 0;
 					AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), 32, 32, 32);
-					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
+					List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, area, this::canBeSmitten);
+					Collections.shuffle(targets, level.random);
+					for (LivingEntity ent : targets) {
 						if (ent.is(player)) continue;
-						if (plrEmc <= costPer*smitten) break;
+						if (smitten > (level.isThundering() ? 30 : 10) || plrEmc <= costPer*smitten) break;
 						swrgSuperSmiteEnt(player, level, ent);
 						smitten++;
 					}
 					long totalCost = costPer*smitten;
 					EmcHelper.consumeAvaliableEmc(player, totalCost);
-					int cdTime = (int) Math.max(13, smitten * (level.isThundering() ? 1.3 : 13));
+					int cdTime = (int) Math.max(13, smitten * (level.isThundering() ? 2.6 : 26));
 					cd.addCooldown(cdItem, cdTime);
 					didDo = true;
 				}
