@@ -2,6 +2,7 @@ package net.solunareclipse1.magitekkit.common.item.armor.gem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
 
@@ -9,9 +10,12 @@ import javax.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
+import org.jline.utils.Colors;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,12 +24,20 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 import moze_intel.projecte.api.capabilities.block_entity.IEmcStorage.EmcAction;
 import moze_intel.projecte.api.capabilities.item.IItemEmcHolder;
@@ -34,6 +46,9 @@ import moze_intel.projecte.capability.ItemCapability;
 import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.utils.WorldHelper;
 
+import net.solunareclipse1.magitekkit.common.item.armor.CrimsonArmor;
+import net.solunareclipse1.magitekkit.common.misc.NukeDamageCalculator;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.config.EmcCfg;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Gem.Chest;
 import net.solunareclipse1.magitekkit.init.EffectInit;
@@ -41,12 +56,20 @@ import net.solunareclipse1.magitekkit.init.NetworkInit;
 import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.util.ColorsHelper;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
+import net.solunareclipse1.magitekkit.util.EntityHelper;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.PlrHelper;
 import net.solunareclipse1.magitekkit.util.ProjectileHelper;
+import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 
+import codechicken.lib.vec.Vector3;
 import mekanism.api.Coord4D;
 import mekanism.api.MekanismAPI;
+import morph.avaritia.entity.GapingVoidEntity;
+import vazkii.botania.common.entity.EntityManaStorm;
+import vazkii.botania.common.entity.ModEntities;
+import vazkii.botania.common.helper.ItemNBTHelper;
 
 /**
  * Chestplate
@@ -59,6 +82,7 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 	
 	public GemAmulet(Properties props, float baseDr) {
 		super(EquipmentSlot.CHEST, props, baseDr);
+		MinecraftForge.EVENT_BUS.addListener(this::checkExplosion);
 		addItemCapability(EmcHolderItemCapabilityWrapper::new);
 		//addItemCapability(ManaItemCapabilityWrapper::new);
 	}
@@ -96,11 +120,39 @@ public class GemAmulet extends GemJewelryBase implements IItemEmcHolder {
 		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.2").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	
-	//@Override
-	//public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-	//	entity.level.playSound(null, entity, PESoundEvents.POWER.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
-	//	return 0;
-	//}
+	/**
+	 * catastrophic klein star failure
+	 * @param event
+	 */
+	public void checkExplosion(LivingEquipmentChangeEvent event) {
+		ItemStack from = event.getFrom();
+		if (from.getItem() instanceof GemAmulet amulet && amulet.getStoredEmc(from) > 0 && from.isDamaged()) {
+			int damage = from.getDamageValue();
+			int max = from.getMaxDamage();
+			ItemStack to = event.getTo();
+			if (damage+1 >= max && to.isEmpty()) {
+				LivingEntity wearer = event.getEntityLiving();
+				DamageSource dmgSrc = MGTKDmgSrc.emcNuke(wearer);
+				float power = (float)amulet.getStoredEmc(from)/(float)amulet.getMaximumEmc(from);
+				NukeDamageCalculator nukeCalc = new NukeDamageCalculator(0f);
+				Vec3 cent = wearer.getBoundingBox().getCenter();
+				wearer.level.explode(wearer, dmgSrc, nukeCalc, cent.x, cent.y, cent.z, 20f*power, false, Explosion.BlockInteraction.DESTROY);
+				if (power > 0.9) {
+					if (!EntityHelper.isInvincible(wearer)) {
+						wearer.hurt(dmgSrc, Float.MAX_VALUE);
+					}
+					EntityManaStorm singularity = ModEntities.MANA_STORM.create(wearer.level);
+					singularity.burstColor = Color.COVALENCE_BLUE.I;
+					singularity.setPos(cent.x, cent.y, cent.z);
+					singularity.setYRot(wearer.getYRot());
+					singularity.liveTime = 1350;
+					singularity.deathTime = 195;
+					wearer.level.addFreshEntity(singularity);
+				}
+				wearer.level.playSound(null, wearer.blockPosition(), EffectInit.ARMOR_BREAK.get(), wearer.getSoundSource(), 10f*power, 0.75f);
+			}
+		}
+	}
 	
 	@Override
 	public void onArmorTick(ItemStack stack, Level level, Player player) {

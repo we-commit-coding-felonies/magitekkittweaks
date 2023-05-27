@@ -63,7 +63,6 @@ public class CutParticle extends Particle {
 		xo = x;
 		yo = y;
 		zo = z;
-		System.out.println(age);
 		if (age++ >= this.lifetime) {
 			this.remove();
 		}

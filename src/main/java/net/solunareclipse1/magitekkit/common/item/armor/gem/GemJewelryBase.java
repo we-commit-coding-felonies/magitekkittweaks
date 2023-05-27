@@ -103,6 +103,8 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	
 	@Override
 	public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
+		return 1;
+		/*
 		if ((stack.getMaxDamage() - stack.getDamageValue()) - 1 < amount) {
 			entity.level.playSound(null, entity, EffectInit.JEWELRY_BREAK.get(), SoundSource.PLAYERS, 2.0F, 1.0F);
 			if (stack.getItem() instanceof GemAmulet && LivingEntity.getEquipmentSlotForItem(stack) == EquipmentSlot.CHEST) {
@@ -115,7 +117,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 				stack.shrink(1);
 			}
 		}
-		return amount;
+		return amount;*/
 	}
 	
 	/**

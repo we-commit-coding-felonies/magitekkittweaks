@@ -1,6 +1,9 @@
 package net.solunareclipse1.magitekkit.util;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.function.Predicate;
 
@@ -82,6 +85,8 @@ import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKEntityDamageSource;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.init.NetworkInit;
+import net.solunareclipse1.magitekkit.network.packet.client.CutParticlePacket;
 
 /**
  * Some common functions that don't really fit in anywhere else
@@ -244,6 +249,7 @@ public class MiscHelper {
 	
 	public static boolean attackRandomInRange(int power, AABB area, Level level, Player culprit, Predicate<LivingEntity> validator) {
 		List<LivingEntity> validTargets = level.getEntitiesOfClass(LivingEntity.class, area, validator);
+		Map<Entity,Integer> hit = new HashMap<>();
 		if (!validTargets.isEmpty()) {
 			int limit = power;// + validTargets.size()/2;
 			for (int i = 0; i < limit; i++) {
@@ -256,20 +262,29 @@ public class MiscHelper {
 				victim.invulnerableTime = 0;
 				victim.hurt(MGTKDmgSrc.matterAoe(culprit), damage);
 				victim.invulnerableTime = iFrames;
-				if (level instanceof ClientLevel lvl) {
-					AABB box = BoxHelper.growToCube(victim.getBoundingBox());
-					Vec3 start = BoxHelper.randomPointInBox(box, level.random);
-					Vec3 end = BoxHelper.randomPointInBox(box, level.random);
-					lvl.addParticle(EffectInit.CUT_PARTICLE.get(), start.x,start.y,start.z, end.x,end.y,end.z);
-				}
+				if (hit.containsKey(victim)) {
+					hit.put(victim, hit.get(victim)+1);
+				} else hit.put(victim, 1);
 				level.playSound(null, victim.blockPosition(), PESoundEvents.DESTRUCT.get(), SoundSource.PLAYERS, 0.5f, 1.5f);
 			}
-			if (level instanceof ClientLevel lvl) {
-				double rot1 = (double)(-Mth.sin(culprit.getYRot() * ((float)Math.PI / 180f)));
-				double rot2 = (double)Mth.cos(culprit.getYRot() * ((float)Math.PI / 180f));
-				lvl.addParticle(ParticleTypes.SWEEP_ATTACK,
-						culprit.getX()+rot1, culprit.getY(0.5), culprit.getZ()+rot2,
-						0, 0, 0);
+			if (level instanceof ServerLevel lvl) {
+				for (Entry<Entity,Integer> hitEnt : hit.entrySet()) {
+					double rot1 = (double)(-Mth.sin(culprit.getYRot() * ((float)Math.PI / 180f)));
+					double rot2 = (double)Mth.cos(culprit.getYRot() * ((float)Math.PI / 180f));
+					lvl.sendParticles(ParticleTypes.SWEEP_ATTACK, culprit.getX()+rot1, culprit.getY(0.5), culprit.getZ()+rot2, 1, 0, 0, 0, 0);
+					
+					// this kinda sucks and i should find a better way to do it
+					AABB box = BoxHelper.growToCube(hitEnt.getKey().getBoundingBox());
+					for (ServerPlayer plr : lvl.players()) {
+						BlockPos pos = plr.blockPosition();
+						if (pos.closerToCenterThan(box.getCenter(), 128)) {
+							NetworkInit.toClient(new CutParticlePacket(hitEnt.getValue(), box), plr);
+						}
+						if (pos.closerToCenterThan(box.getCenter(), 128)) {
+						}
+					}
+				}
+				
 			}
 			level.playSound(null, culprit.blockPosition(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 0.5f, 1.0F);
 			return true;

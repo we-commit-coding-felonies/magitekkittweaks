@@ -7,7 +7,12 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -18,6 +23,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ProtectionEnchantment;
@@ -27,14 +33,16 @@ import moze_intel.projecte.capability.ItemCapability;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
+import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
 import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc.IMGTKDamageSource;
+import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 
 import mekanism.common.registries.MekanismDamageSource;
 
-public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReducer {
+public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReducer, IEnchantmentSynergizer {
 	private float baseDr;
 	
 	/** Damage sources with corresponging DR multipliers. 0.5 would mean 1/2 DR */
@@ -68,9 +76,35 @@ public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReduce
 	}
 	
 	@Override
+	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
+		super.appendHoverText(stack, level, tips, isAdvanced);
+
+		tips.add(new TranslatableComponent("tip.mgtk.enchsynergy"));
+		double bonus = calculateBonus(stack)*100d;
+		if (bonus > 0 && shouldApplyBonus(stack)) {
+			Component typeText = new TranslatableComponent("tip.mgtk.enchbonus."+getBonusType(stack).toString());
+			Component bonusText = new TranslatableComponent("tip.mgtk.enchbonus", ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(bonus), typeText);
+			tips.add(bonusText);
+		}
+		tips.add(new TextComponent(""));
+	}
+	
+	@Override
 	public void onArmorTick(ItemStack stack, Level level, Player player) {
 		//if (level.getGameTime() % 160 != 0) return;
 		//level.playSound(null, player, SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 0.3F, 0.5F);
+	}
+	
+	private static final List<Supplier<ItemCapability<?>>> supportedCapabilities = new ArrayList<>();
+	
+	@Override
+	public double calculateBonus(ItemStack stack) {
+		return getBonusStrength(stack);
+	}
+
+	@Override
+	public BonusType getBonusType(ItemStack stack) {
+		return BonusType.ARMOR;
 	}
 	
 	public float getBaseDr() {
@@ -85,7 +119,7 @@ public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReduce
 	 */
 	public float getDr(ItemStack stack, DamageSource source) {
 		if (sourceCanBeReduced(source)) {
-			return getDrForSource(source);
+			return (float) (getDrForSource(source) + calculateBonus(stack));
 		}
 		return 0;
 	}
@@ -164,7 +198,7 @@ public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReduce
 		public int getEnchantmentValue() {return 50;}
 		@NotNull
 		@Override
-		public SoundEvent getEquipSound() {return SoundEvents.AMBIENT_BASALT_DELTAS_ADDITIONS;}
+		public SoundEvent getEquipSound() {return EffectInit.ARMOR_EQUIP.get();}
 		@NotNull
 		@Override
 		public Ingredient getRepairIngredient() {return Ingredient.EMPTY;}
@@ -182,5 +216,4 @@ public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReduce
 	public @NotNull List<Supplier<ItemCapability<?>>> getSupportedCaps() {
 		return supportedCapabilities;
 	}
-	private static final List<Supplier<ItemCapability<?>>> supportedCapabilities = new ArrayList<>();
 }

@@ -58,15 +58,15 @@ public class GemCirclet extends GemJewelryBase {
 				GemJewelrySetInfo set = jewelryTick(stack, level, player);
 				long plrEmc = set.plrEmc();
 				if (plrEmc >= Head.CLAIRVOYANCE.get()) {
-					plrEmc -= EmcHelper.consumeAvaliableEmc(player, Head.CLAIRVOYANCE.get());
+					//plrEmc -= EmcHelper.consumeAvaliableEmc(player, Head.CLAIRVOYANCE.get());
 					nightVision(player);
 				}
 				if (set.hasBonus() && plrEmc >= Head.CLAIRVOYANCE.get()) {
 					// amount of affected, multiplied by cost per entity
 					long costPer = Head.CLAIRVOYANCE.get();
-					plrEmc -= EmcHelper.consumeAvaliableEmc(player,
-							costPer * entityXray(player, plrEmc/costPer)
-					);
+					//plrEmc -= EmcHelper.consumeAvaliableEmc(player,
+					//		costPer * entityXray(player, plrEmc/costPer)
+					//);
 				}
 				if (set.feet().pristine() && plrEmc >= Head.BREATH.get() && player.getAirSupply() <= 0) {
 					plrEmc -= EmcHelper.consumeAvaliableEmc(player, Head.BREATH.get());

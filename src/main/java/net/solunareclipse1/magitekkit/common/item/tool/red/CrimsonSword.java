@@ -130,7 +130,7 @@ public class CrimsonSword extends SwordItem implements IMGTKItem, IModeChanger, 
 		int charge = getCharge(stack);
 		boolean active = isCurrentlySlashing(stack);
 		if (charge > 0) {
-			int toLeak = level.getGameTime() % 2 == 0 ? 1 : 0;
+			int toLeak = level.getGameTime() % 3 == 0 ? 1 : 0;
 			if (entity instanceof Player plr) {
 				boolean held = selected || plr.getOffhandItem() == stack;
 				if (active && held && charge >= 13) {
@@ -156,33 +156,6 @@ public class CrimsonSword extends SwordItem implements IMGTKItem, IModeChanger, 
 			}
 		} else if (active) // no charge
 			ceaseSlashing(stack);
-		
-		//if ((active || level.getGameTime() % 2 == 0) && charge > 0 && entity instanceof Player player) {
-		//	int toLeak = active ? 13 : 1;
-		//	if (active) {
-		//		if (charge >= toLeak) {
-		//			byte power = getSlashingPower(stack);
-		//			int range = 5+power*5;
-		//			boolean didDo = MiscHelper.attackRandomInRange(power, AABB.ofSize(player.getBoundingBox().getCenter(), range, range, range), level, player,
-		//					getKillMode(stack).test().and(ent -> isValidAutoslashTarget(ent, player)));
-		//			if (didDo) {
-		//				player.resetAttackStrengthTicker();
-		//				player.displayClientMessage(new TextComponent(""+selected), true);
-		//				PlayerHelper.swingItem(player, player.getOffhandItem() == stack ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
-		//			} else {
-		//				ceaseSlashing(stack);
-		//				toLeak = 1;
-		//			}
-		//		} else {
-		//			ceaseSlashing(stack);
-		//			toLeak = 1;
-		//		}
-		//	}
-		//	setCharge(stack, charge-toLeak);
-		//	if (!active) level.playSound(null, player.blockPosition(), EffectInit.EMC_LEAK.get(), SoundSource.PLAYERS, 1, 1);
-		//} else if (active && charge <= 0) {
-		//	ceaseSlashing(stack);
-		//}
 	}
 	
 	@Override

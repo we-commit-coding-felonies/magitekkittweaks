@@ -138,13 +138,12 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.arcana.liquid.water", "Aqua");
         add("tip.mgtk.arcana.liquid.lava", "Magma");
         add("tip.mgtk.enchsynergy", "Grows stronger when enchanted");
-        add("tip.mgtk.enchbonus", "Current bonus: %s %s");
-        add("tip.mgtk.enchbonus.armor", "Damage Reduction");
-        add("tip.mgtk.enchbonus.weapon", "Attack Strength");
-        add("tip.mgtk.enchbonus.tool", "Faster Speed");
+        add("tip.mgtk.enchbonus", "Current bonus: %s%s");
+        add("tip.mgtk.enchbonus.armor", "% Damage Reduction");
+        add("tip.mgtk.enchbonus.weapon", " Attack Strength");
+        add("tip.mgtk.enchbonus.tool", "% Faster Speed");
         add("tip.mgtk.enchbonus.unknown", "Current bonus: %s Unknown. This is a bug!");
-        add("tip.mgtk.dr", "Provides a %s% damage reduction");
-        add("tip.mgtk.dyndr", "Currently providing a %s% damage reduction");
+        add("tip.mgtk.dyndr", "Currently providing %s damage reduction");
         add("tip.mgtk.burnout", "Burnout: %1$s / %2$s");
         add("tip.mgtk.gem.ref.1", "One shudders to imagine what inhuman thoughts lie within");
         add("tip.mgtk.gem.ref.2", "I am become death, the destroyer of worlds");
@@ -152,6 +151,10 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.gem.ref.4", "Not to be confused with Anklet of the Wind");
         add("tip.mgtk.crimson.empower.1", "Abilities require empowerment.");
         add("tip.mgtk.crimson.empower.2", "Press %s to empower with EMC");
+        add("tip.mgtk.crimson.armor", "Absorbs almost all damage, but don't overuse it...");
+        add("tip.mgtk.crimson.armor.1", "Provides enormous amounts of protection by absorbing damage");
+        add("tip.mgtk.crimson.armor.2", "Protection decreases with more damage absorbed, regenerates over time");
+        add("tip.mgtk.crimson.armor.3", "Will violently release all stored energy at once if it absorbs to much");
         add("tip.mgtk.crimson.sword.autoslash", "Decimates foes with the powerful Autoslash");
         add("tip.mgtk.crimson.sword.autoslash.1", "Press %s to rend nearby creatures, %s to change mode");
         add("tip.mgtk.crimson.sword.autoslash.2", "Currently targeting: %s");
@@ -198,7 +201,8 @@ public class MGTKLanguageProvider extends LanguageProvider {
 
         add("subtitles.mgtk.item.ignition.burn", "Atmosphere ignites");
         add("subtitles.mgtk.item.ignition.click", "Alchemical spark");
-        
+
+        add("subtitles.mgtk.item.matterarmor.equip", "Matter armor equipped");
         add("subtitles.mgtk.item.matterarmor.absorb", "Damage absorbed");
         add("subtitles.mgtk.item.matterarmor.degrade", "Armor degrades");
         add("subtitles.mgtk.item.matterarmor.shatter", "Jewellery shatters");

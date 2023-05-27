@@ -41,6 +41,7 @@ public class EffectInit {
     public static final RegistryObject<SoundEvent> EMC_LEAK = registerSound("emc.leak");
     //// Items
     // Armor
+    public static final RegistryObject<SoundEvent> ARMOR_EQUIP = registerSound("item.matterarmor.equip");
     public static final RegistryObject<SoundEvent> ARMOR_ABSORB = registerSound("item.matterarmor.absorb");
     public static final RegistryObject<SoundEvent> ARMOR_BREAK = registerSound("item.matterarmor.degrade");
     public static final RegistryObject<SoundEvent> JEWELRY_BREAK = registerSound("item.matterarmor.shatter");

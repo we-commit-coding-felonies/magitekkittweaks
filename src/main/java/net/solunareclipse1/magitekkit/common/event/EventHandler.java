@@ -9,6 +9,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+
+import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -23,13 +26,20 @@ import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 
+import morph.avaritia.entity.GapingVoidEntity;
 import morph.avaritia.entity.InfinityArrowEntity;
 import morph.avaritia.init.AvaritiaModContent;
 import vazkii.botania.common.entity.EntityDoppleganger;
+import vazkii.botania.common.entity.EntityManaStorm;
 
+/**
+ * does stuff with events that doesnt fit very well into other places
+ * @author solunareclipse1
+ */
 @Mod.EventBusSubscriber(modid = MagiTekkit.MODID)
-public class EntityLivingEventHandler {
+public class EventHandler {
 	
 	
 	/** what */
@@ -94,7 +104,8 @@ public class EntityLivingEventHandler {
 	
 	@SubscribeEvent
 	public static void livingHurt(LivingHurtEvent event) {
-		if (event.getAmount() > 0) {
+		float damage = event.getAmount();
+		if (damage > 0) {
 			LivingEntity entity = event.getEntityLiving();
 			DamageSource source = event.getSource();
 			Map<ItemStack, Float> absorbList = new HashMap<>();
@@ -110,83 +121,38 @@ public class EntityLivingEventHandler {
 				if (totalDr >= 1) {
 					event.setCanceled(true);
 				} else {
-					event.setAmount( event.getAmount() * (1f - totalDr) );
+					event.setAmount(damage * (1f-totalDr));
 				}
 				entity.level.playSound(null, entity, EffectInit.ARMOR_ABSORB.get(), entity.getSoundSource(), Math.min(1, totalDr), 1);
 				for (Entry<ItemStack, Float> absorber : absorbList.entrySet()) {
 					ItemStack stack = absorber.getKey();
 					float absorbed = absorber.getValue()*event.getAmount();
-					absorber.getKey().hurtAndBreak((int)absorbed, entity, ent -> {
-						// TODO: gem explosion
+					stack.hurtAndBreak(Math.round(absorbed), entity, ent -> {
+						armorBreak(stack, ent);
 					});
 				}
 			}
-			/*float drVal = 0, newDmg = dmg;
-			for (ItemStack stack : entity.getArmorSlots()) {
-				if (stack.isEmpty()) continue;
-				if (stack.getItem() instanceof VoidArmorBase) {
-					drVal += calcDr(stack, source, entity);
-				}
-			}
-			newDmg *= 1 - drVal;
-			if (newDmg <= 0) event.setCanceled(true); else event.setAmount(newDmg);*/
-			
 		}
 	}
 	
-	/**
-	 * Checks a DamageSource against a list of sources that should never be blocked.
-	 * Specifically, it checks for the following:<br>
-	 * <li>isCreativePlayer()
-	 * <li>isBypassInvul()
-	 * <li>OUT_OF_WORLD
-	 * <li>DROWN
-	 * <li>FREEZE
-	 * <li>IN_WALL
-	 * <li>STARVE
-	 * 
-	 * <br><br>TODO: this should probably be moved to somewhere in magitekkit.util at some point
-	 * 
-	 * @param source DamageSource to check
-	 * @return true if source is unblockable
-	 */
-	public static boolean isUnblockableSource(DamageSource source) {
-		// creative player, bypass invul, void, drown, freeze, suffocate, starve, avaritia
-		return source.isCreativePlayer() || source.isBypassInvul()
-				|| source == DamageSource.OUT_OF_WORLD
-				|| source == DamageSource.DROWN
-				|| source == DamageSource.FREEZE
-				|| source == DamageSource.IN_WALL
-				|| source == DamageSource.STARVE
-				|| source.getDirectEntity() instanceof InfinityArrowEntity
-				|| (!source.isProjectile()
-						&& source.getEntity() instanceof LivingEntity lEnt
-						&& lEnt.getMainHandItem().getItem() == AvaritiaModContent.INFINITY_SWORD.get());
+	private static void armorBreak(ItemStack stack, LivingEntity entity) {
+		entity.broadcastBreakEvent(LivingEntity.getEquipmentSlotForItem(stack));
 	}
 	
-	/**
-	 * calculates damage reduction for a specific DamageSource
-	 * 
-	 * @param stack the armor
-	 * @param source the source
-	 * @param entity the wearer
-	 * @return percent damage reduction item should provide
-	 */
-	//private static float calcDr(ItemStack stack, DamageSource source, LivingEntity entity) {
-	//	if (isUnblockableSource(source)) return 0;
-	//	VoidArmorBase item = (VoidArmorBase) stack.getItem();
-	//	float drMod = 1; // 100% of the dr
-	//	if (source.isBypassMagic()) drMod = 0.5f;
-	//	else if (source.isBypassArmor()) drMod = 0.9f;
-	//	entity.level.playSound(null, entity.blockPosition(), EffectInit.ARMOR_ABSORB.get(), SoundSource.PLAYERS, 0.1f, 1);
-	//	if (item instanceof GemJewelryBase) {
-	//		// gem jewelry always 100% dr, instead takes more dura damage
-	//		int dmg = 1; // 1, 2 if bypass armor, 3 if bypass magic
-	//		if (drMod < 1f) dmg = drMod < 0.9f ? 3 : 2;
-	//		stack.hurtAndBreak(dmg, entity, ent -> {});
-	//		//item.damageItem(stack, dmg, entity, ent -> {});
-	//		return item.getDr(stack);
-	//	}
-	//	return item.getDr(stack) * drMod;
-	//}
+	@SubscribeEvent
+	public static void entityLeave(EntityLeaveWorldEvent event) {
+		// this is related to the Gem Amulet singularity explosion
+		// we spawn an avaritia black hole when the mana storm dies because its cool
+		// we mark mana storms to do this based on their burst color
+		if (event.getEntity() instanceof EntityManaStorm singularity
+				&& singularity.getRemovalReason() == Entity.RemovalReason.DISCARDED
+				&& singularity.burstColor == Color.COVALENCE_BLUE.I) {
+			Level level = event.getWorld();
+			GapingVoidEntity blackHole = new GapingVoidEntity(level);
+			blackHole.setPos(singularity.getX(), singularity.getY(), singularity.getZ());
+			blackHole.setYRot(singularity.getYRot());
+			blackHole.setXRot(0);
+			level.addFreshEntity(blackHole);
+		}
+	}
 }
