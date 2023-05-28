@@ -21,8 +21,8 @@ import moze_intel.projecte.gameObjs.PETags;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 
 public enum MGTKToolTier implements Tier {
-	VOID("void", 0, 13, 9, 5, 50, () -> Ingredient.EMPTY, PETags.Blocks.NEEDS_DARK_MATTER_TOOL, Tiers.NETHERITE, new ResourceLocation(MagiTekkit.MODID, "crimson")),
-	CRIMSON("crimson", 0, 26, 26, 6, 0, () -> Ingredient.EMPTY, PETags.Blocks.NEEDS_RED_MATTER_TOOL, VOID, null);
+	VOID("void", 0, 13, 9, 5, 30, () -> Ingredient.EMPTY, PETags.Blocks.NEEDS_DARK_MATTER_TOOL, Tiers.NETHERITE, new ResourceLocation(MagiTekkit.MODID, "crimson")),
+	CRIMSON("crimson", 0, 13, 18, 6, 0, () -> Ingredient.EMPTY, PETags.Blocks.NEEDS_RED_MATTER_TOOL, VOID, null);
 
 	private final String name;
 	private final int durability;

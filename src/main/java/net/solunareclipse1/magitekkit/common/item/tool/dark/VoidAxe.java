@@ -32,9 +32,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import moze_intel.projecte.capability.ItemCapability;
 
 import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
-import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
+import net.solunareclipse1.magitekkit.api.item.ICapabilityItem;
 
-public class VoidAxe extends AxeItem implements IMGTKItem, IEnchantmentSynergizer {
+public class VoidAxe extends AxeItem implements ICapabilityItem, IEnchantmentSynergizer {
 	public VoidAxe(Tier tier, int damage, float speed, Properties props) {
 		super(tier, damage, speed, props);
 	}

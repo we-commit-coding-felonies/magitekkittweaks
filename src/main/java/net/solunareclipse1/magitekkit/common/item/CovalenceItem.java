@@ -13,7 +13,7 @@ import moze_intel.projecte.capability.ItemCapability;
 
 import net.solunareclipse1.magitekkit.api.capability.wrapper.CovalentCapabilityWrapper;
 import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCovalentCapabilityWrapper;
-import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
+import net.solunareclipse1.magitekkit.api.item.ICapabilityItem;
 
 import wayoftime.bloodmagic.api.compat.EnumDemonWillType;
 import wayoftime.bloodmagic.api.compat.IDemonWillGem;
@@ -22,7 +22,7 @@ import wayoftime.bloodmagic.api.compat.IDemonWillGem;
  * this entire system is a mess
  * @author solunareclipse1
  */
-public class CovalenceItem extends Item implements IMGTKItem, IDemonWillGem {
+public class CovalenceItem extends Item implements ICapabilityItem, IDemonWillGem {
 	public CovalenceItem(Properties props) {
 		super(props);
 		addItemCapability(ManaCovalentCapabilityWrapper::new);

@@ -39,6 +39,10 @@ import net.solunareclipse1.magitekkit.common.item.curio.CovalenceBracelet;
 import net.solunareclipse1.magitekkit.common.item.tool.BandOfArcana;
 import net.solunareclipse1.magitekkit.common.item.tool.MGTKToolTier;
 import net.solunareclipse1.magitekkit.common.item.tool.dark.VoidSword;
+import net.solunareclipse1.magitekkit.common.item.tool.red.CrimsonAxe;
+import net.solunareclipse1.magitekkit.common.item.tool.red.CrimsonHoe;
+import net.solunareclipse1.magitekkit.common.item.tool.red.CrimsonPickaxe;
+import net.solunareclipse1.magitekkit.common.item.tool.red.CrimsonShovel;
 import net.solunareclipse1.magitekkit.common.item.tool.red.CrimsonSword;
 import net.solunareclipse1.magitekkit.common.item.tool.dark.VoidAxe;
 import net.solunareclipse1.magitekkit.common.item.tool.dark.VoidHoe;
@@ -100,10 +104,10 @@ public class ObjectInit {
     public static final RegistryObject<VoidArmorBase> VOID_BOOTS = ITEMS.register("void_boots", () -> new VoidArmorBase(VoidArmorMaterial.MAT, EquipmentSlot.FEET, ITEM_PROPERTIES_VOID_GEAR, 0.12f));
 
     public static final RegistryObject<CrimsonSword> CRIMSON_SWORD = ITEMS.register("crimson_sword", () -> new CrimsonSword(MGTKToolTier.CRIMSON, 3, -1.6f, ITEM_PROPERTIES_CRIMSON_GEAR));
-    //public static final RegistryObject<CrimsonPickaxe> CRIMSON_PICKAXE = ITEMS.register("crimson_pickaxe", () -> new CrimsonPickaxe(MGTKToolTier.CRIMSON, 1, -2.8f, ITEM_PROPERTIES_VOID));
-    //public static final RegistryObject<CrimsonShovel> CRIMSON_SHOVEL = ITEMS.register("crimson_shovel", () -> new CrimsonShovel(MGTKToolTier.CRIMSON, 2, -3, ITEM_PROPERTIES_VOID));
-    //public static final RegistryObject<CrimsonAxe> CRIMSON_AXE = ITEMS.register("crimson_axe", () -> new CrimsonAxe(MGTKToolTier.CRIMSON, 16, -3.5f, ITEM_PROPERTIES_VOID));
-    //public static final RegistryObject<CrimsonHoe> CRIMSON_HOE = ITEMS.register("crimson_hoe", () -> new CrimsonHoe(MGTKToolTier.CRIMSON, -6, 5, ITEM_PROPERTIES_VOID));
+    public static final RegistryObject<CrimsonPickaxe> CRIMSON_PICKAXE = ITEMS.register("crimson_pickaxe", () -> new CrimsonPickaxe(MGTKToolTier.CRIMSON, 1, -2.8f, ITEM_PROPERTIES_CRIMSON_GEAR));
+    public static final RegistryObject<CrimsonShovel> CRIMSON_SHOVEL = ITEMS.register("crimson_shovel", () -> new CrimsonShovel(MGTKToolTier.CRIMSON, 2, -3, ITEM_PROPERTIES_CRIMSON_GEAR));
+    public static final RegistryObject<CrimsonAxe> CRIMSON_AXE = ITEMS.register("crimson_axe", () -> new CrimsonAxe(MGTKToolTier.CRIMSON, 16, -3.5f, ITEM_PROPERTIES_CRIMSON_GEAR));
+    public static final RegistryObject<CrimsonHoe> CRIMSON_HOE = ITEMS.register("crimson_hoe", () -> new CrimsonHoe(MGTKToolTier.CRIMSON, -6, 5, ITEM_PROPERTIES_CRIMSON_GEAR));
     public static final RegistryObject<CrimsonArmor> CRIMSON_HELM = ITEMS.register("crimson_helm", () -> new CrimsonArmor(CrimsonArmorMaterial.MAT, EquipmentSlot.HEAD, ITEM_PROPERTIES_UNBREAKABLE, 0.17f));
     public static final RegistryObject<CrimsonArmor> CRIMSON_CHEST = ITEMS.register("crimson_chest", () -> new CrimsonArmor(CrimsonArmorMaterial.MAT, EquipmentSlot.CHEST, ITEM_PROPERTIES_UNBREAKABLE, 0.40f));
     public static final RegistryObject<CrimsonArmor> CRIMSON_LEGS = ITEMS.register("crimson_legs", () -> new CrimsonArmor(CrimsonArmorMaterial.MAT, EquipmentSlot.LEGS, ITEM_PROPERTIES_UNBREAKABLE, 0.30f));

@@ -1,0 +1,34 @@
+{
+  "overrides": [
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 0.0
+      },
+      "model": "magitekkit:item/tool/crimson/shovel/stage0"
+    },
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 1.0
+      },
+      "model": "magitekkit:item/tool/crimson/shovel/stage1"
+    },
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 2.0
+      },
+      "model": "magitekkit:item/tool/crimson/shovel/stage2"
+    },
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 3.0
+      },
+      "model": "magitekkit:item/tool/crimson/shovel/stage3"
+    },
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 4.0
+      },
+      "model": "magitekkit:item/tool/crimson/shovel/stage4"
+    }
+  ]
+}

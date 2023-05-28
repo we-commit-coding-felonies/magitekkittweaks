@@ -3,6 +3,7 @@ package net.solunareclipse1.magitekkit.util;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.function.Predicate;
@@ -30,6 +31,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -78,6 +81,7 @@ import net.minecraftforge.common.IForgeShearable;
 import net.minecraftforge.common.IPlantable;
 import moze_intel.projecte.gameObjs.PETags;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
+import moze_intel.projecte.utils.ItemHelper;
 import moze_intel.projecte.utils.PlayerHelper;
 import moze_intel.projecte.utils.WorldHelper;
 
@@ -265,7 +269,7 @@ public class MiscHelper {
 				if (hit.containsKey(victim)) {
 					hit.put(victim, hit.get(victim)+1);
 				} else hit.put(victim, 1);
-				level.playSound(null, victim.blockPosition(), PESoundEvents.DESTRUCT.get(), SoundSource.PLAYERS, 0.5f, 1.5f);
+				level.playSound(null, victim.blockPosition(), PESoundEvents.DESTRUCT.get(), SoundSource.PLAYERS, 0.3f, 1.5f);
 			}
 			if (level instanceof ServerLevel lvl) {
 				for (Entry<Entity,Integer> hitEnt : hit.entrySet()) {
@@ -286,7 +290,7 @@ public class MiscHelper {
 				}
 				
 			}
-			level.playSound(null, culprit.blockPosition(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 0.5f, 1.0F);
+			level.playSound(null, culprit.blockPosition(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 1f, 1.0F);
 			return true;
 		}
 		return false;
@@ -514,9 +518,35 @@ public class MiscHelper {
 	}
 	
 	public static int getTrueEnchMaxLevel(Enchantment ench) {
-		if (ench instanceof FishingSpeedEnchantment
-				|| ench instanceof QuickChargeEnchantment)
+		if (ench instanceof FishingSpeedEnchantment || ench instanceof QuickChargeEnchantment)
 			return 5;
 		return 10;
+	}
+
+	/**
+	 * veinmines all ores in the given AABB
+	 */
+	public static boolean aoeOreCollect(Player player, AABB area, Level level, ItemStack stack) {
+		boolean hasAction = false;
+		List<ItemStack> drops = new ArrayList<>();
+		for (BlockPos pos : WorldHelper.getPositionsFromBox(area)) {
+			if (level.isEmptyBlock(pos)) continue;
+			BlockState state = level.getBlockState(pos);
+			if (ItemHelper.isOre(state) && state.getDestroySpeed(level, pos) != -1 && stack.isCorrectToolForDrops(state)) {
+				if (level.isClientSide) {
+					return true;
+				}
+				//Ensure we are immutable so that changing blocks doesn't act weird
+				int oresMined = WorldHelper.harvestVein(level, player, stack, pos.immutable(), state.getBlock(), drops, 0);
+				if (oresMined > 0) {
+					hasAction = true;
+				}
+			}
+		}
+		if (hasAction) {
+			WorldHelper.createLootDrop(drops, level, player.getX(), player.getY(), player.getZ());
+			return true;
+		}
+		return false;
 	}
 }

@@ -31,9 +31,9 @@ import net.minecraft.world.level.Level;
 import moze_intel.projecte.capability.ItemCapability;
 
 import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
-import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
+import net.solunareclipse1.magitekkit.api.item.ICapabilityItem;
 
-public class VoidSword extends SwordItem implements IMGTKItem, IEnchantmentSynergizer {
+public class VoidSword extends SwordItem implements ICapabilityItem, IEnchantmentSynergizer {
 	public VoidSword(Tier tier, int damage, float speed, Properties props) {
 		super(tier, damage, speed, props);
 	}

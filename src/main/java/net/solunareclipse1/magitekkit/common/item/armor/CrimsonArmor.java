@@ -76,7 +76,8 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 	}
 	
 	@Override
-	public void appendHoverText(ItemStack stack, Level level, List<Component> tips, TooltipFlag advanced) {
+	public void appendHoverText(ItemStack stack, Level level, List<Component> tips, TooltipFlag flags) {
+		superAppendHoverText(stack, level, tips, flags);
 		tips.add(new TextComponent(" "));
 		tips.add(new TranslatableComponent("tip.mgtk.crimson.armor").withStyle(ChatFormatting.UNDERLINE)); // Flavor
 		tips.add(new TranslatableComponent("tip.mgtk.crimson.armor.1")); //

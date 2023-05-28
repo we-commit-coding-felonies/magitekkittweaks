@@ -36,10 +36,10 @@ public class MGTKItemModels extends ItemModelProvider {
 		normal(ObjectInit.VOID_BOOTS, PECore.rl("item/dm_armor/feet"));
 
 		empowerItem(ObjectInit.CRIMSON_SWORD, "item/tool/crimson/sword/", "item/handheld");
-		//tool(ObjectInit.CRIMSON_PICKAXE, modLoc("item/rm_tools/pickaxe"));
-		//tool(ObjectInit.CRIMSON_SHOVEL, modLoc("item/rm_tools/shovel"));
-		//tool(ObjectInit.CRIMSON_AXE, modLoc("item/rm_tools/axe"));
-		//tool(ObjectInit.CRIMSON_HOE, modLoc("item/rm_tools/hoe"));
+		empowerItem(ObjectInit.CRIMSON_PICKAXE, "item/tool/crimson/pickaxe/", "item/handheld");
+		empowerItem(ObjectInit.CRIMSON_SHOVEL, "item/tool/crimson/shovel/", "item/handheld");
+		empowerItem(ObjectInit.CRIMSON_AXE, "item/tool/crimson/axe/", "item/handheld");
+		empowerItem(ObjectInit.CRIMSON_HOE, "item/tool/crimson/hoe/", "item/handheld");
 		normal(ObjectInit.CRIMSON_HELM, PECore.rl("item/rm_armor/head"));
 		normal(ObjectInit.CRIMSON_CHEST, PECore.rl("item/rm_armor/chest"));
 		normal(ObjectInit.CRIMSON_LEGS, PECore.rl("item/rm_armor/legs"));

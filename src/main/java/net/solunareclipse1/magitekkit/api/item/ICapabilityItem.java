@@ -19,12 +19,12 @@ import moze_intel.projecte.capability.ItemCapability;
 import net.solunareclipse1.magitekkit.api.capability.MGTKCapabilityProvider;
 
 /**
- * common stuff for items <br>
+ * common stuff for items with capabilities <br>
  * perhaps extending IForgeItem is a mistake but it works lol
  * @author solunareclipse1
  *
  */
-public interface IMGTKItem extends IForgeItem {
+public interface ICapabilityItem extends IForgeItem {
 
 	/**
 	 * used to store supported capabilities during initialization <br>

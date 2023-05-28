@@ -34,7 +34,7 @@ import moze_intel.projecte.capability.ItemCapability;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
 import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
-import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
+import net.solunareclipse1.magitekkit.api.item.ICapabilityItem;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc.IMGTKDamageSource;
 import net.solunareclipse1.magitekkit.init.EffectInit;
@@ -42,7 +42,7 @@ import net.solunareclipse1.magitekkit.util.EntityHelper;
 
 import mekanism.common.registries.MekanismDamageSource;
 
-public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReducer, IEnchantmentSynergizer {
+public class VoidArmorBase extends ArmorItem implements ICapabilityItem, IDamageReducer, IEnchantmentSynergizer {
 	private float baseDr;
 	
 	/** Damage sources with corresponging DR multipliers. 0.5 would mean 1/2 DR */
@@ -76,8 +76,8 @@ public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReduce
 	}
 	
 	@Override
-	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
-		super.appendHoverText(stack, level, tips, isAdvanced);
+	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag flags) {
+		superAppendHoverText(stack, level, tips, flags);
 
 		tips.add(new TranslatableComponent("tip.mgtk.enchsynergy"));
 		double bonus = calculateBonus(stack)*100d;
@@ -87,6 +87,17 @@ public class VoidArmorBase extends ArmorItem implements IMGTKItem, IDamageReduce
 			tips.add(bonusText);
 		}
 		tips.add(new TextComponent(""));
+	}
+	
+	/**
+	 * ArmorItem.appendHoverText
+	 * @param stack
+	 * @param level
+	 * @param tips
+	 * @param isAdvanced
+	 */
+	protected void superAppendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag flags) {
+		super.appendHoverText(stack, level, tips, flags);
 	}
 	
 	@Override

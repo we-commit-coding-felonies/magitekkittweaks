@@ -43,7 +43,7 @@ public class GemAnklet extends GemJewelryBase implements IFlightProvider, IStepA
 	
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
-		super.appendHoverText(stack, level, tips, isAdvanced);
+		superAppendHoverText(stack, level, tips, isAdvanced);
 		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.4").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	

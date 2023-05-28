@@ -1,0 +1,34 @@
+{
+  "overrides": [
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 0.0
+      },
+      "model": "magitekkit:item/tool/crimson/pickaxe/stage0"
+    },
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 1.0
+      },
+      "model": "magitekkit:item/tool/crimson/pickaxe/stage1"
+    },
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 2.0
+      },
+      "model": "magitekkit:item/tool/crimson/pickaxe/stage2"
+    },
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 3.0
+      },
+      "model": "magitekkit:item/tool/crimson/pickaxe/stage3"
+    },
+    {
+      "predicate": {
+        "magitekkit:empowerment_charge": 4.0
+      },
+      "model": "magitekkit:item/tool/crimson/pickaxe/stage4"
+    }
+  ]
+}

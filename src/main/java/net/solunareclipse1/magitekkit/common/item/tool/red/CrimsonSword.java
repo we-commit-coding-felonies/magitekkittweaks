@@ -1,23 +1,21 @@
 package net.solunareclipse1.magitekkit.common.item.tool.red;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.mojang.blaze3d.platform.InputConstants;
-
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -33,34 +31,29 @@ import net.minecraft.world.phys.AABB;
 
 import moze_intel.projecte.api.capabilities.item.IExtraFunction;
 import moze_intel.projecte.api.capabilities.item.IModeChanger;
-import moze_intel.projecte.api.capabilities.item.IProjectileShooter;
 import moze_intel.projecte.capability.ExtraFunctionItemCapabilityWrapper;
 import moze_intel.projecte.capability.ItemCapability;
 import moze_intel.projecte.capability.ModeChangerItemCapabilityWrapper;
-import moze_intel.projecte.capability.ProjectileShooterItemCapabilityWrapper;
 import moze_intel.projecte.utils.ClientKeyHelper;
 import moze_intel.projecte.utils.PEKeybind;
 import moze_intel.projecte.utils.PlayerHelper;
 
 import net.solunareclipse1.magitekkit.api.capability.wrapper.ChargeItemCapabilityWrapperButBetter;
 import net.solunareclipse1.magitekkit.api.item.IEmpowerItem;
-import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
-import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
+import net.solunareclipse1.magitekkit.api.item.ICapabilityItem;
 import net.solunareclipse1.magitekkit.init.EffectInit;
-import net.solunareclipse1.magitekkit.util.ColorsHelper;
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 
 import vazkii.botania.common.helper.ItemNBTHelper;
 
-public class CrimsonSword extends SwordItem implements IMGTKItem, IModeChanger, IEmpowerItem, IExtraFunction {
+public class CrimsonSword extends SwordItem implements ICapabilityItem, IModeChanger, IEmpowerItem, IExtraFunction {
 	public CrimsonSword(Tier tier, int damage, float speed, Properties props) {
 		super(tier, damage, speed, props);
 		addItemCapability(ModeChangerItemCapabilityWrapper::new);
 		addItemCapability(ChargeItemCapabilityWrapperButBetter::new);
 		addItemCapability(ExtraFunctionItemCapabilityWrapper::new);
-		addItemCapability(ProjectileShooterItemCapabilityWrapper::new);
 	}
 	
 	public enum KillMode {
@@ -104,11 +97,17 @@ public class CrimsonSword extends SwordItem implements IMGTKItem, IModeChanger, 
 		Component autoslashKeyText = ClientKeyHelper.getKeyName(PEKeybind.EXTRA_FUNCTION).copy().withStyle(ChatFormatting.AQUA);
 		Component modeKeyText = ClientKeyHelper.getKeyName(PEKeybind.MODE).copy().withStyle(ChatFormatting.AQUA);
 		// Style(color, bold, italic, underline, strikethrough, obfuscated, clickevent, hoverevent, insertion, font)
-		tips.add(new TranslatableComponent("tip.mgtk.crimson.sword.autoslash").withStyle(ChatFormatting.UNDERLINE)); // Flavor
-		tips.add(new TranslatableComponent("tip.mgtk.crimson.sword.autoslash.1", autoslashKeyText, modeKeyText)); // Keys
-		tips.add(new TranslatableComponent("tip.mgtk.crimson.sword.autoslash.2",
-				new TranslatableComponent("tip.mgtk.crimson.sword.killall."+getMode(stack)))); // Mode
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.sword").withStyle(ChatFormatting.UNDERLINE)); // Flavor
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.sword.1", autoslashKeyText, modeKeyText)); // Keys
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.sword.2",
+				new TranslatableComponent("tip.mgtk.crimson.sword.mode."+getMode(stack)))); // Mode
 		appendEmpowerTooltip(stack, level, tips, flags);		
+	}
+	
+	@Override
+	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+		if (slotChanged) return true;
+		return onlyChargeHasChanged(oldStack, newStack);
 	}
 
 	@Override
@@ -174,7 +173,8 @@ public class CrimsonSword extends SwordItem implements IMGTKItem, IModeChanger, 
 		switch (getStage(stack)) {
 		default:
 		case 1:
-			return 0xd15400;
+			color = Color.WEIRD_ORANGE;
+			break;
 		case 2:
 			color = Color.COVALENCE_GREEN;
 			break;
@@ -202,8 +202,8 @@ public class CrimsonSword extends SwordItem implements IMGTKItem, IModeChanger, 
 		if (!isCurrentlySlashing(stack)) {
 			byte mode = getMode(stack);
 			ItemNBTHelper.setByte( stack, TAG_KILLMODE, (byte)(mode >= 3 ? 0 : mode+1) );
-			player.displayClientMessage(new TranslatableComponent("tip.mgtk.crimson.sword.autoslash.hud",
-					new TranslatableComponent("tip.mgtk.crimson.sword.killall."+getMode(stack))), true);
+			player.displayClientMessage(new TranslatableComponent("tip.mgtk.crimson.sword.hud",
+					new TranslatableComponent("tip.mgtk.crimson.sword.mode."+getMode(stack))), true);
 			return true;
 		}
 		return false;

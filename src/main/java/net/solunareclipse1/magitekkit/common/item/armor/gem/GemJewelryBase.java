@@ -39,6 +39,7 @@ import net.solunareclipse1.magitekkit.config.EmcCfg.Gem;
 
 import mekanism.common.registries.MekanismDamageSource;
 
+import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
@@ -94,7 +95,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 
 	@Override
 	public int getBarColor(ItemStack stack) {
-		return 0x8f0000;
+		return Color.RED_MATTER.I;
 	}
 	
 	public float getDiscount(ItemStack stack, int slot, Player player, @Nullable ItemStack tool) {

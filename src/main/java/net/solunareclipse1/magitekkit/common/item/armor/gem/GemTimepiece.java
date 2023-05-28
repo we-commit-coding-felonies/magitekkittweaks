@@ -45,7 +45,7 @@ public class GemTimepiece extends GemJewelryBase implements IManaProficiencyArmo
 	
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
-		super.appendHoverText(stack, level, tips, isAdvanced);
+		superAppendHoverText(stack, level, tips, isAdvanced);
 		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.3").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	

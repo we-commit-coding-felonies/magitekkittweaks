@@ -10,10 +10,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -24,13 +26,12 @@ import moze_intel.projecte.utils.PlayerHelper;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 import net.solunareclipse1.magitekkit.api.item.IDamageReducer;
+import net.solunareclipse1.magitekkit.api.item.IStaticSpeedBreaker;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 
 import morph.avaritia.entity.GapingVoidEntity;
-import morph.avaritia.entity.InfinityArrowEntity;
-import morph.avaritia.init.AvaritiaModContent;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityManaStorm;
 
@@ -153,6 +154,25 @@ public class EventHandler {
 			blackHole.setYRot(singularity.getYRot());
 			blackHole.setXRot(0);
 			level.addFreshEntity(blackHole);
+		}
+	}
+	
+	@SubscribeEvent
+	public static void breakSpeedHandler(PlayerEvent.BreakSpeed event) {
+		Player player = event.getPlayer();
+		ItemStack stack = player.getMainHandItem();
+		if (stack.getItem() instanceof IStaticSpeedBreaker tool) {
+			Level level = player.level;
+			BlockState state = event.getState();
+			int breakTicks = tool.blockBreakSpeedInTicks(stack, state);
+			float blockStrength = event.getState().getDestroySpeed(level, event.getPos());
+			if (breakTicks > 0 && blockStrength >= 0) {
+				if (breakTicks > 1 && blockStrength != 0) {
+					event.setNewSpeed(32f / (breakTicks/blockStrength));
+				} else {
+					event.setNewSpeed(Float.POSITIVE_INFINITY);
+				}
+			}
 		}
 	}
 }

@@ -32,9 +32,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import moze_intel.projecte.capability.ItemCapability;
 
 import net.solunareclipse1.magitekkit.api.item.IEnchantmentSynergizer;
-import net.solunareclipse1.magitekkit.api.item.IMGTKItem;
+import net.solunareclipse1.magitekkit.api.item.ICapabilityItem;
 
-public class VoidShovel extends ShovelItem implements IMGTKItem, IEnchantmentSynergizer {
+public class VoidShovel extends ShovelItem implements ICapabilityItem, IEnchantmentSynergizer {
 	public VoidShovel(Tier tier, int damage, float speed, Properties props) {
 		super(tier, damage, speed, props);
 	}

@@ -44,7 +44,7 @@ public class GemCirclet extends GemJewelryBase {
 	
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
-		super.appendHoverText(stack, level, tips, isAdvanced);
+		superAppendHoverText(stack, level, tips, isAdvanced);
 		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.1").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 

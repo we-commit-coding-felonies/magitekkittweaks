@@ -22,6 +22,8 @@ public class ColorsHelper {
 	 * <li> <b>I</b> = Integer color value (0xRRGGBB)
 	 */
 	public enum Color {
+		RED_MATTER(143, 0, 0, 0, 100, 56, 0x8f0000),
+		WEIRD_ORANGE(209, 84, 0, 24, 100, 82, 0xd15400),
 		MIDGREEN(0, 128, 0, 120, 100, 50, 0x008000),
 		PHILOSOPHERS(179, 47, 103, 335, 74, 70, 0xb32f67),
 		COVALENCE_GREEN(0, 210, 74, 141, 100, 82, 0x00d149),

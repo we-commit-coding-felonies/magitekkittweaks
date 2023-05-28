@@ -28,8 +28,12 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.VOID_CHEST.get(), "Chestplate of the Void");
         add(ObjectInit.VOID_LEGS.get(), "Leggings of the Void");
         add(ObjectInit.VOID_BOOTS.get(), "Boots of the Void");
-        
+
         add(ObjectInit.CRIMSON_SWORD.get(), "Crimson Sword");
+        add(ObjectInit.CRIMSON_PICKAXE.get(), "Crimson Pickaxe");
+        add(ObjectInit.CRIMSON_SHOVEL.get(), "Crimson Shovel");
+        add(ObjectInit.CRIMSON_AXE.get(), "Crimson Axe");
+        add(ObjectInit.CRIMSON_HOE.get(), "Crimson Hoe");
         add(ObjectInit.CRIMSON_HELM.get(), "Crimson Helmet");
         add(ObjectInit.CRIMSON_CHEST.get(), "Crimson Chestplate");
         add(ObjectInit.CRIMSON_LEGS.get(), "Crimson Leggings");
@@ -45,6 +49,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("effect.magitekkit.ice_shield", "Frozen Solid");
         
         // tooltips
+        add("tip.mgtk.keycombo", "%s+%s");
         add("tip.mgtk.arcana.1", "Channels the latent power of Gem Jewellery");
         add("tip.mgtk.arcana.2", "Press %s to change mode, %s to toggle Covalence");
         add("tip.mgtk.arcana.3", "Hold %s to modify certain abilities");
@@ -149,20 +154,50 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.gem.ref.2", "I am become death, the destroyer of worlds");
         add("tip.mgtk.gem.ref.3", "2... 3... 5... 7... 11... 13...");
         add("tip.mgtk.gem.ref.4", "Not to be confused with Anklet of the Wind");
-        add("tip.mgtk.crimson.empower.1", "Abilities require empowerment.");
+        add("tip.mgtk.crimson.empower.1", "Abilities require empowerment");
         add("tip.mgtk.crimson.empower.2", "Press %s to empower with EMC");
         add("tip.mgtk.crimson.armor", "Absorbs almost all damage, but don't overuse it...");
         add("tip.mgtk.crimson.armor.1", "Provides enormous amounts of protection by absorbing damage");
         add("tip.mgtk.crimson.armor.2", "Protection decreases with more damage absorbed, regenerates over time");
         add("tip.mgtk.crimson.armor.3", "Will violently release all stored energy at once if it absorbs to much");
-        add("tip.mgtk.crimson.sword.autoslash", "Decimates foes with the powerful Autoslash");
-        add("tip.mgtk.crimson.sword.autoslash.1", "Press %s to rend nearby creatures, %s to change mode");
-        add("tip.mgtk.crimson.sword.autoslash.2", "Currently targeting: %s");
-        add("tip.mgtk.crimson.sword.autoslash.hud", "Autoslash: %s");
-        add("tip.mgtk.crimson.sword.killall.0", "Hostile only");
-        add("tip.mgtk.crimson.sword.killall.1", "Hostile + Players");
-        add("tip.mgtk.crimson.sword.killall.2", "All except Players");
-        add("tip.mgtk.crimson.sword.killall.3", "Everything");
+        add("tip.mgtk.crimson.sword", "Decimates foes with the powerful Autoslash");
+        add("tip.mgtk.crimson.sword.1", "Press %s to rend nearby creatures, %s to change mode");
+        add("tip.mgtk.crimson.sword.2", "Currently targeting: %s");
+        add("tip.mgtk.crimson.sword.hud", "Autoslash: %s");
+        add("tip.mgtk.crimson.sword.mode.0", "Hostile only");
+        add("tip.mgtk.crimson.sword.mode.1", "Hostile + Players");
+        add("tip.mgtk.crimson.sword.mode.2", "All except Players");
+        add("tip.mgtk.crimson.sword.mode.3", "Everything");
+        add("tip.mgtk.crimson.pickaxe", "Makes stripmining a breeze with the handy Proximine");
+        add("tip.mgtk.crimson.pickaxe.1", "Press %s to collect all nearby ores");
+        add("tip.mgtk.crimson.shovel", "Levels entire mountains with the arguably safe Areablast");
+        add("tip.mgtk.crimson.shovel.1", "Press %s to excavate a large cubic area");
+        add("tip.mgtk.crimson.axe", "Turns forests into plains with the controversial Supercut");
+        add("tip.mgtk.crimson.axe.1", "Press %s to harvest all nearby tree blocks");
+        add("tip.mgtk.crimson.hoe", "Speeds up landscaping with the useful Hyperscythe");
+        add("tip.mgtk.crimson.hoe.1", "Press %s to %s, %s to change operation");
+        add("tip.mgtk.crimson.hoe.2", "Current operation: %s");
+        add("tip.mgtk.crimson.hoe.hud", "Hyperscythe: %s");
+        add("tip.mgtk.crimson.hoe.mode.0", "Irrigation");
+        add("tip.mgtk.crimson.hoe.mode.0.full", "till nearby soil");
+        add("tip.mgtk.crimson.hoe.mode.1", "Pathmaking");
+        add("tip.mgtk.crimson.hoe.mode.1.full", "create dirt paths");
+        add("tip.mgtk.crimson.hoe.mode.2", "Weed Killer");
+        add("tip.mgtk.crimson.hoe.mode.2.full", "destroy nearby foliage");
+        add("tip.mgtk.crimson.tool", "Press %s to toggle safety");
+        add("tip.mgtk.crimson.tool.1", "Safety is %s, %s");
+        add("tip.mgtk.crimson.tool.hud", "Safety: %s");
+        add("tip.mgtk.crimson.tool.mode.false", "DISABLED");
+        add("tip.mgtk.crimson.tool.mode.false.full", "dangerous abilities can be used!");
+        add("tip.mgtk.crimson.tool.mode.true", "Enabled");
+        add("tip.mgtk.crimson.tool.mode.true.full", "preventing the use of dangerous abilities");
+        add("tip.mgtk.crimson.tool.speed", "Can stabilize its power to dig at a certain speed");
+        add("tip.mgtk.crimson.tool.speed.1", "Press %s to change stabilization mode");
+        add("tip.mgtk.crimson.tool.speed.2", "Current stabilizer mode: %s");
+        add("tip.mgtk.crimson.tool.speed.hud", "Dig Stabilizer: %s");
+        add("tip.mgtk.crimson.tool.speed.mode.0", "Off");
+        add("tip.mgtk.crimson.tool.speed.mode.1", "Speed");
+        add("tip.mgtk.crimson.tool.speed.mode.2", "Precision");
         
 
         add("gui.mgtk.philo.enchanter.name", "Arcanum");
