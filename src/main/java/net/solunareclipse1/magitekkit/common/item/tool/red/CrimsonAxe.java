@@ -12,11 +12,15 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -28,12 +32,14 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
 import moze_intel.projecte.api.capabilities.item.IExtraFunction;
 import moze_intel.projecte.api.capabilities.item.IModeChanger;
 import moze_intel.projecte.capability.ExtraFunctionItemCapabilityWrapper;
 import moze_intel.projecte.capability.ItemCapability;
 import moze_intel.projecte.capability.ModeChangerItemCapabilityWrapper;
+import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.ClientKeyHelper;
 import moze_intel.projecte.utils.PEKeybind;
 import moze_intel.projecte.utils.PlayerHelper;
@@ -132,8 +138,24 @@ public class CrimsonAxe extends AxeItem implements ICapabilityItem, IModeChanger
 
 	@Override
 	public boolean doExtraFunction(@NotNull ItemStack stack, @NotNull Player player, @Nullable InteractionHand hand) {
-		boolean didDo = MiscHelper.aoeOreCollect(player, player.getBoundingBox().inflate(3), player.level, stack);
-		if (didDo) PlayerHelper.swingItem(player, hand);
+		int charge = getCharge(stack);
+		boolean didDo = false;
+		if (!getSafety(stack) && charge > 0) {
+			int stage = getStage(stack);
+			int size = 5 + 5*stage;
+			AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), size*2, size*0.75, size*2);
+			didDo = MiscHelper.ecosystemDestroyer(player, area, player.level, stack);
+			if (didDo) {
+				PlayerHelper.swingItem(player, hand);
+				setCharge(stack, getTotalChargeForStage(stack, stage-1));
+				player.level.playSound(null, player.blockPosition(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 1, 1f);
+				if (player.level instanceof ServerLevel lvl) {
+					double rot1 = (double)(-Mth.sin(player.getYRot() * ((float)Math.PI / 180f)));
+					double rot2 = (double)Mth.cos(player.getYRot() * ((float)Math.PI / 180f));
+					lvl.sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX()+rot1, player.getY(0.5), player.getZ()+rot2, 1, 0, 0, 0, 0);
+				}
+			}
+		}
 		return didDo;
 	}
 

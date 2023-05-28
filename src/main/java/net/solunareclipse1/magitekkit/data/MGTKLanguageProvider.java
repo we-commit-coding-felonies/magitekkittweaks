@@ -215,8 +215,10 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.alchshield.ignored", "Barrier is pierced");
         add("subtitles.mgtk.alchshield.protect", "Barrier deflects");
         
+        
         add("subtitles.mgtk.emc.leak", "EMC leaks");
         add("subtitles.mgtk.emc.waste", "EMC disperses");
+        add("subtitles.mgtk.emc.explode", "EMC violently disperses");
         
         add("subtitles.mgtk.god.attack", "Deity attacks");
         add("subtitles.mgtk.god.chat", "Deity speaks");

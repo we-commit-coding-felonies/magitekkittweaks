@@ -12,12 +12,18 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.HoeItem;
@@ -26,8 +32,13 @@ import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 
 import moze_intel.projecte.api.capabilities.item.IExtraFunction;
 import moze_intel.projecte.api.capabilities.item.IModeChanger;
@@ -36,15 +47,18 @@ import moze_intel.projecte.capability.ExtraFunctionItemCapabilityWrapper;
 import moze_intel.projecte.capability.ItemCapability;
 import moze_intel.projecte.capability.ModeChangerItemCapabilityWrapper;
 import moze_intel.projecte.capability.ProjectileShooterItemCapabilityWrapper;
+import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.ClientKeyHelper;
 import moze_intel.projecte.utils.PEKeybind;
 import moze_intel.projecte.utils.PlayerHelper;
+import moze_intel.projecte.utils.ToolHelper;
 
 import net.solunareclipse1.magitekkit.api.capability.wrapper.ChargeItemCapabilityWrapperButBetter;
 import net.solunareclipse1.magitekkit.api.item.ICapabilityItem;
 import net.solunareclipse1.magitekkit.api.item.IEmpowerItem;
 import net.solunareclipse1.magitekkit.api.item.IStaticSpeedBreaker;
 import net.solunareclipse1.magitekkit.init.EffectInit;
+import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.TextHelper;
 import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
@@ -147,8 +161,56 @@ public class CrimsonHoe extends HoeItem implements ICapabilityItem, IModeChanger
 
 	@Override
 	public boolean doExtraFunction(@NotNull ItemStack stack, @NotNull Player player, @Nullable InteractionHand hand) {
-		boolean didDo = MiscHelper.aoeOreCollect(player, player.getBoundingBox().inflate(3), player.level, stack);
-		if (didDo) PlayerHelper.swingItem(player, hand);
+		int charge = getCharge(stack);
+		boolean didDo = false;
+		if (!getSafety(stack) && charge > 0) {
+			int stage = getStage(stack);
+			InteractionResult result = null;
+			switch (getOperation(stack)) {
+			case 0:
+				// since we use the charge nbt differently, we convert it back to stock projectes format on a copy of ourself
+				// prevents projecte from doing a batshit insane block modification operation
+				ItemStack peCompatStack = stack.copy();
+				setCharge(peCompatStack, stage);
+				Vec3 pos1 = player.getEyePosition();
+				Vec3 ray = player.getLookAngle().scale(player.getReachDistance()-0.5);
+				Vec3 pos2 = pos1.add(ray);
+				BlockHitResult hitRes = player.level.clip(new ClipContext(pos1, pos2, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, player));
+				UseOnContext ctx = new UseOnContext(player.level, player, hand, peCompatStack, hitRes);
+				result = ToolHelper.tillHoeAOE(ctx, 0);
+				didDo = result == InteractionResult.SUCCESS;
+				break;
+			case 1:
+				// see above, shovel because we need it for making paths
+				ItemStack shovelStack = new ItemStack(ObjectInit.CRIMSON_SHOVEL.get());
+				setCharge(shovelStack, stage);
+				Vec3 pos12 = player.getEyePosition();
+				Vec3 ray2 = player.getLookAngle().scale(player.getReachDistance()-0.5);
+				Vec3 pos22 = pos12.add(ray2);
+				BlockHitResult hitRes2 = player.level.clip(new ClipContext(pos12, pos22, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, player));
+				UseOnContext ctx2 = new UseOnContext(player.level, player, hand, shovelStack, hitRes2);
+				result = ToolHelper.flattenAOE(ctx2, 0);
+				didDo = result == InteractionResult.SUCCESS;
+				break;
+			case 2:
+				int size = 5 + 5*stage;
+				AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), size*2, size*0.75, size*2);
+				if (player.level instanceof ServerLevel lvl) {
+					didDo = MiscHelper.harvestNearbyNoReplant((ServerPlayer)player, lvl, area, 1) > 0;
+				}
+				break;
+			}
+			if (didDo) {
+				PlayerHelper.swingItem(player, hand);
+				setCharge(stack, getTotalChargeForStage(stack, stage-1));
+				player.level.playSound(null, player.blockPosition(), PESoundEvents.CHARGE.get(), SoundSource.PLAYERS, 1, 1f);
+				if (player.level instanceof ServerLevel lvl) {
+					double rot1 = (double)(-Mth.sin(player.getYRot() * ((float)Math.PI / 180f)));
+					double rot2 = (double)Mth.cos(player.getYRot() * ((float)Math.PI / 180f));
+					lvl.sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX()+rot1, player.getY(0.5), player.getZ()+rot2, 1, 0, 0, 0, 0);
+				}
+			}
+		}
 		return didDo;
 	}
 	

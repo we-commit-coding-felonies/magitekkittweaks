@@ -19,9 +19,10 @@
     },
 
 
-
-
-
+    "emc.explode": {
+        "subtitle": "subtitles.mgtk.emc.explode",
+        "sounds": [ "projecte:item/nova" ]
+    },
     "emc.leak": {
         "subtitle": "subtitles.mgtk.emc.leak",
         "sounds": [ "projecte:item/chargetick" ]
