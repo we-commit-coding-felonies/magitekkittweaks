@@ -19,9 +19,10 @@
     },
 
 
-
-
-
+    "emc.explode": {
+        "subtitle": "subtitles.mgtk.emc.explode",
+        "sounds": [ "projecte:item/nova" ]
+    },
     "emc.leak": {
         "subtitle": "subtitles.mgtk.emc.leak",
         "sounds": [ "projecte:item/chargetick" ]
@@ -130,6 +131,14 @@
 
 
 
+    "item.matterarmor.equip": {
+        "subtitle": "subtitles.mgtk.item.matterarmor.equip",
+        "sounds": [
+        	"minecraft:item/axe/wax_off1",
+        	"minecraft:item/axe/wax_off2",
+        	"minecraft:item/axe/wax_off3"
+        ]
+    },
     "item.matterarmor.absorb": {
         "subtitle": "subtitles.mgtk.item.matterarmor.absorb",
         "sounds": [{

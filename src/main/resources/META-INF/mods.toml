@@ -48,7 +48,7 @@ Custom code mod for the MagiTekkit modpack
 [[dependencies.magitekkit]]
 	modId="create"
 	mandatory=true
-	versionRange="*"
+	versionRange="[0.5.1.a,)"
 	ordering="AFTER"
 	side="BOTH"
 [[dependencies.magitekkit]]

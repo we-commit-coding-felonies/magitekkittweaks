@@ -10,9 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.Lists;
 
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -55,7 +53,7 @@ import moze_intel.projecte.utils.WorldHelper;
 
 import net.solunareclipse1.magitekkit.common.entity.ai.ArrowPathNavigation;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.config.DebugCfg;
 import net.solunareclipse1.magitekkit.data.MGTKBlockTags;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
@@ -66,11 +64,8 @@ import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePack
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket.LineParticlePreset;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
-import net.solunareclipse1.magitekkit.util.MiscHelper;
-import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
-import vazkii.botania.client.fx.WispParticleData;
 import vazkii.botania.common.entity.EntityDoppleganger;
 import vazkii.botania.common.entity.EntityPixie;
 
@@ -93,9 +88,6 @@ public class SentientArrow extends AbstractArrow {
 	}
 	private static final EntityDataAccessor<Byte> AI_STATE = SynchedEntityData.defineId(SentientArrow.class, EntityDataSerializers.BYTE);
 	private static final EntityDataAccessor<Integer> TARGET_ID = SynchedEntityData.defineId(SentientArrow.class, EntityDataSerializers.INT);
-	private ArrowState state = ArrowState.SEARCHING;
-	/** the integer entity id of our current tracked target */
-	private int victimId = -1;
 	
 	/**
 	 * the position we are currently going toward <br>
@@ -736,15 +728,15 @@ public class SentientArrow extends AbstractArrow {
 		if (entity instanceof EntityDoppleganger gaia && owner != null) {
 			// gaia refuses to take damage unless its player damage
 			gaia.hurt(DamageSource.playerAttack(owner), gaia.getMaxHealth());
-		} else if (entity instanceof Player plr && GemJewelryBase.isBarrierActive(plr)) {
+		} else if (entity instanceof Player plr && GemJewelryBase.isBarrierActive(plr) && owner != null) {
 			// massive damage to alchshield
-			entity.hurt(MGTKDmgSrc.TRANSMUTATION, entity.getMaxHealth() * 3);
+			entity.hurt(MGTKDmgSrc.transmutation(owner), entity.getMaxHealth() * 3);
 		} else if (entity instanceof EntityPixie pixie) {
 			// pixies are weird so we just kill them
 			pixie.setHealth(0);
 		} else if (!entity.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 7, 1))) {
 			// if we cant do the effect, do a shitload of damage
-			entity.hurt(MGTKDmgSrc.TRANSMUTATION, entity.getMaxHealth() / 8);
+			entity.hurt(MGTKDmgSrc.transmutation(owner), entity.getMaxHealth() / 8);
 		}
 		entity.invulnerableTime = oldInvuln;
 		entity.playSound(EffectInit.ARCHANGELS_SENTIENT_HIT.get(), 1, 2f);

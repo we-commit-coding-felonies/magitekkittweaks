@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "magitekkit:item/armor/void/chest"
+    "layer0": "projecte:item/dm_armor/chest"
   }
 }

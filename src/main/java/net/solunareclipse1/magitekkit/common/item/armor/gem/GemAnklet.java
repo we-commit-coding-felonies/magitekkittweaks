@@ -26,7 +26,6 @@ import net.minecraftforge.fml.DistExecutor;
 
 import moze_intel.projecte.gameObjs.items.IFlightProvider;
 import moze_intel.projecte.gameObjs.items.IStepAssister;
-import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Gem.Feet;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
@@ -44,7 +43,7 @@ public class GemAnklet extends GemJewelryBase implements IFlightProvider, IStepA
 	
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
-		super.appendHoverText(stack, level, tips, isAdvanced);
+		superAppendHoverText(stack, level, tips, isAdvanced);
 		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.4").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 	
@@ -62,7 +61,7 @@ public class GemAnklet extends GemJewelryBase implements IFlightProvider, IStepA
 			if (!stack.isDamaged()) {
 				if (!player.getAbilities().flying && !player.isFallFlying()) {
 					attemptGustFlight(player, level);
-					if (set.legs().exists() && plrEmc >= Constants.EmcCosts.JEWELRY_JESUS && jesusTick(player, set.legs().pristine())) {
+					if (set.legs().exists() && plrEmc >= Feet.JESUS.get() && jesusTick(player, set.legs().pristine())) {
 						//plrEmc -= EmcHelper.consumeAvaliableEmc(player, Feet.JESUS.get());
 					}
 				}
@@ -76,7 +75,7 @@ public class GemAnklet extends GemJewelryBase implements IFlightProvider, IStepA
 						plr.fallDistance = 0;
 						plrEmc -= EmcHelper.consumeAvaliableEmc(player, Feet.FLIGHT.get());
 					}
-					if (plrEmc >= Constants.EmcCosts.JEWELRY_JESUS && jesusTick(player, set.legs().pristine())) {
+					if (plrEmc >= Feet.JESUS.get() && jesusTick(player, set.legs().pristine())) {
 						plrEmc -= EmcHelper.consumeAvaliableEmc(player, Feet.JESUS.get());
 					}
 				} else {
@@ -159,6 +158,6 @@ public class GemAnklet extends GemJewelryBase implements IFlightProvider, IStepA
 
 	@Override
 	public boolean canProvideFlight(ItemStack stack, ServerPlayer player) {
-		return !stack.isDamaged() && getInfo(player, EquipmentSlot.LEGS).pristine();
+		return !stack.isDamaged() && getInfo(player, EquipmentSlot.CHEST).pristine();
 	}
 }

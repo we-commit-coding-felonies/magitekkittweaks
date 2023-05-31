@@ -18,12 +18,22 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.GANTIUM_BLOCK.get(), "Block of Gantium");
         
         add(ObjectInit.COVALENCE_BRACELET.get(), "Covalence Bracelet");
-        
+
+        add(ObjectInit.VOID_SWORD.get(), "Void Sword");
+        add(ObjectInit.VOID_PICKAXE.get(), "Void Pickaxe");
+        add(ObjectInit.VOID_SHOVEL.get(), "Void Shovel");
+        add(ObjectInit.VOID_AXE.get(), "Void Axe");
+        add(ObjectInit.VOID_HOE.get(), "Void Hoe");
         add(ObjectInit.VOID_HELM.get(), "Helmet of the Void");
         add(ObjectInit.VOID_CHEST.get(), "Chestplate of the Void");
         add(ObjectInit.VOID_LEGS.get(), "Leggings of the Void");
         add(ObjectInit.VOID_BOOTS.get(), "Boots of the Void");
-        
+
+        add(ObjectInit.CRIMSON_SWORD.get(), "Crimson Sword");
+        add(ObjectInit.CRIMSON_PICKAXE.get(), "Crimson Pickaxe");
+        add(ObjectInit.CRIMSON_SHOVEL.get(), "Crimson Shovel");
+        add(ObjectInit.CRIMSON_AXE.get(), "Crimson Axe");
+        add(ObjectInit.CRIMSON_HOE.get(), "Crimson Hoe");
         add(ObjectInit.CRIMSON_HELM.get(), "Crimson Helmet");
         add(ObjectInit.CRIMSON_CHEST.get(), "Crimson Chestplate");
         add(ObjectInit.CRIMSON_LEGS.get(), "Crimson Leggings");
@@ -34,8 +44,12 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add(ObjectInit.GEM_TIMEPIECE.get(), "Gravity's Timepiece");
         add(ObjectInit.GEM_ANKLET.get(), "Hurricane Anklet");
         add(ObjectInit.GEM_BRACELET.get(), "Band of Arcana");
+
+        add("effect.magitekkit.transmuting", "Transmuting");
+        add("effect.magitekkit.ice_shield", "Frozen Solid");
         
         // tooltips
+        add("tip.mgtk.keycombo", "%s+%s");
         add("tip.mgtk.arcana.1", "Channels the latent power of Gem Jewellery");
         add("tip.mgtk.arcana.2", "Press %s to change mode, %s to toggle Covalence");
         add("tip.mgtk.arcana.3", "Hold %s to modify certain abilities");
@@ -55,7 +69,7 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.arcana.guide.2.2", "Time acceleration");
         add("tip.mgtk.arcana.guide.2.2.alt", "Toggle global time acceleration");
         add("tip.mgtk.arcana.guide.2.3", "Blink");
-        add("tip.mgtk.arcana.guide.2.3.alt", "Recall");
+        add("tip.mgtk.arcana.guide.2.3.alt", "Blink");
         add("tip.mgtk.arcana.guide.2.4", "Ender Chest");
         add("tip.mgtk.arcana.guide.2.4.alt", "Anvil");
         add("tip.mgtk.arcana.guide.3.1", "Withering vine");
@@ -128,13 +142,62 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("tip.mgtk.arcana.charge.off", "Covalence disabled");
         add("tip.mgtk.arcana.liquid.water", "Aqua");
         add("tip.mgtk.arcana.liquid.lava", "Magma");
-        add("tip.mgtk.dr", "Provides a %s% damage reduction");
-        add("tip.mgtk.dyndr", "Currently providing a %s% damage reduction");
+        add("tip.mgtk.enchsynergy", "Grows stronger when enchanted");
+        add("tip.mgtk.enchbonus", "Current bonus: %s%s");
+        add("tip.mgtk.enchbonus.armor", "% Damage Reduction");
+        add("tip.mgtk.enchbonus.weapon", " Attack Strength");
+        add("tip.mgtk.enchbonus.tool", "% Faster Speed");
+        add("tip.mgtk.enchbonus.unknown", "Current bonus: %s Unknown. This is a bug!");
+        add("tip.mgtk.dyndr", "Currently providing %s damage reduction");
         add("tip.mgtk.burnout", "Burnout: %1$s / %2$s");
         add("tip.mgtk.gem.ref.1", "One shudders to imagine what inhuman thoughts lie within");
         add("tip.mgtk.gem.ref.2", "I am become death, the destroyer of worlds");
         add("tip.mgtk.gem.ref.3", "2... 3... 5... 7... 11... 13...");
         add("tip.mgtk.gem.ref.4", "Not to be confused with Anklet of the Wind");
+        add("tip.mgtk.crimson.empower.1", "Abilities require empowerment");
+        add("tip.mgtk.crimson.empower.2", "Press %s to empower with EMC");
+        add("tip.mgtk.crimson.armor", "Absorbs almost all damage, but don't overuse it...");
+        add("tip.mgtk.crimson.armor.1", "Provides enormous amounts of protection by absorbing damage");
+        add("tip.mgtk.crimson.armor.2", "Protection decreases with more damage absorbed, regenerates over time");
+        add("tip.mgtk.crimson.armor.3", "Will violently release all stored energy at once if it absorbs to much");
+        add("tip.mgtk.crimson.sword", "Decimates foes with the powerful Autoslash");
+        add("tip.mgtk.crimson.sword.1", "Press %s to rend nearby creatures, %s to change mode");
+        add("tip.mgtk.crimson.sword.2", "Currently targeting: %s");
+        add("tip.mgtk.crimson.sword.hud", "Autoslash: %s");
+        add("tip.mgtk.crimson.sword.mode.0", "Hostile only");
+        add("tip.mgtk.crimson.sword.mode.1", "Hostile + Players");
+        add("tip.mgtk.crimson.sword.mode.2", "All except Players");
+        add("tip.mgtk.crimson.sword.mode.3", "Everything");
+        add("tip.mgtk.crimson.pickaxe", "Makes stripmining a breeze with the handy Proximine");
+        add("tip.mgtk.crimson.pickaxe.1", "Press %s to collect all nearby ores");
+        add("tip.mgtk.crimson.shovel", "Levels entire mountains with the arguably safe Areablast");
+        add("tip.mgtk.crimson.shovel.1", "Press %s to excavate a large cubic area");
+        add("tip.mgtk.crimson.axe", "Turns forests into plains with the controversial Supercut");
+        add("tip.mgtk.crimson.axe.1", "Press %s to harvest all nearby tree blocks");
+        add("tip.mgtk.crimson.hoe", "Speeds up landscaping with the useful Hyperscythe");
+        add("tip.mgtk.crimson.hoe.1", "Press %s to %s, %s to change operation");
+        add("tip.mgtk.crimson.hoe.2", "Current operation: %s");
+        add("tip.mgtk.crimson.hoe.hud", "Hyperscythe: %s");
+        add("tip.mgtk.crimson.hoe.mode.0", "Irrigation");
+        add("tip.mgtk.crimson.hoe.mode.0.full", "till nearby soil");
+        add("tip.mgtk.crimson.hoe.mode.1", "Pathmaking");
+        add("tip.mgtk.crimson.hoe.mode.1.full", "create dirt paths");
+        add("tip.mgtk.crimson.hoe.mode.2", "Weed Killer");
+        add("tip.mgtk.crimson.hoe.mode.2.full", "destroy nearby foliage");
+        add("tip.mgtk.crimson.tool", "Press %s to toggle safety");
+        add("tip.mgtk.crimson.tool.1", "Safety is %s, %s");
+        add("tip.mgtk.crimson.tool.hud", "Safety: %s");
+        add("tip.mgtk.crimson.tool.mode.false", "DISABLED");
+        add("tip.mgtk.crimson.tool.mode.false.full", "dangerous abilities can be used!");
+        add("tip.mgtk.crimson.tool.mode.true", "Enabled");
+        add("tip.mgtk.crimson.tool.mode.true.full", "preventing the use of dangerous abilities");
+        add("tip.mgtk.crimson.tool.speed", "Can stabilize its power to dig at a certain speed");
+        add("tip.mgtk.crimson.tool.speed.1", "Press %s to change stabilization mode");
+        add("tip.mgtk.crimson.tool.speed.2", "Current stabilizer mode: %s");
+        add("tip.mgtk.crimson.tool.speed.hud", "Dig Stabilizer: %s");
+        add("tip.mgtk.crimson.tool.speed.mode.0", "Off");
+        add("tip.mgtk.crimson.tool.speed.mode.1", "Speed");
+        add("tip.mgtk.crimson.tool.speed.mode.2", "Precision");
         
 
         add("gui.mgtk.philo.enchanter.name", "Arcanum");
@@ -152,8 +215,10 @@ public class MGTKLanguageProvider extends LanguageProvider {
         add("subtitles.mgtk.alchshield.ignored", "Barrier is pierced");
         add("subtitles.mgtk.alchshield.protect", "Barrier deflects");
         
+        
         add("subtitles.mgtk.emc.leak", "EMC leaks");
         add("subtitles.mgtk.emc.waste", "EMC disperses");
+        add("subtitles.mgtk.emc.explode", "EMC violently disperses");
         
         add("subtitles.mgtk.god.attack", "Deity attacks");
         add("subtitles.mgtk.god.chat", "Deity speaks");
@@ -173,7 +238,8 @@ public class MGTKLanguageProvider extends LanguageProvider {
 
         add("subtitles.mgtk.item.ignition.burn", "Atmosphere ignites");
         add("subtitles.mgtk.item.ignition.click", "Alchemical spark");
-        
+
+        add("subtitles.mgtk.item.matterarmor.equip", "Matter armor equipped");
         add("subtitles.mgtk.item.matterarmor.absorb", "Damage absorbed");
         add("subtitles.mgtk.item.matterarmor.degrade", "Armor degrades");
         add("subtitles.mgtk.item.matterarmor.shatter", "Jewellery shatters");
@@ -198,20 +264,18 @@ public class MGTKLanguageProvider extends LanguageProvider {
         
         
         // death messages
-        add("death.attack.aoe", "%s rests in pieces");
-        add("death.attack.aoe.player", "%s was butchered by %s");
-        add("death.attack.aoe2", "%s was rended asunder");
-        add("death.attack.aoe2.player", "%s was decimated by %s");
+        add("death.attack.matter_aoe", "%s was decimated by %s");
+        add("death.attack.matter_aoe.item", "%s was butchered by %s's %s");
         add("death.attack.transmutation", "%s turned into an unspeakable horror");
         add("death.attack.transmutation.player", "%s was horrifically disfigured by %s");
         add("death.attack.transmutation.strong", "%s experienced the law of equivalent exchange");
         add("death.attack.transmutation.strong.player", "%s's carbon was transmuted by %s");
         add("death.attack.transmutation.potion", "%s was converted into EMC");
         add("death.attack.transmutation.potion.player", "%s is now a mere statistic thanks to %s");
-        add("death.attack.mustang", "%s phlogistonated");
-        add("death.attack.mustang.player", "%s was immolated by %s");
+        add("death.attack.mustang", "%s got phlogistonated by %s");
+        add("death.attack.mustang.item", "%s was immolated by %s using %s");
         add("death.attack.emcnuke", "%s was atomized by a catastrophic energy release");
-        add("death.attack.emcnuke.player", "%s underwent fission because of %s");
+        add("death.attack.emcnuke.player", "%s underwent fission in an attempt to destroy %s");
         add("death.attack.god", "%s is a work of fiction");
         add("death.attack.god.player", "%s was retconned by %s");
         // since avaritia cant do it themselves, apparently

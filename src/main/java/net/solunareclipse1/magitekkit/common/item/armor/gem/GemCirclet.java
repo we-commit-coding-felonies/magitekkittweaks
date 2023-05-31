@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -17,8 +18,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
 import net.solunareclipse1.magitekkit.config.DebugCfg;
-import net.solunareclipse1.magitekkit.util.Constants;
+import net.solunareclipse1.magitekkit.config.EmcCfg.Gem.Head;
+import net.solunareclipse1.magitekkit.init.NetworkInit;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
+import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket.ParticlePreset;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 
 /**
@@ -38,7 +44,7 @@ public class GemCirclet extends GemJewelryBase {
 	
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tips, TooltipFlag isAdvanced) {
-		super.appendHoverText(stack, level, tips, isAdvanced);
+		superAppendHoverText(stack, level, tips, isAdvanced);
 		tips.add(new TranslatableComponent("tip.mgtk.gem.ref.1").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 	}
 
@@ -51,16 +57,19 @@ public class GemCirclet extends GemJewelryBase {
 			if (!stack.isDamaged()) {
 				GemJewelrySetInfo set = jewelryTick(stack, level, player);
 				long plrEmc = set.plrEmc();
-				if (plrEmc >= Constants.EmcCosts.JEWELRY_XRAY) {
-					plrEmc -= Constants.EmcCosts.JEWELRY_XRAY;
+				if (plrEmc >= Head.CLAIRVOYANCE.get()) {
+					//plrEmc -= EmcHelper.consumeAvaliableEmc(player, Head.CLAIRVOYANCE.get());
 					nightVision(player);
 				}
-				if (set.hasBonus() && plrEmc >= Constants.EmcCosts.JEWELRY_XRAY) {
+				if (set.hasBonus() && plrEmc >= Head.CLAIRVOYANCE.get()) {
 					// amount of affected, multiplied by cost per entity
-					plrEmc -= entityXray(player, plrEmc/Constants.EmcCosts.JEWELRY_XRAY) * Constants.EmcCosts.JEWELRY_XRAY;
+					long costPer = Head.CLAIRVOYANCE.get();
+					//plrEmc -= EmcHelper.consumeAvaliableEmc(player,
+					//		costPer * entityXray(player, plrEmc/costPer)
+					//);
 				}
-				if (set.feet().pristine() && plrEmc >= Constants.EmcCosts.JEWELRY_BREATH && player.getAirSupply() <= 0) {
-					plrEmc -= EmcHelper.consumeAvaliableEmc(player, Constants.EmcCosts.JEWELRY_BREATH);
+				if (set.feet().pristine() && plrEmc >= Head.BREATH.get() && player.getAirSupply() <= 0) {
+					plrEmc -= EmcHelper.consumeAvaliableEmc(player, Head.BREATH.get());
 					player.setAirSupply(player.getMaxAirSupply());
 				}
 			}
@@ -80,8 +89,8 @@ public class GemCirclet extends GemJewelryBase {
 		double range = 64;
 		AABB box = //new AABB(player.getX(), player.getY(), player.getZ(), player.getX(), player.getY(), player.getZ()).inflate(range);
 			AABB.ofSize(player.getEyePosition(), range/4, range/4, range/4).expandTowards(player.getLookAngle().scale(range));
-		if (DebugCfg.XRAY_HITBOX.get()) {
-			//NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(box.minX, box.minY, box.minZ), new Vec3(box.maxX, box.maxY, box.maxZ), ParticlePreset.DEBUG), (ServerPlayer)player);
+		if (DebugCfg.XRAY_HITBOX.get() && !player.level.isClientSide) {
+			NetworkInit.toClient(new DrawParticleAABBPacket(new Vec3(box.minX, box.minY, box.minZ), new Vec3(box.maxX, box.maxY, box.maxZ), ParticlePreset.DEBUG), (ServerPlayer)player);
 		}
 		List<LivingEntity> mobs = player.level.getEntitiesOfClass(LivingEntity.class, box, ent -> !ent.is(player));
 

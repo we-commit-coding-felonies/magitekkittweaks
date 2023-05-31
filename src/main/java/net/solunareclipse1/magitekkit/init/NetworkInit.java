@@ -9,6 +9,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.network.packet.client.CreateLoopingSoundPacket;
+import net.solunareclipse1.magitekkit.network.packet.client.CutParticlePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleAABBPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.GustParticlePacket;
@@ -81,6 +82,12 @@ public class NetworkInit {
 				.encoder(GustParticlePacket::enc)
         		.decoder(GustParticlePacket::dec)
         		.consumer(GustParticlePacket::handle)
+        		.add();
+        
+        CHANNEL.messageBuilder(CutParticlePacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(CutParticlePacket::enc)
+        		.decoder(CutParticlePacket::dec)
+        		.consumer(CutParticlePacket::handle)
         		.add();
     }
     

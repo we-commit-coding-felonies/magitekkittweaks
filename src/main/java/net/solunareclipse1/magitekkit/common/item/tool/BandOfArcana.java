@@ -1,27 +1,26 @@
 package net.solunareclipse1.magitekkit.common.item.tool;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
 import java.util.UUID;
 
+import org.abego.treelayout.internal.util.java.util.ListUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.google.common.collect.Lists;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.item.CustomArmPoseItem;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.shaders.Effect;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.model.HumanoidModel.ArmPose;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -73,14 +72,10 @@ import net.minecraft.world.entity.monster.Stray;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
-import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.MinecartTNT;
-import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.inventory.EnchantmentMenu;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
 import net.minecraft.world.entity.projectile.Fireball;
@@ -90,7 +85,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.NameTagItem;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
@@ -129,7 +123,6 @@ import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.NonNullLazy;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.network.NetworkEvent.Context;
 
@@ -144,7 +137,6 @@ import moze_intel.projecte.capability.ProjectileShooterItemCapabilityWrapper;
 import moze_intel.projecte.config.ProjectEConfig;
 import moze_intel.projecte.gameObjs.PETags;
 import moze_intel.projecte.gameObjs.PETags.BlockEntities;
-import moze_intel.projecte.gameObjs.items.ItemPE;
 import moze_intel.projecte.gameObjs.registries.PEItems;
 import moze_intel.projecte.gameObjs.registries.PESoundEvents;
 import moze_intel.projecte.utils.ClientKeyHelper;
@@ -160,17 +152,13 @@ import net.solunareclipse1.magitekkit.api.capability.wrapper.converter.ManaCoval
 import net.solunareclipse1.magitekkit.api.item.ISwingItem;
 import net.solunareclipse1.magitekkit.common.entity.projectile.FreeLavaProjectile;
 import net.solunareclipse1.magitekkit.common.entity.projectile.SentientArrow;
-import net.solunareclipse1.magitekkit.common.entity.projectile.SmartArrow;
 import net.solunareclipse1.magitekkit.common.entity.projectile.WitherVineProjectile;
 import net.solunareclipse1.magitekkit.common.inventory.container.GravityAnvilMenu;
 import net.solunareclipse1.magitekkit.common.inventory.container.PhiloEnchantmentMenu;
-import net.solunareclipse1.magitekkit.common.item.MGTKCovalenceItem;
-import net.solunareclipse1.magitekkit.common.item.MGTKItem;
+import net.solunareclipse1.magitekkit.common.item.CovalenceItem;
 import net.solunareclipse1.magitekkit.common.item.armor.gem.GemJewelryBase;
-import net.solunareclipse1.magitekkit.common.item.armor.gem.GemTimepiece;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.config.DebugCfg;
-import net.solunareclipse1.magitekkit.config.EmcCfg;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Arcana.*;
 import net.solunareclipse1.magitekkit.data.MGTKEntityTags;
 import net.solunareclipse1.magitekkit.init.EffectInit;
@@ -184,11 +172,7 @@ import net.solunareclipse1.magitekkit.network.packet.client.DrawParticleLinePack
 import net.solunareclipse1.magitekkit.network.packet.client.GustParticlePacket;
 import net.solunareclipse1.magitekkit.network.packet.client.ModifyPlayerVelocityPacket;
 import net.solunareclipse1.magitekkit.network.packet.client.MustangExplosionPacket;
-import net.solunareclipse1.magitekkit.util.Constants.Cooldowns;
-import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
 import net.solunareclipse1.magitekkit.util.Constants.Xp;
-import net.solunareclipse1.magitekkit.util.ColorsHelper;
-import net.solunareclipse1.magitekkit.util.Constants;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
@@ -196,12 +180,9 @@ import net.solunareclipse1.magitekkit.util.MiscHelper;
 import net.solunareclipse1.magitekkit.util.PlrHelper;
 import net.solunareclipse1.magitekkit.util.ProjectileHelper;
 import net.solunareclipse1.magitekkit.util.ProjectileHelper.*;
-import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
-
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongComparators;
 import it.unimi.dsi.fastutil.longs.LongList;
-import morph.avaritia.handler.ArmorHandler;
 import vazkii.botania.api.internal.IManaBurst;
 import vazkii.botania.api.mana.BurstProperties;
 import vazkii.botania.api.mana.ILensEffect;
@@ -218,7 +199,7 @@ import wayoftime.bloodmagic.api.compat.EnumDemonWillType;
 import wayoftime.bloodmagic.api.compat.IDemonWill;
 import wayoftime.bloodmagic.api.compat.IMultiWillTool;
 
-public class BandOfArcana extends MGTKCovalenceItem
+public class BandOfArcana extends CovalenceItem
 	implements IModeChanger, IItemCharge, IProjectileShooter, IExtraFunction, ISwingItem, ILensEffect, CustomArmPoseItem, IMultiWillTool {
 
 	//////////////////////////////////////////////
@@ -586,11 +567,11 @@ public class BandOfArcana extends MGTKCovalenceItem
 							break;
 						}
 					}
-					lEnt.hurt(MGTKDmgSrc.TRANSMUTATION_2, Math.max(1, lEnt.getMaxHealth()/2));
-					lEnt.setLastHurtByPlayer(player);
-					if (lEnt instanceof NeutralMob mob) {
-						mob.setPersistentAngerTarget(player.getUUID());
-					}
+					lEnt.hurt(MGTKDmgSrc.strongTransmutation(player), Math.max(1, lEnt.getMaxHealth()/2));
+					//lEnt.setLastHurtByPlayer(player);
+					//if (lEnt instanceof NeutralMob mob) {
+					//	mob.setPersistentAngerTarget(player.getUUID());
+					//}
 					lEnt.addEffect(new MobEffectInstance(EffectInit.TRANSMUTING.get(), 3, 2), player);
 					EmcHelper.consumeAvaliableEmc(player, Philo.TRANSMUTE.get());
 					level.playSound(null, player, EffectInit.PHILO_ATTACK.get(), SoundSource.PLAYERS, 1, 2);
@@ -1130,15 +1111,17 @@ public class BandOfArcana extends MGTKCovalenceItem
 					long costPer = SWRG.SMITE.get();
 					int smitten = 0;
 					AABB area = AABB.ofSize(player.getBoundingBox().getCenter(), 32, 32, 32);
-					for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, area)) {
+					List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, area, this::canBeSmitten);
+					Collections.shuffle(targets, level.random);
+					for (LivingEntity ent : targets) {
 						if (ent.is(player)) continue;
-						if (plrEmc <= costPer*smitten) break;
+						if (smitten > (level.isThundering() ? 30 : 10) || plrEmc <= costPer*smitten) break;
 						swrgSuperSmiteEnt(player, level, ent);
 						smitten++;
 					}
 					long totalCost = costPer*smitten;
 					EmcHelper.consumeAvaliableEmc(player, totalCost);
-					int cdTime = (int) Math.max(13, smitten * (level.isThundering() ? 1.3 : 13));
+					int cdTime = (int) Math.max(13, smitten * (level.isThundering() ? 2.6 : 26));
 					cd.addCooldown(cdItem, cdTime);
 					didDo = true;
 				}
@@ -1465,7 +1448,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 
 	@Override
 	public boolean changeMode(@NotNull Player player, @NotNull ItemStack stack, @Nullable InteractionHand hand) {
-		if (player.isUsingItem()) return false;
+		if (player.isUsingItem() || player.getCooldowns().isOnCooldown(stack.getItem())) return false;
 		for (ItemStack armor : player.getArmorSlots()) {
 			if (armor.getItem() instanceof GemJewelryBase) {
 				byte ogMode = getMode(stack);
@@ -1642,6 +1625,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 	 * @return
 	 */
 	private boolean isValidRingUser(Player player, ItemStack stack) {
+		if (player.getCooldowns().isOnCooldown(stack.getItem())) return false;
 		switch (getMode(stack)) {
 		case 1: // Mind
 		case 5: // Philo
@@ -2114,7 +2098,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 		};
 		ent.setRemainingFireTicks(1200);
 		MiscHelper.burnInBoundingBox(ent.level, ent.getBoundingBox().inflate(1), culprit, false);
-		ent.hurt(MGTKDmgSrc.MUSTANG, ent instanceof SnowGolem ? Float.MAX_VALUE : 8);
+		ent.hurt(MGTKDmgSrc.mustang(culprit), ent instanceof SnowGolem ? Float.MAX_VALUE : 8);
 	}
 	
 	private SmallFireball fireball(Level level, Vec3 pos, Vec3 target, @Nullable LivingEntity owner) {
@@ -2361,7 +2345,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 						double seenPercent = (double)Explosion.getSeenPercent(cent, ent);
 						double invDist = (1.0D - distance) * seenPercent;
 						ent.setRemainingFireTicks(1200);
-						ent.hurt(MGTKDmgSrc.MUSTANG, (float) Math.pow(((int)((invDist * invDist + invDist) / 2.0D * 7.0D * 8d + 1.0D)), 2));
+						ent.hurt(MGTKDmgSrc.mustang(culprit), (float) Math.pow(((int)((invDist * invDist + invDist) / 2.0D * 7.0D * 8d + 1.0D)), 2));
 					}
 				}
 			}
@@ -2629,7 +2613,7 @@ public class BandOfArcana extends MGTKCovalenceItem
 				// TODO: something a bit more interesting than this
 				if (player.getHealth() < player.getMaxHealth()/2 || !GemJewelryBase.isBarrierActive(player)) {
 					player.setLastHurtByPlayer(null);
-					player.hurt(MGTKDmgSrc.TRANSMUTATION_2, Float.MAX_VALUE);
+					player.hurt(MGTKDmgSrc.strongTransmutation(culprit), Float.MAX_VALUE);
 				} else return false;
 			}
 			List<ItemStack> possible = new ArrayList<>();

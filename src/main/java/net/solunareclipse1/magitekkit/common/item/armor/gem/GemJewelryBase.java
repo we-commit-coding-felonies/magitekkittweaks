@@ -13,6 +13,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -30,14 +31,15 @@ import net.solunareclipse1.magitekkit.api.capability.wrapper.HazmatCapabilityWra
 import net.solunareclipse1.magitekkit.api.item.IAlchShield;
 import net.solunareclipse1.magitekkit.api.item.IHazmatItem;
 import net.solunareclipse1.magitekkit.common.item.armor.VoidArmorBase;
-import net.solunareclipse1.magitekkit.common.misc.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc.IMGTKDamageSource;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.config.EmcCfg;
 import net.solunareclipse1.magitekkit.config.EmcCfg.Gem;
-import net.solunareclipse1.magitekkit.util.Constants.EmcCosts;
 
 import mekanism.common.registries.MekanismDamageSource;
 
+import net.solunareclipse1.magitekkit.util.ColorsHelper.Color;
 import net.solunareclipse1.magitekkit.util.EmcHelper;
 import net.solunareclipse1.magitekkit.util.EntityHelper;
 import net.solunareclipse1.magitekkit.util.LoggerHelper;
@@ -93,7 +95,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 
 	@Override
 	public int getBarColor(ItemStack stack) {
-		return 0x8f0000;
+		return Color.RED_MATTER.I;
 	}
 	
 	public float getDiscount(ItemStack stack, int slot, Player player, @Nullable ItemStack tool) {
@@ -102,6 +104,8 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	
 	@Override
 	public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
+		return 1;
+		/*
 		if ((stack.getMaxDamage() - stack.getDamageValue()) - 1 < amount) {
 			entity.level.playSound(null, entity, EffectInit.JEWELRY_BREAK.get(), SoundSource.PLAYERS, 2.0F, 1.0F);
 			if (stack.getItem() instanceof GemAmulet && LivingEntity.getEquipmentSlotForItem(stack) == EquipmentSlot.CHEST) {
@@ -114,7 +118,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 				stack.shrink(1);
 			}
 		}
-		return amount;
+		return amount;*/
 	}
 	
 	/**
@@ -194,7 +198,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 			|| EntityHelper.isDamageSourceInfinite(source)) {
 			return false;
 		}
-		if (source instanceof MGTKDmgSrc src && src.isBypassAlchShield()) return false;
+		if (source instanceof IMGTKDamageSource src && src.isBypassAlchShield()) return false;
 		
 		for (int i = 0; i < dmgSrcBlacklistAlchshield.length; i++) {
 			if (source == dmgSrcBlacklistAlchshield[i]) return false;
@@ -219,7 +223,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 		float mult = 1f;
 		if (source.isBypassArmor()) mult = 1.1f;
 		if (source.isMagic() || source.isBypassMagic()) mult = 1.5f;
-		if (source instanceof MGTKDmgSrc src) {
+		if (source instanceof IMGTKDamageSource src) {
 			if (src.isBypassDr()) mult = 2f;
 			if (src.isDivine()) mult = 42f;
 			// adders, order doesnt matter
@@ -230,7 +234,7 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	
 	public long calcShieldingCost(Player player, float damage, DamageSource source, ItemStack stack) {
 		// ( dmg * mod ) ^ exp = emc
-		return (long) Math.max(EmcCosts.ALCHSHIELD_MIN, Math.pow(damage*getCostMultiplierForSource(source), Gem.SHIELD_EXP.get()));
+		return (long) Math.max(Gem.SHIELD_MIN.get(), Math.pow(damage*getCostMultiplierForSource(source), Gem.SHIELD_EXP.get()));
 	}
 	
 	public float calcAffordableDamage(Player player, float damage, DamageSource source, ItemStack stack, long emcHeld) {
@@ -245,7 +249,10 @@ public class GemJewelryBase extends VoidArmorBase implements IAlchShield, IFireP
 	@Override
 	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {return false;}
 	
+
 	
+	@Override
+	public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {return null;}
 	// Material
 	public static class GemJewelryMaterial implements ArmorMaterial {
 		public static final GemJewelryMaterial MAT = new GemJewelryMaterial();

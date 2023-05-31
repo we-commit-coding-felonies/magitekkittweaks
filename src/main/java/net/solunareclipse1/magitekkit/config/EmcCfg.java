@@ -25,7 +25,8 @@ public class EmcCfg {
 				REJUVENATE,
 				CAPACITY,
 				AUTOCHARGE,
-				TRICKLE;
+				TRICKLE,
+				RADLEAK;
 		}
 		public class Legs {
 			public static LongValue
@@ -95,6 +96,12 @@ public class EmcCfg {
 				MUSTANG;
 		}
 	}
+	//public class Crimson {
+	//	public class Sword {
+	//		public static LongValue
+	//			AUTOSLASH;
+	//	}
+	//}
 	
 	public static void registerServerConfig(Builder cfg) {
 		cfg.comment("Here you can change the EMC values of various things");
@@ -125,6 +132,9 @@ public class EmcCfg {
 		Gem.Chest.TRICKLE = cfg
 				.comment("Amount of EMC regenerated each time the Amulet blocks incoming radiation. 0 to disable.")
 				.defineInRange("gemChestTrickle", 1, 0, 96l);
+		Gem.Chest.RADLEAK = cfg
+				.comment("max emc that can get converted to radiation when leaking. 0 to disable radiation leaking.")
+				.defineInRange("gemChestRadleak", 8192, 0, 8192l);
 		Gem.Legs.FASTDROP = cfg
 				.comment("Cost per tick when fast-falling with the Timepiece")
 				.defineInRange("gemLegsFastfall", 1, 0, Long.MAX_VALUE);
@@ -244,6 +254,7 @@ public class EmcCfg {
 		Arcana.Ignition.MUSTANG = cfg
 				.comment("Cost of the Alchemical Flameburst projectile")
 				.defineInRange("arcanaIgnitionMustang", 20340, 0, Long.MAX_VALUE);
+		cfg.pop();
 	}
 	
 	// Common

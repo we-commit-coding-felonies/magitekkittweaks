@@ -14,8 +14,6 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 
-import vazkii.botania.common.lib.ModTags;
-
 public class MGTKBlockTags extends BlockTagsProvider {
 	public MGTKBlockTags(DataGenerator generator, ExistingFileHelper helper) {
         super(generator, MagiTekkit.MODID, helper);
@@ -23,6 +21,9 @@ public class MGTKBlockTags extends BlockTagsProvider {
 
 	public static final TagKey<Block> ARROW_NOCLIP = makeTag("sentient_arrow_pathfind_noclip");
 	public static final TagKey<Block> ARROW_ANNIHILATE = makeTag("sentient_arrow_pathfind_annihilate");
+
+	public static final TagKey<Block> NUKE_RESIST = makeTag("nuke_immune");
+	public static final TagKey<Block> NUKE_IMMUNE = makeTag("nuke_immune");
 	
 	@Override
     protected void addTags() {
@@ -64,6 +65,12 @@ public class MGTKBlockTags extends BlockTagsProvider {
         	.addTag(BlockTags.REPLACEABLE_PLANTS)
         	.addTag(BlockTags.FLOWERS)
         	.addTag(BlockTags.CLIMBABLE);
+        
+        tag(NUKE_RESIST)
+        	.add(Blocks.NETHERITE_BLOCK);
+        
+        tag(NUKE_IMMUNE)
+        	.addTag(BlockTags.WITHER_IMMUNE);
     }
     
     private static TagKey<Block> makeTag(String name) {

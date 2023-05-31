@@ -6,40 +6,60 @@ import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
+import moze_intel.projecte.utils.ClientKeyHelper;
+import moze_intel.projecte.utils.PEKeybind;
+import moze_intel.projecte.utils.PlayerHelper;
+import moze_intel.projecte.utils.WorldHelper;
+
 import net.solunareclipse1.magitekkit.MagiTekkit;
 import net.solunareclipse1.magitekkit.api.item.IBurnoutItem;
+import net.solunareclipse1.magitekkit.common.misc.NukeDamageCalculator;
+import net.solunareclipse1.magitekkit.common.misc.damage.MGTKDmgSrc;
 import net.solunareclipse1.magitekkit.init.EffectInit;
 import net.solunareclipse1.magitekkit.init.ObjectInit;
 import net.solunareclipse1.magitekkit.util.ColorsHelper;
+import net.solunareclipse1.magitekkit.util.EntityHelper;
+import net.solunareclipse1.magitekkit.util.LoggerHelper;
+import net.solunareclipse1.magitekkit.util.MiscHelper;
+
 import vazkii.botania.common.helper.ItemNBTHelper;
 
 public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 	private static final ItemStack[] DEGRADE_REPLACEMENTS = {
-			new ItemStack(ObjectInit.VOID_HELM.get()),
-			new ItemStack(ObjectInit.VOID_CHEST.get()),
+			new ItemStack(ObjectInit.VOID_BOOTS.get()),
 			new ItemStack(ObjectInit.VOID_LEGS.get()),
-			new ItemStack(ObjectInit.VOID_BOOTS.get())
+			new ItemStack(ObjectInit.VOID_CHEST.get()),
+			new ItemStack(ObjectInit.VOID_HELM.get())
 	};
 	
 	/**
@@ -56,9 +76,20 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 	}
 	
 	@Override
-	public void appendHoverText(ItemStack stack, Level level, List<Component> tips, TooltipFlag advanced) {
-		tips.add(new TranslatableComponent("tip.mgtk.dyndr", getDr(stack, DamageSource.GENERIC)));
-		tips.add(new TranslatableComponent("tip.mgtk.burnout", getBurnout(stack), getBurnoutMax()));
+	public void appendHoverText(ItemStack stack, Level level, List<Component> tips, TooltipFlag flags) {
+		superAppendHoverText(stack, level, tips, flags);
+		tips.add(new TextComponent(" "));
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.armor").withStyle(ChatFormatting.UNDERLINE)); // Flavor
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.armor.1")); //
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.armor.2")); // info
+		tips.add(new TranslatableComponent("tip.mgtk.crimson.armor.3")); //
+		float dr = getDr(stack, DamageSource.GENERIC)*100;
+		Component drText = new TextComponent(ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(dr)+"%").withStyle(ChatFormatting.GREEN);
+		tips.add(new TranslatableComponent("tip.mgtk.dyndr", drText));
+		Style style = Style.EMPTY.withColor(getBarColor(stack));
+		Component burnoutText = new TextComponent(ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(getBurnout(stack))).withStyle(style);
+		Component maxText = new TextComponent(ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(getBurnoutMax())).withStyle(ChatFormatting.DARK_RED);
+		tips.add(new TranslatableComponent("tip.mgtk.burnout", burnoutText, maxText));
 	}
 	
 	@Override
@@ -83,20 +114,28 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 
 	@Override
 	public int getBurnoutMax() {
-		return 16384;
+		return (int) (16384f * (getDefense()/30f));
 	}
 	
 	@Override
 	public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-		//int burnout = getBurnout(stack) + amount;
-		//if (burnout > getBurnoutMax()) {
-		//	
-		//}
-		setBurnout(stack, getBurnout(stack) + amount);
-		if (getBurnout(stack) > getBurnoutMax()) {
+		int burnout = getBurnout(stack);
+		setBurnout(stack, burnout + 8*amount);
+		if (burnout+amount > getBurnoutMax()) {
 			ItemNBTHelper.setBoolean(stack, "burnout_overload", true);
 		}
 		return 0;
+	}
+	
+	@Override
+	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
+		if (level.isClientSide) return;
+		int burnout = getBurnout(stack);
+		//int leakTime = Math.round(12f - (9f*getBurnoutPercent(stack)));
+		if (burnout > 0 && level.getGameTime() % 12 == 0) {
+			setBurnout(stack, burnout-1);
+			level.playSound(null, entity.blockPosition(), EffectInit.EMC_LEAK.get(), entity.getSoundSource(), 0.5f, 1);
+		}
 	}
 	
 	/**
@@ -104,58 +143,41 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 	 * @param event
 	 */
 	public void checkDegrade(LivingEquipmentChangeEvent event) {
-		//ItemStack from = event.getFrom();
 		ItemStack to = event.getTo();
-		if ( to.getItem() instanceof CrimsonArmor armor && armor.getBurnout(to) > armor.getBurnoutMax() ) {
-			Optional<IItemHandler> itemHandlerCap = event.getEntity().getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, Direction.NORTH).resolve();
+		if ( to.getItem() instanceof CrimsonArmor && ItemNBTHelper.getBoolean(to, "burnout_overload", false) ) {
+			LivingEntity wearer = event.getEntityLiving();
+			Optional<IItemHandler> itemHandlerCap = wearer.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, Direction.NORTH).resolve();
 			if (itemHandlerCap.isPresent()) {
-				ItemStack replacement;
 				IItemHandler inv = itemHandlerCap.get();
+				int detPower = 0;
 				for (int i = 0; i < inv.getSlots(); i++) {
-					ItemStack item = inv.getStackInSlot(i);
-					if (ItemNBTHelper.getBoolean(item, "burnout_overload", false)) {
-						EquipmentSlot slot = LivingEntity.getEquipmentSlotForItem(item);
-						inv.extractItem(slot.getIndex(), 1, false);
-						inv.insertItem(slot.getIndex(), DEGRADE_REPLACEMENTS[slot.getIndex()].copy(), false);
+					ItemStack stack = inv.getStackInSlot(i);
+					if (stack.getItem() instanceof CrimsonArmor) {
+						EquipmentSlot slot = LivingEntity.getEquipmentSlotForItem(stack);
+						inv.extractItem(slot.getIndex(), stack.getCount(), false);
+						ItemStack toInsert = DEGRADE_REPLACEMENTS[slot.getIndex()].copy();
+						ItemStack inserted = inv.insertItem(slot.getIndex(), toInsert, false);
+						if (inserted == toInsert) {
+							LoggerHelper.printWarn("CrimsonArmor.checkDegrade()", "ReplaceFailed", "Replacing ["+stack+"] with ["+toInsert+"] failed!");
+						}
+						detPower++;
 					}
 				}
-				//switch (event.getSlot()) {
-				//
-				//case HEAD: // 4
-				//	replacement = new ItemStack(ObjectInit.VOID_HELM.get());
-				//	break;
-				//	
-				//case CHEST: // 3
-				//	replacement = new ItemStack(ObjectInit.VOID_HELM.get());
-				//	break;
-				//	
-				//case LEGS: // 2
-				//	replacement = new ItemStack(ObjectInit.VOID_HELM.get());
-				//	break;
-				//	
-				//case FEET: // 1
-				//	replacement = new ItemStack(ObjectInit.VOID_HELM.get());
-				//	break;
-				//
-				//default:
-				//	HashMap<String, String> info = new HashMap<>();
-				//	info.put("Entity", event.getEntity()+"");
-				//	info.put("From", event.getFrom()+"");
-				//	info.put("To", event.getTo()+"");
-				//	LoggerHelper.printWarn("CrimsonArmor.checkDegrade()", "UnknownSlotType", "Slot type " + event.getSlot() + " is not valid here!", info);
-				//	return;
-				//}
-				//WorldHelper.createNovaExplosion(event.getEntity().level, event.getEntity(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), armor.getBurnout(to) - armor.getBurnoutMax());
-				event.getEntity().level.playSound(null, event.getEntity().blockPosition(), EffectInit.ARMOR_BREAK.get(), event.getEntity().getSoundSource(), 1, 1);
-				//for (int i = 0; i < inv.getSlots(); i++) {
-				//}
+				DamageSource dmgSrc = MGTKDmgSrc.emcNuke(wearer);
+				if (!EntityHelper.isInvincible(wearer)) {
+					wearer.hurt(dmgSrc, Float.MAX_VALUE);
+				}
+				NukeDamageCalculator nukeCalc = new NukeDamageCalculator(1f/detPower);
+				Vec3 cent = wearer.getBoundingBox().getCenter();
+				wearer.level.explode(wearer, dmgSrc, nukeCalc, cent.x, cent.y, cent.z, 4.5f*detPower, true, Explosion.BlockInteraction.BREAK);
+				wearer.level.playSound(null, wearer.blockPosition(), EffectInit.ARMOR_BREAK.get(), wearer.getSoundSource(), 1, 1);
 			}
 		}
 	}
 
 	@Override
 	public float getDr(ItemStack stack, DamageSource source) {
-		return super.getDr(stack, source) * (1 - getBurnoutPercent(stack));
+		return super.getDr(stack, source) * (1 - 0.75f*getBurnoutPercent(stack));
 	}
 	
 	@Override
@@ -164,6 +186,19 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 	public boolean isBookEnchantable(ItemStack stack, ItemStack book) {return false;}
 	@Override
 	public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment ench) {return false;}
+	
+	// using projecte textures for texture pack compatability
+	@Override
+	public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
+		return slot != EquipmentSlot.LEGS ?
+			"projecte:textures/models/armor/red_matter_layer_1.png":
+			"projecte:textures/models/armor/red_matter_layer_2.png";
+	}
+	
+	@Override
+	public double calculateBonus(ItemStack stack) {
+		return 0;
+	}
 	
 	public static class CrimsonArmorMaterial implements ArmorMaterial {
 		public static final CrimsonArmorMaterial MAT = new CrimsonArmorMaterial();
@@ -188,13 +223,13 @@ public class CrimsonArmor extends VoidArmorBase implements IBurnoutItem {
 		public int getEnchantmentValue() {return 0;}
 		@NotNull
 		@Override
-		public SoundEvent getEquipSound() {return SoundEvents.AXE_WAX_OFF;}
+		public SoundEvent getEquipSound() {return EffectInit.ARMOR_EQUIP.get();}
 		@NotNull
 		@Override
 		public Ingredient getRepairIngredient() {return Ingredient.EMPTY;}
 		@NotNull
 		@Override
-		public String getName() {return new ResourceLocation(MagiTekkit.MODID, "crimson/").toString();}
+		public String getName() {return new ResourceLocation(MagiTekkit.MODID, "crimson_armor").toString();}
 		@Override
 		public float getToughness() {return 5;}
 		@Override
