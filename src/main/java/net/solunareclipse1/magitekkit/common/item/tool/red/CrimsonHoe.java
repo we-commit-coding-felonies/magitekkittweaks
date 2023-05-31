@@ -165,7 +165,6 @@ public class CrimsonHoe extends HoeItem implements ICapabilityItem, IModeChanger
 		boolean didDo = false;
 		if (!getSafety(stack) && charge > 0) {
 			int stage = getStage(stack);
-			InteractionResult result = null;
 			switch (getOperation(stack)) {
 			case 0:
 				// since we use the charge nbt differently, we convert it back to stock projectes format on a copy of ourself
@@ -177,8 +176,7 @@ public class CrimsonHoe extends HoeItem implements ICapabilityItem, IModeChanger
 				Vec3 pos2 = pos1.add(ray);
 				BlockHitResult hitRes = player.level.clip(new ClipContext(pos1, pos2, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, player));
 				UseOnContext ctx = new UseOnContext(player.level, player, hand, peCompatStack, hitRes);
-				result = ToolHelper.tillHoeAOE(ctx, 0);
-				didDo = result == InteractionResult.SUCCESS;
+				didDo = ToolHelper.tillHoeAOE(ctx, 0) == InteractionResult.SUCCESS;
 				break;
 			case 1:
 				// see above, shovel because we need it for making paths
@@ -189,8 +187,7 @@ public class CrimsonHoe extends HoeItem implements ICapabilityItem, IModeChanger
 				Vec3 pos22 = pos12.add(ray2);
 				BlockHitResult hitRes2 = player.level.clip(new ClipContext(pos12, pos22, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, player));
 				UseOnContext ctx2 = new UseOnContext(player.level, player, hand, shovelStack, hitRes2);
-				result = ToolHelper.flattenAOE(ctx2, 0);
-				didDo = result == InteractionResult.SUCCESS;
+				didDo = ToolHelper.flattenAOE(ctx2, 0) == InteractionResult.SUCCESS;
 				break;
 			case 2:
 				int size = 5 + 5*stage;
